@@ -78,7 +78,7 @@ Pages from these services can't be read from a browser directly, so a small func
 
 Spindle is members-only: you sign in with Google, GitHub, or email and password, and new email accounts confirm with a 6-digit code. Once you're in, your liked songs, playlists (with their covers), your own lyrics, settings and queue follow you. Changes reach your other signed-in devices within a few seconds, and an idle device picks up the queue where you left off.
 
-It all runs on a free [Supabase](https://supabase.com) project. Without one (local development with no `.env.local`), the gate is skipped and everything stays on the device.
+It all runs on a free [Supabase](https://supabase.com) project. **Right now email verification is off for testing** (Supabase's free mailer can't send custom templates); steps 3–5 below switch codes and branded emails on once an email sender is connected. Google and GitHub buttons appear once `VITE_AUTH_PROVIDERS=google,github` is set in Vercel. Without one (local development with no `.env.local`), the gate is skipped and everything stays on the device.
 
 ### Setup
 
