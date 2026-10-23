@@ -544,46 +544,32 @@ html.has-cursor .tile-play:not(.is-on) {
   touch-action: none;
   user-select: none;
 }
-/* Over the turntable the ring and dot step aside for a drawn hand. */
+.cur-hand,
+.cur-grab {
+  color: #111;
+}
 .cur-ring[data-mode='hand'],
 .cur-ring[data-mode='grab'] {
-  opacity: 0 !important;
+  width: 56px;
+  height: 56px;
+  margin: -28px 0 0 -28px;
+  border-color: transparent;
+  background: rgba(246, 243, 236, 0.95);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+}
+.cur-ring[data-mode='grab'] {
+  width: 48px;
+  height: 48px;
+  margin: -24px 0 0 -24px;
+}
+.cur-ring[data-mode='hand'] .cur-hand,
+.cur-ring[data-mode='grab'] .cur-grab {
+  opacity: 1;
+  scale: 1;
 }
 .cur-dot[data-mode='hand'],
 .cur-dot[data-mode='grab'] {
   scale: 0;
-}
-.cur-hand-wrap {
-  position: fixed;
-  left: 0;
-  top: 0;
-  z-index: 601;
-  width: 0;
-  height: 0;
-  pointer-events: none;
-}
-.cur-hand-art {
-  position: absolute;
-  opacity: 0;
-  scale: 0.85;
-  transform-origin: 40% 15%;
-  filter: drop-shadow(-6px 14px 10px rgba(0, 0, 0, 0.45)) drop-shadow(0 2px 2px rgba(0, 0, 0, 0.25));
-  transition:
-    opacity 0.18s,
-    scale 0.25s var(--ease),
-    filter 0.25s var(--ease);
-}
-.cur-hand-wrap[data-mode='hand'] .is-open,
-.cur-hand-wrap[data-mode='grab'] .is-grab {
-  opacity: 1;
-  scale: 1;
-}
-/* Pressing down: the shadow tightens as the hand meets the vinyl. */
-.cur-hand-wrap[data-mode='grab'] .is-grab {
-  filter: drop-shadow(-2px 5px 4px rgba(0, 0, 0, 0.5));
-}
-html:not(.cursor-on) .cur-hand-wrap {
-  opacity: 0;
 }
 .scrub-bubble {
   position: absolute;

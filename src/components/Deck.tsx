@@ -186,26 +186,99 @@ export function Deck({ track, playing, onToggle }: Props) {
         <span className="sleeve-edge" />
       </motion.div>
 
+      {/*
+        Tonearm, modelled on a real S-arm: brushed-aluminium pivot base with a
+        bearing housing, a ribbed counterweight behind the pivot, a polished tube
+        that catches a highlight along its length, and a headshell with a finger
+        lift, cartridge and stylus. The pivot (84, 36) and stylus position match
+        the old arm, so it still lands on the same groove. The rest post sits
+        where the arm parks (rotated -30° about the pivot).
+      */}
       <svg className="tonearm" viewBox="0 0 120 300" aria-hidden="true">
         <defs>
-          <linearGradient id="arm-metal" x1="0" x2="1">
-            <stop offset="0" stopColor="#8d8d96" />
-            <stop offset=".45" stopColor="#f4f4f8" />
-            <stop offset="1" stopColor="#6b6b74" />
+          <linearGradient id="ta-tube" gradientUnits="userSpaceOnUse" x1="79" y1="0" x2="89" y2="0">
+            <stop offset="0" stopColor="#5d5d66" />
+            <stop offset=".28" stopColor="#d9d9e0" />
+            <stop offset=".45" stopColor="#ffffff" />
+            <stop offset=".62" stopColor="#b9b9c2" />
+            <stop offset="1" stopColor="#4c4c55" />
           </linearGradient>
-          <radialGradient id="arm-base" cx=".4" cy=".35">
-            <stop offset="0" stopColor="#fafafa" />
-            <stop offset=".6" stopColor="#9a9aa3" />
-            <stop offset="1" stopColor="#4a4a52" />
+          <linearGradient id="ta-weight" x1="0" x2="1">
+            <stop offset="0" stopColor="#3b3b42" />
+            <stop offset=".35" stopColor="#a9a9b2" />
+            <stop offset=".5" stopColor="#e6e6ec" />
+            <stop offset=".7" stopColor="#8a8a93" />
+            <stop offset="1" stopColor="#2e2e34" />
+          </linearGradient>
+          <radialGradient id="ta-plinth" cx=".38" cy=".32" r=".75">
+            <stop offset="0" stopColor="#f3f3f6" />
+            <stop offset=".45" stopColor="#b8b8c1" />
+            <stop offset=".85" stopColor="#6c6c75" />
+            <stop offset="1" stopColor="#3f3f46" />
           </radialGradient>
+          <radialGradient id="ta-bearing" cx=".42" cy=".38" r=".7">
+            <stop offset="0" stopColor="#5a5a63" />
+            <stop offset="1" stopColor="#1d1d22" />
+          </radialGradient>
+          <radialGradient id="ta-cap" cx=".35" cy=".3" r=".8">
+            <stop offset="0" stopColor="#ffffff" />
+            <stop offset=".5" stopColor="#c9c9d1" />
+            <stop offset="1" stopColor="#6e6e77" />
+          </radialGradient>
+          <linearGradient id="ta-shell" x1="0" x2="1">
+            <stop offset="0" stopColor="#d8d8de" />
+            <stop offset=".5" stopColor="#f7f7fa" />
+            <stop offset="1" stopColor="#9c9ca5" />
+          </linearGradient>
         </defs>
-        <g ref={armRef} className="tonearm-swing">
-          <path d="M84 36 L84 210 Q84 236 62 252 L46 264" fill="none" stroke="url(#arm-metal)" strokeWidth="6" strokeLinecap="round" />
-          <rect x="30" y="256" width="26" height="34" rx="4" transform="rotate(-36 43 273)" fill="#2a2a30" stroke="#55555e" />
-          <rect x="74" y="8" width="20" height="22" rx="5" fill="#3a3a42" />
+
+        {/* Arm rest: a post with a soft cradle, where the arm parks */}
+        <g transform="translate(151 150)">
+          <ellipse cx="0" cy="10" rx="9" ry="4" fill="#000" opacity=".35" />
+          <rect x="-3" y="-6" width="6" height="16" rx="2" fill="url(#ta-weight)" />
+          <path d="M-7 -6 Q0 -1 7 -6" fill="none" stroke="#2a2a30" strokeWidth="3.4" strokeLinecap="round" />
         </g>
-        <circle cx="84" cy="36" r="20" fill="url(#arm-base)" />
-        <circle cx="84" cy="36" r="7" fill="#3a3a42" />
+
+        {/* Plinth: the brushed base the arm pivots on */}
+        <circle cx="84" cy="36" r="25" fill="#16161a" opacity=".55" />
+        <circle cx="84" cy="36" r="23" fill="url(#ta-plinth)" />
+        <circle cx="84" cy="36" r="23" fill="none" stroke="#ffffff" strokeOpacity=".35" strokeWidth=".8" />
+        <circle cx="84" cy="36" r="18.5" fill="none" stroke="#2c2c32" strokeOpacity=".35" strokeWidth=".6" />
+        <circle cx="84" cy="36" r="15.5" fill="none" stroke="#ffffff" strokeOpacity=".18" strokeWidth=".6" />
+
+        <g ref={armRef} className="tonearm-swing">
+          {/* Counterweight behind the pivot, with machined ribs */}
+          <rect x="81" y="6" width="6" height="22" rx="1.5" fill="url(#ta-tube)" />
+          <rect x="72" y="-6" width="24" height="18" rx="4" fill="url(#ta-weight)" />
+          <g stroke="#1c1c21" strokeOpacity=".45" strokeWidth=".7">
+            <line x1="72.5" y1="-1" x2="95.5" y2="-1" />
+            <line x1="72.5" y1="3" x2="95.5" y2="3" />
+            <line x1="72.5" y1="7" x2="95.5" y2="7" />
+          </g>
+          <rect x="72" y="-6" width="24" height="18" rx="4" fill="none" stroke="#ffffff" strokeOpacity=".25" strokeWidth=".6" />
+
+          {/* The tube: dark edge, polished body, and a sharp specular line */}
+          <path d="M84 40 L84 206 Q84 233 62.5 250 L48.5 261" fill="none" stroke="#2a2a30" strokeWidth="8" strokeLinecap="round" />
+          <path d="M84 40 L84 206 Q84 233 62.5 250 L48.5 261" fill="none" stroke="url(#ta-tube)" strokeWidth="6.4" strokeLinecap="round" />
+          <path d="M82.6 44 L82.6 205 Q82.4 229 62 246" fill="none" stroke="#ffffff" strokeOpacity=".75" strokeWidth="1.1" strokeLinecap="round" />
+          {/* Collars where the tube meets the bearing and the headshell */}
+          <rect x="79.5" y="52" width="9" height="6" rx="1.5" fill="url(#ta-weight)" />
+          <rect x="79.5" y="190" width="9" height="5" rx="1.5" fill="url(#ta-weight)" opacity=".9" />
+
+          {/* Headshell with a finger lift, then the cartridge and stylus */}
+          <g transform="rotate(-36 43 273)">
+            <path d="M33 255 L53 255 L54.5 283 L31.5 283 Z" fill="url(#ta-shell)" stroke="#6e6e77" strokeWidth=".7" />
+            <path d="M53.5 260 Q63 258 64 248" fill="none" stroke="url(#ta-weight)" strokeWidth="2.6" strokeLinecap="round" />
+            <rect x="35.5" y="270" width="15" height="17" rx="2" fill="#151518" />
+            <rect x="35.5" y="270" width="15" height="3" rx="1" fill="var(--accent, #ff3b5c)" opacity=".9" />
+            <path d="M41.5 287 L44.5 287 L43 292 Z" fill="#c9c9d1" />
+          </g>
+        </g>
+
+        {/* Bearing housing and cap sit on top of the arm's root */}
+        <circle cx="84" cy="36" r="11" fill="url(#ta-bearing)" />
+        <circle cx="84" cy="36" r="11" fill="none" stroke="#ffffff" strokeOpacity=".2" strokeWidth=".6" />
+        <circle cx="84" cy="36" r="5.5" fill="url(#ta-cap)" />
       </svg>
     </div>
   )
