@@ -1,0 +1,626 @@
+/* =========================================================
+   v5: Spindle brand, cursor, search stage, covers, intro
+   ========================================================= */
+
+/* ---------- Brand ---------- */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px 16px;
+}
+.logo {
+  flex: none;
+  overflow: visible;
+}
+.logo-disc {
+  transform-box: view-box;
+  transform-origin: 15px 17px;
+}
+.logo.is-spinning .logo-disc {
+  animation: spin 1.8s linear infinite;
+}
+.wordmark {
+  display: inline-flex;
+  align-items: baseline;
+  font-family: var(--display);
+  font-size: 25px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variation-settings: 'wdth' 112;
+}
+.wm-i {
+  position: relative;
+  display: inline-block;
+}
+/* The i's dot is a tiny record. */
+.wm-dot {
+  position: absolute;
+  left: 50%;
+  top: -0.02em;
+  width: 0.34em;
+  height: 0.34em;
+  translate: -50% 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, #f6f3ec 0 12%, var(--accent) 13% 42%, transparent 43%),
+    repeating-radial-gradient(circle, #131218 0 1px, #24222b 1.4px 2px);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+.wordmark.is-playing .wm-dot {
+  animation: spin 1.8s linear infinite;
+}
+
+/* ---------- Cursor ---------- */
+html.has-cursor,
+html.has-cursor * {
+  cursor: none !important;
+}
+html.has-cursor input:not([type='range']),
+html.has-cursor textarea,
+html.has-cursor [contenteditable] {
+  cursor: text !important;
+}
+.cur-dot,
+.cur-ring {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 600;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+html.cursor-on .cur-dot,
+html.cursor-on .cur-ring {
+  opacity: 1;
+}
+.cur-dot {
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  border-radius: 50%;
+  background: #fff;
+  mix-blend-mode: difference;
+  transition:
+    opacity 0.2s,
+    scale 0.2s var(--ease);
+}
+.cur-ring {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin: -18px 0 0 -18px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  transition:
+    opacity 0.2s,
+    width 0.35s var(--ease),
+    height 0.35s var(--ease),
+    margin 0.35s var(--ease),
+    background 0.25s,
+    border-color 0.25s,
+    box-shadow 0.25s,
+    scale 0.18s var(--ease);
+}
+html.cursor-down .cur-ring {
+  scale: 0.86;
+}
+.cur-glyph {
+  grid-area: 1 / 1;
+  width: 22px;
+  height: 22px;
+  opacity: 0;
+  scale: 0.4;
+  transition:
+    opacity 0.2s,
+    scale 0.3s var(--ease);
+}
+.cur-play {
+  color: #fff;
+  margin-left: 3px;
+}
+.cur-open {
+  color: #111;
+}
+.cur-ring[data-mode='link'] {
+  width: 48px;
+  height: 48px;
+  margin: -24px 0 0 -24px;
+  border-color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.05);
+}
+.cur-ring[data-mode='play'],
+.cur-ring[data-mode='open'] {
+  width: 68px;
+  height: 68px;
+  margin: -34px 0 0 -34px;
+  border-color: transparent;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+}
+.cur-ring[data-mode='play'] {
+  background: var(--accent);
+}
+.cur-ring[data-mode='open'] {
+  background: rgba(246, 243, 236, 0.95);
+}
+.cur-ring[data-mode='play'] .cur-play,
+.cur-ring[data-mode='open'] .cur-open {
+  opacity: 1;
+  scale: 1;
+}
+.cur-dot[data-mode='play'],
+.cur-dot[data-mode='open'],
+.cur-dot[data-mode='text'],
+.cur-dot[data-mode='link'] {
+  scale: 0;
+}
+.cur-ring[data-mode='text'] {
+  opacity: 0 !important;
+}
+.cur-ring[data-mode='drag'] {
+  width: 26px;
+  height: 26px;
+  margin: -13px 0 0 -13px;
+  border-color: var(--accent);
+}
+/* The old in-tile play button is redundant under the cursor's own play glyph. */
+html.has-cursor .tile-play:not(.is-on) {
+  opacity: 0 !important;
+}
+
+/* ---------- Sidebar search launcher ---------- */
+.side-search {
+  position: relative;
+}
+.side-search input {
+  cursor: none;
+}
+.side-kbd,
+.search-kbd {
+  display: grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 5px;
+  font: inherit;
+  font-size: 11px;
+  color: var(--text-3);
+  box-shadow: inset 0 0 0 1px var(--hairline-strong);
+}
+.side-search.is-placeholder {
+  opacity: 0.45;
+}
+.side-search.is-placeholder span {
+  font-size: 13px;
+}
+
+/* ---------- Search stage ---------- */
+.search-page {
+  min-height: 100%;
+}
+.search-stage {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+}
+.search-page.is-idle .search-stage {
+  min-height: min(68vh, 640px);
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 30px;
+}
+.search-page.has-query .search-stage {
+  position: sticky;
+  top: -32px;
+  margin: -32px calc(var(--gutter) * -1) 8px;
+  padding: 24px var(--gutter) 14px;
+  background: linear-gradient(180deg, rgba(7, 6, 11, 0.85), rgba(7, 6, 11, 0.55) 70%, transparent);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+.search-hero {
+  margin: 0;
+  max-width: 13ch;
+  font-family: var(--display);
+  font-size: clamp(44px, 6.6vw, 104px);
+  font-weight: 800;
+  line-height: 0.88;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  font-variation-settings: 'wdth' 92;
+  text-wrap: balance;
+}
+.search-page .search-box {
+  max-width: none;
+  margin: 0;
+  background: rgba(20, 18, 28, 0.6);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+}
+.search-page.is-idle .search-box {
+  width: min(720px, 100%);
+  height: 68px;
+  padding: 0 14px 0 24px;
+  border-radius: 999px;
+  box-shadow:
+    inset 0 0 0 1px var(--hairline-strong),
+    0 20px 60px -20px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+.search-page.is-idle .search-box input {
+  font-size: 21px;
+}
+.search-page.has-query .search-box {
+  width: min(680px, 100%);
+  height: 50px;
+  border-radius: 14px;
+}
+.search-page .search-box:focus-within {
+  box-shadow:
+    inset 0 0 0 1.5px var(--accent),
+    0 20px 60px -24px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+.search-icon {
+  display: grid;
+  place-items: center;
+}
+.search-page.has-query .search-kbd {
+  display: none;
+}
+.search-sugg {
+  width: min(720px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+.sugg-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sugg-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-3);
+}
+.sugg-head span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.sugg-head button {
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+.sugg-head button:hover {
+  color: var(--text);
+}
+.sugg-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+.chip-x {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  font-size: 13px;
+  font-weight: 500;
+}
+.chip-x button:first-child {
+  padding: 0 4px 0 14px;
+  height: 100%;
+}
+.chip-x-del {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 100%;
+  color: var(--text-3);
+}
+.chip-x:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+.chip-x-del:hover {
+  color: var(--text);
+}
+.search-results {
+  position: relative;
+  z-index: 1;
+}
+.top-result .art {
+  width: 120px;
+}
+
+/* Staggered entrance used by search results and suggestion chips */
+.rise {
+  animation: rise 0.6s var(--ease) both;
+  animation-delay: calc(var(--i, 0) * 55ms);
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+/* ---------- Playlist covers ---------- */
+.cover-edit {
+  position: relative;
+  border-radius: inherit;
+}
+.cover-edit-veil {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(7, 6, 11, 0.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+.cover-edit:hover .cover-edit-veil,
+.cover-edit:focus-within .cover-edit-veil,
+.cover-edit.is-over .cover-edit-veil {
+  opacity: 1;
+}
+.cover-edit.is-over {
+  outline: 2px dashed var(--accent);
+  outline-offset: 4px;
+}
+.cover-edit.is-busy .cover-edit-veil {
+  opacity: 1;
+  pointer-events: none;
+}
+.cover-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 999px;
+  font-weight: 650;
+  color: #111;
+  background: #f6f3ec;
+  transition: transform 0.25s var(--ease);
+}
+.cover-edit-btn:hover {
+  transform: scale(1.04);
+}
+.cover-edit-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+}
+.cover-edit-link:hover {
+  text-decoration: underline;
+}
+.cover-edit-hint {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+}
+.side-pl-cover {
+  width: 26px !important;
+  height: 26px;
+  flex: none;
+  border-radius: 5px !important;
+}
+.side-pl-cover.pl-empty svg {
+  width: 12px;
+  height: 12px;
+}
+.side-pl-cover.pl-mosaic img {
+  min-width: 0;
+}
+
+/* ---------- Intro ---------- */
+.intro {
+  position: fixed;
+  inset: 0;
+  z-index: 700;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 34px;
+  background: radial-gradient(60% 60% at 50% 45%, #1a1424, #07060b 70%);
+}
+.intro-deck {
+  position: relative;
+  width: 190px;
+  height: 190px;
+}
+.intro-disc {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    conic-gradient(from 20deg, transparent 0 40deg, rgba(255, 255, 255, 0.12) 55deg, transparent 75deg 220deg, rgba(255, 255, 255, 0.08) 235deg, transparent 255deg),
+    repeating-radial-gradient(circle, #121116 0 1.2px, #1d1b23 1.6px 2.8px);
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+.intro-label {
+  position: absolute;
+  inset: 33%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #f6f3ec 0 9%, var(--accent) 10%);
+}
+.intro-arm {
+  position: absolute;
+  right: -40px;
+  top: -24px;
+  width: 52px;
+  height: 156px;
+  transform-origin: 75% 7%;
+  filter: drop-shadow(-6px 10px 8px rgba(0, 0, 0, 0.5));
+}
+.intro-word {
+  display: flex;
+  overflow: hidden;
+  padding: 0 0.05em 0.08em;
+  font-family: var(--display);
+  font-size: clamp(48px, 7vw, 84px);
+  font-weight: 800;
+  line-height: 1;
+  font-variation-settings: 'wdth' 112;
+}
+.intro-word span {
+  display: inline-block;
+}
+
+@media (max-width: 860px) {
+  .search-page.is-idle .search-stage {
+    min-height: 56vh;
+    gap: 22px;
+  }
+  .search-page.is-idle .search-box {
+    height: 58px;
+  }
+  .search-page.is-idle .search-box input {
+    font-size: 18px;
+  }
+  .search-page.has-query .search-stage {
+    top: -20px;
+    margin-top: -20px;
+  }
+  .search-kbd {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise {
+    animation: none;
+  }
+  .logo.is-spinning .logo-disc,
+  .wordmark.is-playing .wm-dot {
+    animation: none;
+  }
+}
+
+/* Playlist names are often long phrases; keep them inside the hero column. */
+.pl-name {
+  font-size: clamp(34px, 4.4vw, 76px);
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.pl-hero-text {
+  min-width: 0;
+}
+
+/* ---------- Turntable: hand cursor, needle, scrubbing ---------- */
+/* The needle is eased frame by frame in Deck.tsx; a CSS transition would fight it. */
+.tonearm-swing,
+.tonearm-swing.is-on {
+  transition: none;
+}
+.deck.is-tappable {
+  touch-action: none;
+  user-select: none;
+}
+/* Over the turntable the ring and dot step aside for a drawn hand. */
+.cur-ring[data-mode='hand'],
+.cur-ring[data-mode='grab'] {
+  opacity: 0 !important;
+}
+.cur-dot[data-mode='hand'],
+.cur-dot[data-mode='grab'] {
+  scale: 0;
+}
+.cur-hand-wrap {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 601;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.cur-hand-art {
+  position: absolute;
+  opacity: 0;
+  scale: 0.85;
+  transform-origin: 40% 15%;
+  filter: drop-shadow(-6px 14px 10px rgba(0, 0, 0, 0.45)) drop-shadow(0 2px 2px rgba(0, 0, 0, 0.25));
+  transition:
+    opacity 0.18s,
+    scale 0.25s var(--ease),
+    filter 0.25s var(--ease);
+}
+.cur-hand-wrap[data-mode='hand'] .is-open,
+.cur-hand-wrap[data-mode='grab'] .is-grab {
+  opacity: 1;
+  scale: 1;
+}
+/* Pressing down: the shadow tightens as the hand meets the vinyl. */
+.cur-hand-wrap[data-mode='grab'] .is-grab {
+  filter: drop-shadow(-2px 5px 4px rgba(0, 0, 0, 0.5));
+}
+html:not(.cursor-on) .cur-hand-wrap {
+  opacity: 0;
+}
+.scrub-bubble {
+  position: absolute;
+  z-index: 4;
+  /* Over the half of the record that's out of the sleeve; the sleeve covers the rest. */
+  left: 76%;
+  top: -16%;
+  translate: -50% 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: rgba(20, 18, 28, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow:
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.16),
+    0 12px 30px rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.2s,
+    translate 0.25s var(--ease);
+}
+.scrub-bubble[data-show='true'] {
+  opacity: 1;
+  translate: -50% 0;
+}
+.scrub-bubble b {
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  font-variation-settings: 'wdth' 90;
+}
+.scrub-bubble small {
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.65);
+}
