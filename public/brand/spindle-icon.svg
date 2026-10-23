@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- Spindle app icon: a record seen from above, the needle resting in the outer groove. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#241a35" />
+      <stop offset="0.55" stop-color="#110d19" />
+      <stop offset="1" stop-color="#07060b" />
+    </linearGradient>
+    <radialGradient id="glowPink" cx="0.18" cy="0.12" r="0.75">
+      <stop offset="0" stop-color="#ff3b5c" stop-opacity="0.55" />
+      <stop offset="1" stop-color="#ff3b5c" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="glowViolet" cx="0.92" cy="0.95" r="0.7">
+      <stop offset="0" stop-color="#7a5cff" stop-opacity="0.5" />
+      <stop offset="1" stop-color="#7a5cff" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="disc" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#2b2733" />
+      <stop offset="0.62" stop-color="#16141b" />
+      <stop offset="1" stop-color="#0a090d" />
+    </radialGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.5" />
+      <stop offset="0.45" stop-color="#ffffff" stop-opacity="0" />
+    </linearGradient>
+    <linearGradient id="label" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff5f7d" />
+      <stop offset="0.55" stop-color="#ff3b5c" />
+      <stop offset="1" stop-color="#ff8a5c" />
+    </linearGradient>
+    <linearGradient id="metal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff" />
+      <stop offset="0.5" stop-color="#e6e1d8" />
+      <stop offset="1" stop-color="#a9a49c" />
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="26" stdDeviation="34" flood-color="#000" flood-opacity="0.55" />
+    </filter>
+    <filter id="armShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="-10" dy="16" stdDeviation="12" flood-color="#000" flood-opacity="0.5" />
+    </filter>
+    <clipPath id="tile"><rect width="1024" height="1024" rx="232" /></clipPath>
+  </defs>
+
+  <g clip-path="url(#tile)">
+    <rect width="1024" height="1024" fill="url(#bg)" />
+    <rect width="1024" height="1024" fill="url(#glowPink)" />
+    <rect width="1024" height="1024" fill="url(#glowViolet)" />
+    <rect x="1.5" y="1.5" width="1021" height="1021" rx="230.5" fill="none" stroke="#ffffff" stroke-opacity="0.1" stroke-width="3" />
+  </g>
+
+  <!-- Record -->
+  <g filter="url(#shadow)">
+    <circle cx="470" cy="560" r="318" fill="url(#disc)" />
+  </g>
+  <g fill="none" stroke="#ffffff">
+    <circle cx="470" cy="560" r="290" stroke-opacity="0.07" stroke-width="3" />
+    <circle cx="470" cy="560" r="262" stroke-opacity="0.06" stroke-width="2" />
+    <circle cx="470" cy="560" r="236" stroke-opacity="0.08" stroke-width="3" />
+    <circle cx="470" cy="560" r="208" stroke-opacity="0.05" stroke-width="2" />
+    <circle cx="470" cy="560" r="182" stroke-opacity="0.07" stroke-width="3" />
+    <circle cx="470" cy="560" r="156" stroke-opacity="0.05" stroke-width="2" />
+  </g>
+  <!-- Light catching the grooves -->
+  <path d="M232 352 A318 318 0 0 1 452 243" fill="none" stroke="url(#sheen)" stroke-width="30" stroke-linecap="round" />
+  <path d="M286 410 A250 250 0 0 1 404 323" fill="none" stroke="#ffffff" stroke-opacity="0.16" stroke-width="10" stroke-linecap="round" />
+  <!-- Label and spindle -->
+  <circle cx="470" cy="560" r="112" fill="url(#label)" />
+  <circle cx="470" cy="560" r="112" fill="none" stroke="#ffffff" stroke-opacity="0.22" stroke-width="3" />
+  <circle cx="470" cy="560" r="72" fill="none" stroke="#ffffff" stroke-opacity="0.14" stroke-width="3" />
+  <circle cx="470" cy="560" r="26" fill="#f6f3ec" />
+
+  <!-- Tonearm: pivot top right, tube down, headshell resting on the outer groove -->
+  <g filter="url(#armShadow)">
+    <circle cx="806" cy="214" r="74" fill="#1b1822" />
+    <circle cx="806" cy="214" r="74" fill="none" stroke="#ffffff" stroke-opacity="0.12" stroke-width="3" />
+    <path d="M806 214 L806 560 L700 664" fill="none" stroke="url(#metal)" stroke-width="30" stroke-linecap="round" stroke-linejoin="round" />
+    <circle cx="806" cy="214" r="44" fill="url(#metal)" />
+    <circle cx="806" cy="214" r="16" fill="#8b867f" />
+    <g transform="rotate(-45 676 688)">
+      <rect x="640" y="664" width="72" height="48" rx="10" fill="url(#metal)" />
+      <rect x="652" y="700" width="48" height="14" rx="4" fill="#ff3b5c" />
+    </g>
+  </g>
+</svg>

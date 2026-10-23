@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Small-size Spindle icon: same record and arm, fewer details so it stays crisp at 16–32px. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3a1d38" />
+      <stop offset="0.6" stop-color="#140f1d" />
+      <stop offset="1" stop-color="#2a1f5c" />
+    </linearGradient>
+    <linearGradient id="label" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff5f7d" />
+      <stop offset="1" stop-color="#ff3b5c" />
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="15" fill="url(#bg)" />
+  <circle cx="28.5" cy="35" r="21" fill="#0c0b10" />
+  <circle cx="28.5" cy="35" r="15" fill="none" stroke="#fff" stroke-opacity=".12" stroke-width="1.2" />
+  <circle cx="28.5" cy="35" r="8" fill="url(#label)" />
+  <circle cx="28.5" cy="35" r="2.2" fill="#f6f3ec" />
+  <path d="M50.5 12 V35 L43.5 42" fill="none" stroke="#efebe4" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="50.5" cy="12" r="4.2" fill="#efebe4" />
+</svg>

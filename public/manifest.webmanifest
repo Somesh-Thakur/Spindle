@@ -1,0 +1,14 @@
+{
+  "name": "Spindle",
+  "short_name": "Spindle",
+  "description": "Every record you love, on every screen.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#07060b",
+  "theme_color": "#07060b",
+  "icons": [
+    { "src": "/brand/spindle-icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/brand/spindle-icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/brand/spindle-icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
