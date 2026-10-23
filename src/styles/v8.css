@@ -489,3 +489,10 @@
 .coll-actions .btn {
   white-space: nowrap;
 }
+
+/* Song menus float above everything (see TrackMenu), including the full player. */
+.menu.menu-floating {
+  position: fixed;
+  top: auto;
+  z-index: 90;
+}

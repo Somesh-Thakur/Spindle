@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { ChevronLeft, ChevronRight, Disc3, Heart, ListEnd, ListMusic, ListStart, MoreHorizontal, Play, Plus, User, Share } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { fmtTime } from '../lib/format'
 import type { Track } from '../lib/types'
@@ -77,25 +78,70 @@ export function TrackRow({ track, rank, label, onPlay, showAlbum = true, showArt
   )
 }
 
+const MENU_GAP = 6
+
+/**
+ * Where the menu goes on screen: under its button, right edges lined up, and
+ * flipped above when there's no room below (or when the caller asks, as the
+ * full player does with `menu-up`).
+ */
+function placeMenu(button: DOMRect, menu: { width: number; height: number }, preferUp: boolean) {
+  const right = Math.max(8, innerWidth - button.right)
+  const below = innerHeight - button.bottom - MENU_GAP
+  const up = preferUp ? button.top - MENU_GAP >= menu.height || below < menu.height : below < menu.height && button.top > below
+  return up
+    ? { right, bottom: innerHeight - button.top + MENU_GAP, transformOrigin: 'bottom right' }
+    : { right, top: button.bottom + MENU_GAP, transformOrigin: 'top right' }
+}
+
 export function TrackMenu({ track, className = '' }: { track: Track; className?: string }) {
   const [open, setOpen] = useState(false)
   const [view, setView] = useState<'main' | 'playlists'>('main')
+  const [pos, setPos] = useState<CSSProperties>({ visibility: 'hidden' })
   const playlists = usePlayer((s) => s.playlists)
   const ref = useRef<HTMLDivElement>(null)
+  const button = useRef<HTMLButtonElement>(null)
+  const menu = useRef<HTMLDivElement>(null)
   const nav = useNavigate()
   const { playNext, addToQueue, setFull } = usePlayer.getState()
 
+  const place = useCallback(() => {
+    if (!button.current || !menu.current) return
+    const b = button.current.getBoundingClientRect()
+    // Scrolled out of sight: nothing left to point at.
+    if (b.bottom < 0 || b.top > innerHeight) return setOpen(false)
+    const m = menu.current
+    setPos(placeMenu(b, { width: m.offsetWidth, height: m.offsetHeight }, className.includes('menu-up')))
+  }, [className])
+
   useEffect(() => {
     if (!open) return
-    const close = (e: MouseEvent) => !ref.current?.contains(e.target as Node) && setOpen(false)
+    const inside = (n: Node) => ref.current?.contains(n) || menu.current?.contains(n)
+    const close = (e: MouseEvent) => !inside(e.target as Node) && setOpen(false)
     const esc = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
+    // The menu floats above the page, so it follows its button when the list scrolls.
+    let raf = 0
+    const follow = () => {
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(place)
+    }
     window.addEventListener('pointerdown', close)
     window.addEventListener('keydown', esc)
+    window.addEventListener('scroll', follow, true)
+    window.addEventListener('resize', follow)
     return () => {
+      cancelAnimationFrame(raf)
       window.removeEventListener('pointerdown', close)
       window.removeEventListener('keydown', esc)
+      window.removeEventListener('scroll', follow, true)
+      window.removeEventListener('resize', follow)
     }
-  }, [open])
+  }, [open, place])
+
+  // Measure once it's drawn (the playlist view is taller), then place it.
+  useLayoutEffect(() => {
+    if (open) place()
+  }, [open, view, playlists.length, place])
 
   const go = (path: string) => {
     setOpen(false)
@@ -106,64 +152,72 @@ export function TrackMenu({ track, className = '' }: { track: Track; className?:
   return (
     <div className={`menu-wrap ${className}`} ref={ref}>
       <button
+        ref={button}
         className="icon-btn"
         aria-label="More options"
         aria-expanded={open}
         onClick={(e) => {
           e.stopPropagation()
           setView('main')
+          setPos({ visibility: 'hidden' })
           setOpen((o) => !o)
         }}
       >
         <MoreHorizontal size={18} />
       </button>
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            className="menu glass"
-            role="menu"
-            initial={{ opacity: 0, scale: 0.97, y: -4 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.98 }}
-            transition={{ duration: 0.14 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {view === 'playlists' ? (
-              <PlaylistChooser
-                track={track}
-                playlists={playlists}
-                onBack={() => setView('main')}
-                onDone={() => setOpen(false)}
-              />
-            ) : (
-              <>
-            <button role="menuitem" onClick={() => (playNext(track), setOpen(false), toast('Playing next'))}>
-              <ListStart size={16} /> Play next
-            </button>
-            <button role="menuitem" onClick={() => (addToQueue(track), setOpen(false), toast('Added to queue'))}>
-              <ListEnd size={16} /> Add to queue
-            </button>
-            <button role="menuitem" onClick={() => setView('playlists')} aria-haspopup="menu">
-              <ListMusic size={16} /> Add to playlist <ChevronRight size={14} className="menu-more" />
-            </button>
-            <button role="menuitem" onClick={() => (setOpen(false), openShare(trackShare(track)))}>
-              <Share size={16} /> Share
-            </button>
-            {track.source === 'itunes' && track.albumId && (
-              <button role="menuitem" onClick={() => go(`/album/${track.albumId}`)}>
-                <Disc3 size={16} /> Go to album
-              </button>
-            )}
-            {track.source === 'itunes' && track.artistId && (
-              <button role="menuitem" onClick={() => go(`/artist/${track.artistId}`)}>
-                <User size={16} /> Go to artist
-              </button>
-            )}
-              </>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Drawn at the top of the page: rows below this one are their own layers and would cover it. */}
+      {createPortal(
+        <AnimatePresence>
+          {open && (
+            <motion.div
+              ref={menu}
+              className="menu menu-floating glass"
+              role="menu"
+              style={pos}
+              initial={{ opacity: 0, scale: 0.97, y: -4 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.14 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {view === 'playlists' ? (
+                <PlaylistChooser
+                  track={track}
+                  playlists={playlists}
+                  onBack={() => setView('main')}
+                  onDone={() => setOpen(false)}
+                />
+              ) : (
+                <>
+                  <button role="menuitem" onClick={() => (playNext(track), setOpen(false), toast('Playing next'))}>
+                    <ListStart size={16} /> Play next
+                  </button>
+                  <button role="menuitem" onClick={() => (addToQueue(track), setOpen(false), toast('Added to queue'))}>
+                    <ListEnd size={16} /> Add to queue
+                  </button>
+                  <button role="menuitem" onClick={() => setView('playlists')} aria-haspopup="menu">
+                    <ListMusic size={16} /> Add to playlist <ChevronRight size={14} className="menu-more" />
+                  </button>
+                  <button role="menuitem" onClick={() => (setOpen(false), openShare(trackShare(track)))}>
+                    <Share size={16} /> Share
+                  </button>
+                  {track.source === 'itunes' && track.albumId && (
+                    <button role="menuitem" onClick={() => go(`/album/${track.albumId}`)}>
+                      <Disc3 size={16} /> Go to album
+                    </button>
+                  )}
+                  {track.source === 'itunes' && track.artistId && (
+                    <button role="menuitem" onClick={() => go(`/artist/${track.artistId}`)}>
+                      <User size={16} /> Go to artist
+                    </button>
+                  )}
+                </>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body,
+      )}
     </div>
   )
 }
