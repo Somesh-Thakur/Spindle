@@ -36,6 +36,12 @@ export function friendly(e: unknown) {
 
 const RESEND_AFTER = 45
 
+/** Sign-in buttons to show, e.g. VITE_AUTH_PROVIDERS=google,github, once each is set up in Supabase. */
+const PROVIDERS = ((import.meta.env.VITE_AUTH_PROVIDERS as string | undefined) ?? '')
+  .split(',')
+  .map((p) => p.trim())
+  .filter((p): p is Provider => p === 'google' || p === 'github')
+
 function GoogleMark() {
   return (
     <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
@@ -248,20 +254,28 @@ export function AuthGate() {
                 <h2 className="gate-h">{mode === 'up' ? 'Create your account' : 'Welcome back'}</h2>
                 <p className="gate-p">{mode === 'up' ? 'It takes a few seconds.' : 'Sign in to pick up where you left off.'}</p>
 
-                <div className="gate-providers">
-                  <button className="gate-provider" disabled={working} onClick={() => run('google', () => signInWith('google'))}>
-                    {busy === 'google' ? <Loader2 className="spin" size={18} /> : <GoogleMark />}
-                    Continue with Google
-                  </button>
-                  <button className="gate-provider" disabled={working} onClick={() => run('github', () => signInWith('github'))}>
-                    {busy === 'github' ? <Loader2 className="spin" size={18} /> : <GitHubMark />}
-                    Continue with GitHub
-                  </button>
-                </div>
+                {PROVIDERS.length > 0 && (
+                  <>
+                    <div className="gate-providers">
+                      {PROVIDERS.includes('google') && (
+                        <button className="gate-provider" disabled={working} onClick={() => run('google', () => signInWith('google'))}>
+                          {busy === 'google' ? <Loader2 className="spin" size={18} /> : <GoogleMark />}
+                          Continue with Google
+                        </button>
+                      )}
+                      {PROVIDERS.includes('github') && (
+                        <button className="gate-provider" disabled={working} onClick={() => run('github', () => signInWith('github'))}>
+                          {busy === 'github' ? <Loader2 className="spin" size={18} /> : <GitHubMark />}
+                          Continue with GitHub
+                        </button>
+                      )}
+                    </div>
 
-                <div className="gate-or">
-                  <span>or with email</span>
-                </div>
+                    <div className="gate-or">
+                      <span>or with email</span>
+                    </div>
+                  </>
+                )}
 
                 <form className="gate-form" onSubmit={submit}>
                   <AnimatePresence initial={false}>
