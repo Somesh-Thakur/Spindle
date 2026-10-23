@@ -86,3 +86,55 @@ $$;
 
 revoke execute on function public.delete_account() from public, anon;
 grant execute on function public.delete_account() to authenticated;
+
+-- ---------- Sharing ----------
+-- A shared song, playlist or album: a public snapshot anyone with the link can open.
+-- One link per item per owner, so sharing the same thing again keeps the same link.
+create table if not exists public.shares (
+  code text primary key,
+  owner uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  owner_name text,
+  kind text not null check (kind in ('track', 'playlist', 'album')),
+  item_key text not null,
+  title text not null,
+  subtitle text,
+  image text,
+  payload jsonb not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (owner, kind, item_key)
+);
+
+alter table public.shares enable row level security;
+
+drop policy if exists "shares: anyone with the link" on public.shares;
+create policy "shares: anyone with the link" on public.shares for select using (true);
+drop policy if exists "shares: owner inserts" on public.shares;
+create policy "shares: owner inserts" on public.shares for insert with check (auth.uid() = owner);
+drop policy if exists "shares: owner updates" on public.shares;
+create policy "shares: owner updates" on public.shares for update using (auth.uid() = owner) with check (auth.uid() = owner);
+drop policy if exists "shares: owner deletes" on public.shares;
+create policy "shares: owner deletes" on public.shares for delete using (auth.uid() = owner);
+
+-- Create or refresh the link for an item and return its code.
+create or replace function public.share_item(
+  p_kind text, p_item_key text, p_title text, p_subtitle text, p_image text, p_payload jsonb, p_owner_name text
+) returns text
+language plpgsql security invoker as $$
+declare
+  result text;
+begin
+  if auth.uid() is null then
+    raise exception 'not signed in';
+  end if;
+  insert into public.shares as s (code, owner, owner_name, kind, item_key, title, subtitle, image, payload)
+  values (substr(replace(gen_random_uuid()::text, '-', ''), 1, 10), auth.uid(), p_owner_name, p_kind, p_item_key, p_title, p_subtitle, p_image, p_payload)
+  on conflict (owner, kind, item_key) do update
+    set title = excluded.title, subtitle = excluded.subtitle, image = excluded.image,
+        payload = excluded.payload, owner_name = excluded.owner_name, updated_at = now()
+  returning s.code into result;
+  return result;
+end
+$$;
+
+grant execute on function public.share_item(text, text, text, text, text, jsonb, text) to authenticated;

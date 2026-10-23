@@ -1,8 +1,9 @@
 import { AnimatePresence, motion, useDragControls } from 'framer-motion'
-import { ChevronDown, Disc3, Eye, EyeOff, Heart, ListMusic, Mic2, Captions, Video } from 'lucide-react'
+import { ChevronDown, Disc3, Eye, EyeOff, Heart, ListMusic, Mic2, Captions, Video, Share } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { trackArt, year } from '../lib/format'
 import { useIsPhone } from '../lib/useIsPhone'
+import { openShare, trackShare } from '../lib/share'
 import { useCurrent, usePlayer } from '../store/player'
 import { Scrubber, TransportControls, VolumeControl } from './Controls'
 import { Deck } from './Deck'
@@ -147,6 +148,9 @@ function Sheet() {
                   aria-pressed={liked}
                 >
                   <Heart size={20} fill={liked ? 'currentColor' : 'none'} />
+                </button>
+                <button className="ctl ctl-minor" onClick={() => openShare(trackShare(track))} aria-label="Share song">
+                  <Share size={19} />
                 </button>
                 <TrackMenu track={track} className="menu-up" />
               </div>

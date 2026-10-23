@@ -35,7 +35,25 @@ function play(tracks: Track[], shuffle: boolean) {
 }
 
 /** Album hero: the cover tilts toward the pointer and its record slides out. */
-export function SleeveHero({ art, title, byline, meta, tracks }: { art: string; title: string; byline: ReactNode; meta: string; tracks: Track[] }) {
+export function SleeveHero({
+  art,
+  title,
+  byline,
+  meta,
+  tracks,
+  actions,
+  kind = 'Album',
+}: {
+  art: string
+  title: string
+  byline: ReactNode
+  meta: string
+  tracks: Track[]
+  /** Extra buttons after Play and Shuffle. */
+  actions?: ReactNode
+  /** Label above the title. */
+  kind?: string
+}) {
   const ref = useRef<HTMLDivElement>(null)
   const pal = usePalette(art)
   const current = useCurrent()
@@ -73,7 +91,7 @@ export function SleeveHero({ art, title, byline, meta, tracks }: { art: string; 
         </motion.div>
       </div>
       <div className="sleeve-text">
-        <div className="sleeve-kind">Album</div>
+        <div className="sleeve-kind">{kind}</div>
         <motion.h1
           className="sleeve-title"
           style={{ fontVariationSettings: `'wdth' ${widthFor(title)}, 'wght' 800` }}
@@ -92,6 +110,7 @@ export function SleeveHero({ art, title, byline, meta, tracks }: { art: string; 
           <button className="btn" onClick={() => play(tracks, true)} disabled={!tracks.length}>
             <Shuffle size={15} /> Shuffle
           </button>
+          {actions}
         </div>
       </div>
     </header>

@@ -1,6 +1,6 @@
 import { AnimatePresence, LayoutGroup, motion } from 'framer-motion'
-import { useEffect, useRef } from 'react'
-import { Route, Routes, useLocation } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { useShallow } from 'zustand/react/shallow'
 import { Ambient } from './components/Ambient'
 import { AuthGate } from './components/AuthGate'
@@ -11,6 +11,8 @@ import { FullPlayer } from './components/FullPlayer'
 import { Intro } from './components/Intro'
 import { LyricsEditor } from './components/LyricsEditor'
 import { MiniPlayer } from './components/MiniPlayer'
+import { PublicShare } from './components/PublicShare'
+import { ShareSheet } from './components/ShareSheet'
 import { Sidebar, TabBar } from './components/Nav'
 import { Toasts } from './components/Toast'
 import { VideoDock } from './components/VideoDock'
@@ -31,21 +33,47 @@ import { ImportPage } from './pages/Import'
 import { LibraryPage, PlaylistPage } from './pages/Playlists'
 import { BrowsePage } from './pages/Browse'
 import { Search } from './pages/Search'
+import { SharedPage } from './pages/Shared'
 import { ScrollRoot } from './lib/scroll'
+import { codeFromPath, rememberShare, takeRememberedShare } from './lib/share'
 import { useAccount } from './lib/sync'
 import { useCurrent, usePlayer } from './store/player'
+
+/** True when this browser has a saved sign-in, before Supabase has confirmed it. */
+const hadSession = (() => {
+  try {
+    return !!localStorage.getItem('aura:auth')
+  } catch {
+    return false
+  }
+})()
 
 export default function App() {
   const status = useAccount((s) => s.status)
   const customCursor = usePlayer((s) => s.customCursor)
+  // Opened from a share link (/s/<code>): people without an account get a public preview first.
+  const [linkCode] = useState(codeFromPath)
+  const [wantsIn, setWantsIn] = useState(false)
   // Spindle is members-only once accounts are switched on; 'off' is local development without Supabase.
-  if (status === 'loading' || status === 'out')
+  if (status === 'loading' || status === 'out') {
+    const showLink = linkCode && !wantsIn && !(status === 'loading' && hadSession)
     return (
       <>
-        <AuthGate />
+        {showLink ? (
+          <PublicShare
+            code={linkCode}
+            onSignIn={() => {
+              rememberShare(linkCode)
+              setWantsIn(true)
+            }}
+          />
+        ) : (
+          <AuthGate />
+        )}
         {customCursor && <Cursor />}
       </>
     )
+  }
   return <Shell />
 }
 
@@ -59,6 +87,16 @@ function Shell() {
   useEffect(() => {
     mainRef.current?.scrollTo({ top: 0 })
   }, [location.pathname])
+
+  // Arrived from a share link, or signed in from one: open what was shared.
+  const nav = useNavigate()
+  useEffect(() => {
+    const code = takeRememberedShare() ?? codeFromPath()
+    if (!code) return
+    history.replaceState(null, '', '/' + location.hash)
+    nav(`/shared/${code}`, { replace: true })
+    // Runs once, when the app first opens.
+  }, [])
 
   return (
     <LayoutGroup>
@@ -86,6 +124,7 @@ function Shell() {
               <Route path="/full" element={<FullTracksPage />} />
               <Route path="/library" element={<LibraryPage />} />
               <Route path="/import" element={<ImportPage />} />
+              <Route path="/shared/:code" element={<SharedPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/account" element={<SettingsPage />} />
               <Route path="/liked" element={<LikedPage />} />
@@ -106,6 +145,7 @@ function Shell() {
       <FullPlayer />
       <VideoDock />
       <LyricsEditor />
+      <ShareSheet />
       <Toasts />
       {customCursor && <Cursor />}
       {intro && <Intro />}

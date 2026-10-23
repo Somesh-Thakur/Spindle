@@ -11,6 +11,7 @@ import './styles/v4.css'
 import './styles/v5.css'
 import './styles/v6.css'
 import './styles/v7.css'
+import './styles/v8.css'
 
 // Dev-only handle for poking at player state from the console.
 if (import.meta.env.DEV) Object.assign(window, { __player: usePlayer })

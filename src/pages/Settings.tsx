@@ -6,6 +6,7 @@ import {
   Info,
   Keyboard,
   KeyRound,
+  Link2,
   Languages,
   Loader2,
   LogOut,
@@ -17,7 +18,7 @@ import {
   UserRound,
   Volume2,
 } from 'lucide-react'
-import { useMemo, useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
 import { COUNTRIES } from '../api/itunes'
 import { allUserLyrics, applyUserLyrics } from '../api/lyrics'
 import { friendly } from '../components/AuthGate'
@@ -25,6 +26,7 @@ import { Initials } from '../components/Avatar'
 import { KineticTitle } from '../components/Kinetic'
 import { toast } from '../components/Toast'
 import { cacheSize, clearCache } from '../lib/cache'
+import { deleteShare, myShares, shareUrl, type Share } from '../lib/share'
 import { changePassword, deleteAccount, displayName, signOut, syncAgain, updateName, useAccount } from '../lib/sync'
 import { usePlayer } from '../store/player'
 
@@ -32,6 +34,7 @@ const flag = (code: string) => `https://flagcdn.com/w40/${code}.png`
 
 const SECTIONS = [
   { id: 'account', label: 'Account', icon: UserRound },
+  { id: 'sharing', label: 'Shared links', icon: Link2 },
   { id: 'region', label: 'Region', icon: Languages },
   { id: 'playback', label: 'Playback', icon: Volume2 },
   { id: 'lyrics', label: 'Lyrics', icon: MonitorPlay },
@@ -98,6 +101,7 @@ export function SettingsPage() {
         </nav>
         <div className="set-body">
           <AccountSection />
+          <SharingSection />
           <RegionSection />
           <PlaybackSection />
           <LyricsSection />
@@ -303,6 +307,71 @@ function AccountSection() {
           </button>
         </div>
       </div>
+    </Section>
+  )
+}
+
+// ---------- Shared links ----------
+
+const SHARE_KIND = { track: 'Song', playlist: 'Playlist', album: 'Album' } as const
+
+function SharingSection() {
+  const status = useAccount((s) => s.status)
+  const [shares, setShares] = useState<Share[] | null>(null)
+  const [busy, setBusy] = useState('')
+
+  useEffect(() => {
+    if (status !== 'in') return
+    myShares().then(setShares, () => setShares([]))
+  }, [status])
+
+  if (status !== 'in') return null
+
+  const remove = async (code: string) => {
+    setBusy(code)
+    try {
+      await deleteShare(code)
+      setShares((list) => list?.filter((s) => s.code !== code) ?? null)
+      toast('Link turned off')
+    } catch (err) {
+      toast(friendly(err))
+    } finally {
+      setBusy('')
+    }
+  }
+  const copy = (code: string) => navigator.clipboard.writeText(shareUrl(code)).then(() => toast('Link copied'))
+
+  return (
+    <Section id="sharing" title="Shared links">
+      {shares === null ? (
+        <Row title="Loading your links…">
+          <Loader2 className="spin" size={18} />
+        </Row>
+      ) : !shares.length ? (
+        <Row title="No shared links yet" sub="Share a song, playlist or album from its ••• menu or Share button. Links you make show up here." >
+          <Link2 size={18} />
+        </Row>
+      ) : (
+        shares.map((s) => (
+          <div className="set-row" key={s.code}>
+            <div className="set-row-text">
+              <b>{s.title}</b>
+              <span>
+                {SHARE_KIND[s.kind]}
+                {s.subtitle ? ` · ${s.subtitle}` : ''} · {shareUrl(s.code).replace(/^https?:\/\//, '')}
+              </span>
+            </div>
+            <div className="set-row-control">
+              <button className="btn btn-ghost" onClick={() => copy(s.code)}>
+                Copy
+              </button>
+              <button className="btn btn-ghost" onClick={() => remove(s.code)} disabled={busy === s.code}>
+                {busy === s.code ? <Loader2 className="spin" size={15} /> : <Trash2 size={15} />} Turn off
+              </button>
+            </div>
+          </div>
+        ))
+      )}
     </Section>
   )
 }

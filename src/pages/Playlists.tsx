@@ -1,5 +1,5 @@
 import { motion, Reorder, useDragControls } from 'framer-motion'
-import { Download, GripVertical, Heart, Pencil, Play, Plus, Search, Settings, Shuffle, Trash2, X } from 'lucide-react'
+import { Download, GripVertical, Heart, Pencil, Play, Plus, Search, Settings, Share, Shuffle, Trash2, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Artwork } from '../components/Artwork'
@@ -11,7 +11,9 @@ import { Reveal } from '../components/Reveal'
 import { Shelf } from '../components/Shelf'
 import { SongTile } from '../components/Tiles'
 import { toast } from '../components/Toast'
+import { TrackMenu } from '../components/TrackRow'
 import { fmtTime } from '../lib/format'
+import { openShare, playlistShare } from '../lib/share'
 import { displayName, useAccount } from '../lib/sync'
 import type { Track } from '../lib/types'
 import { useCurrent, usePlayer } from '../store/player'
@@ -49,6 +51,7 @@ function DraggableRow({ track, playlistId, index, all }: { track: Track; playlis
       </div>
       <div className="row-album">{track.album}</div>
       <span className="row-time">{fmtTime(track.duration)}</span>
+      <TrackMenu track={track} />
       <button className="icon-btn" onClick={() => usePlayer.getState().removeFromPlaylist(playlistId, track.id)} aria-label={`Remove ${track.title}`}>
         <X size={16} />
       </button>
@@ -122,6 +125,9 @@ export function PlaylistPage() {
             </button>
             <button className="btn" onClick={() => play(p.tracks, true)} disabled={!p.tracks.length}>
               <Shuffle size={15} /> Shuffle
+            </button>
+            <button className="btn" onClick={() => openShare(playlistShare(p))} disabled={!p.tracks.length}>
+              <Share size={15} /> Share
             </button>
             <button
               className={`btn btn-ghost ${confirm ? 'is-danger' : ''}`}

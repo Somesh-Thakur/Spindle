@@ -1,3 +1,4 @@
 {
-  "cleanUrls": true
+  "cleanUrls": true,
+  "rewrites": [{ "source": "/s/:code", "destination": "/api/share?code=:code" }]
 }

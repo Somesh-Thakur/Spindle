@@ -1,9 +1,10 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { ChevronLeft, ChevronRight, Disc3, Heart, ListEnd, ListMusic, ListStart, MoreHorizontal, Play, Plus, User } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Disc3, Heart, ListEnd, ListMusic, ListStart, MoreHorizontal, Play, Plus, User, Share } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fmtTime } from '../lib/format'
 import type { Track } from '../lib/types'
+import { openShare, trackShare } from '../lib/share'
 import { useCurrent, usePlayer } from '../store/player'
 import { Artwork } from './Artwork'
 import { Equalizer } from './Equalizer'
@@ -144,6 +145,9 @@ export function TrackMenu({ track, className = '' }: { track: Track; className?:
             </button>
             <button role="menuitem" onClick={() => setView('playlists')} aria-haspopup="menu">
               <ListMusic size={16} /> Add to playlist <ChevronRight size={14} className="menu-more" />
+            </button>
+            <button role="menuitem" onClick={() => (setOpen(false), openShare(trackShare(track)))}>
+              <Share size={16} /> Share
             </button>
             {track.source === 'itunes' && track.albumId && (
               <button role="menuitem" onClick={() => go(`/album/${track.albumId}`)}>

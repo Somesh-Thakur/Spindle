@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Share } from 'lucide-react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { trending } from '../api/audius'
 import { album, artist, artistsTopSongs, COUNTRIES, topSongs } from '../api/itunes'
@@ -10,6 +11,7 @@ import { AlbumTile, SongTile } from '../components/Tiles'
 import { TrackRow } from '../components/TrackRow'
 import { AUDIUS_GENRES, ERAS, GENRES } from '../lib/catalog'
 import type { Track } from '../lib/types'
+import { albumShare, openShare } from '../lib/share'
 import { useAsync } from '../lib/useAsync'
 import { usePlayer } from '../store/player'
 
@@ -62,6 +64,11 @@ export function AlbumPage() {
           tracks={tracks}
           byline={<Link to={`/artist/${a.artistId}`}>{a.artist}</Link>}
           meta={[a.genre, a.year, tracks.length && `${tracks.length} songs, ${minutes(tracks)} minutes`].filter(Boolean).join(', ')}
+          actions={
+            <button className="btn" onClick={() => openShare(albumShare(a.id, a.title, a.artist, a.art, tracks))} disabled={!tracks.length}>
+              <Share size={15} /> Share
+            </button>
+          }
         />
       ) : (
         <div className="coll-head-skel skel" />
