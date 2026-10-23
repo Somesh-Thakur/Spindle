@@ -34,7 +34,7 @@ export function friendly(e: unknown) {
   return m
 }
 
-const RESEND_AFTER = 45
+const RESEND_AFTER = 60
 
 /** Sign-in buttons to show, e.g. VITE_AUTH_PROVIDERS=google,github, once each is set up in Supabase. */
 const PROVIDERS = ((import.meta.env.VITE_AUTH_PROVIDERS as string | undefined) ?? '')
@@ -406,7 +406,9 @@ export function AuthGate() {
             )}
           </AnimatePresence>
         )}
-        <p className="gate-legal">By continuing you agree to use Spindle for personal listening. Music streams from YouTube, iTunes and Audius.</p>
+        <p className="gate-legal">
+          By continuing you agree to the <a href="/terms">Terms</a> and <a href="/privacy">Privacy Policy</a>. Music streams from YouTube, iTunes and Audius.
+        </p>
       </motion.section>
     </div>
   )

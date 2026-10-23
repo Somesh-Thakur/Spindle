@@ -119,6 +119,16 @@ export function SettingsPage() {
                 Source
               </a>
             </Row>
+            <Row title="Privacy and terms" sub="What we store, and the rules for using Spindle.">
+              <div className="set-actions">
+                <a className="btn btn-ghost" href="/privacy" target="_blank" rel="noreferrer">
+                  Privacy
+                </a>
+                <a className="btn btn-ghost" href="/terms" target="_blank" rel="noreferrer">
+                  Terms
+                </a>
+              </div>
+            </Row>
           </Section>
         </div>
       </div>

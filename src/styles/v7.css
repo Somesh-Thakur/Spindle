@@ -897,3 +897,11 @@
     font-size: 22px;
   }
 }
+.gate-legal a {
+  color: var(--text-2);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.gate-legal a:hover {
+  color: var(--text);
+}
