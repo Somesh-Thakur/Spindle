@@ -1,8 +1,9 @@
 import { motion, Reorder, useDragControls } from 'framer-motion'
-import { Download, GripVertical, Heart, Pencil, Play, Plus, Search, Shuffle, Trash2, X } from 'lucide-react'
+import { Cloud, Download, GripVertical, Heart, Pencil, Play, Plus, Search, Shuffle, Trash2, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Artwork } from '../components/Artwork'
+import { Initials } from '../components/Avatar'
 import { CoverEditor } from '../components/CoverEditor'
 import { KineticTitle } from '../components/Kinetic'
 import { PlaylistCover } from '../components/PlaylistCover'
@@ -11,6 +12,7 @@ import { Shelf } from '../components/Shelf'
 import { SongTile } from '../components/Tiles'
 import { toast } from '../components/Toast'
 import { fmtTime } from '../lib/format'
+import { displayName, useAccount } from '../lib/sync'
 import type { Track } from '../lib/types'
 import { useCurrent, usePlayer } from '../store/player'
 
@@ -155,6 +157,24 @@ export function PlaylistPage() {
   )
 }
 
+/** Account entry on the Library page; phones have no sidebar to hold it. */
+function LibAccountButton() {
+  const status = useAccount((s) => s.status)
+  const user = useAccount((s) => s.user)
+  if (status === 'off' || status === 'loading') return null
+  if (status === 'in')
+    return (
+      <Link to="/account" className="lib-avatar" aria-label="Your account">
+        <Initials name={displayName(user)} size={34} />
+      </Link>
+    )
+  return (
+    <Link to="/account" className="btn">
+      <Cloud size={16} /> Sign in
+    </Link>
+  )
+}
+
 export function LibraryPage() {
   const liked = usePlayer((s) => s.liked)
   const playlists = usePlayer((s) => s.playlists)
@@ -169,6 +189,7 @@ export function LibraryPage() {
       <div className="sec-head lib-head">
         <KineticTitle as="h1">Library</KineticTitle>
         <div className="lib-actions">
+          <LibAccountButton />
           <Link to="/import" className="btn">
             <Download size={16} /> Import
           </Link>

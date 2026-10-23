@@ -74,6 +74,25 @@ Every song is then matched: Apple Music songs through the iTunes catalogue, ever
 
 Pages from these services can't be read from a browser directly, so a small function does it: `server/import.ts`. In development the Vite dev server runs it at `/api/import`; when deployed to Vercel, `api/import.ts` runs the same code as a free serverless function.
 
+## Accounts and sync
+
+Sign in on any device and your liked songs, playlists (with their covers), your own lyrics, region and queue follow you. Changes reach your other signed-in devices within a few seconds, and a device that's idle picks up the queue where you left off.
+
+It runs on a free [Supabase](https://supabase.com) project. Without one, the site works as before and keeps everything on the device.
+
+1. Create a project at supabase.com.
+2. In **SQL Editor**, paste [`supabase/schema.sql`](supabase/schema.sql) and run it.
+3. In **Authentication → Sign In / Providers → Email**, turn off **Confirm email**. Supabase's built-in mailer only reaches your own team's addresses, so leave it on only if you add your own SMTP.
+4. In **Authentication → URL Configuration**, set the Site URL to your deployed address.
+5. Put the project URL and the anon (publishable) key in `.env.local` for local work, and in the Vercel project's environment variables:
+
+```
+VITE_SUPABASE_URL=https://<project>.supabase.co
+VITE_SUPABASE_ANON_KEY=<anon key>
+```
+
+Both values are public by design. Row-level security keeps each library readable only by its owner. Each library is one JSON document that merges entry by entry, so the newest change wins and deletions carry over (`src/lib/sync.ts`).
+
 ## Karaoke
 
 Open it with the microphone button in the player bar or the full player.

@@ -24,6 +24,7 @@ import {
   RecentPage,
 } from './pages/Collections'
 import { Home } from './pages/Home'
+import { AccountPage } from './pages/Account'
 import { ImportPage } from './pages/Import'
 import { LibraryPage, PlaylistPage } from './pages/Playlists'
 import { BrowsePage } from './pages/Browse'
@@ -67,6 +68,7 @@ export default function App() {
               <Route path="/full" element={<FullTracksPage />} />
               <Route path="/library" element={<LibraryPage />} />
               <Route path="/import" element={<ImportPage />} />
+              <Route path="/account" element={<AccountPage />} />
               <Route path="/liked" element={<LikedPage />} />
               <Route path="/playlist/:id" element={<PlaylistPage />} />
               <Route path="/recent" element={<RecentPage />} />

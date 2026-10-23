@@ -161,6 +161,28 @@ export function deleteUserLyrics(id: string) {
   }
 }
 
+/** Every song the listener wrote lyrics for, keyed by track id (for account sync). */
+export function allUserLyrics(): Record<string, Pick<Lyrics, 'lines' | 'synced'>> {
+  const out: Record<string, Pick<Lyrics, 'lines' | 'synced'>> = {}
+  try {
+    for (const k of Object.keys(localStorage)) {
+      if (!k.startsWith(USER)) continue
+      const { lines, synced } = JSON.parse(localStorage.getItem(k) || '{}')
+      if (lines) out[k.slice(USER.length)] = { lines, synced }
+    }
+  } catch {
+    /* storage unavailable */
+  }
+  return out
+}
+
+/** Lyrics that arrived from another device; null removes them. */
+export function applyUserLyrics(id: string, l: Pick<Lyrics, 'lines' | 'synced'> | null) {
+  if (l) saveUserLyrics(id, l)
+  else deleteUserLyrics(id)
+  missing.delete(id)
+}
+
 /** Turn pasted text into lines, dropping section labels like "[Chorus]". */
 export function parsePasted(text: string): LyricLine[] {
   if (/^\s*\[\d+:\d+/m.test(text)) return parseLrc(text)
