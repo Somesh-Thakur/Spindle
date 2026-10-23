@@ -1,6 +1,6 @@
 // Vercel serverless function: GET /api/import?url=<playlist or album link>
 // Free on Vercel's Hobby plan. Locally, vite.config.ts serves the same route.
-import { ImportError, importFromUrl } from '../server/import'
+import { ImportError, importFromUrl } from '../server/import.js'
 
 export async function GET(request: Request) {
   const url = new URL(request.url).searchParams.get('url')
