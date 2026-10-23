@@ -69,6 +69,10 @@ interface PlayerState {
   playlists: Playlist[]
   recent: Track[]
   country: string
+  /** Appearance: the custom ring cursor, the opening animation, the animated background. */
+  customCursor: boolean
+  intro: boolean
+  liveBackground: boolean
 
   current: () => Track | undefined
   upNext: () => Track[]
@@ -144,6 +148,9 @@ export const usePlayer = create<PlayerState>()(
       playlists: [],
       recent: [],
       country: defaultCountry(),
+      customCursor: true,
+      intro: true,
+      liveBackground: true,
 
       current: () => {
         const { queue, order, pos } = get()
@@ -251,6 +258,9 @@ export const usePlayer = create<PlayerState>()(
         videoView: s.videoView,
         videoHidden: s.videoHidden,
         hinglish: s.hinglish,
+        customCursor: s.customCursor,
+        intro: s.intro,
+        liveBackground: s.liveBackground,
         queue: s.queue,
         order: s.order,
         pos: s.pos,

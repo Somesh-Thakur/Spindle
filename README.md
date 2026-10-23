@@ -76,22 +76,31 @@ Pages from these services can't be read from a browser directly, so a small func
 
 ## Accounts and sync
 
-Sign in on any device and your liked songs, playlists (with their covers), your own lyrics, region and queue follow you. Changes reach your other signed-in devices within a few seconds, and a device that's idle picks up the queue where you left off.
+Spindle is members-only: you sign in with Google, GitHub, or email and password, and new email accounts confirm with a 6-digit code. Once you're in, your liked songs, playlists (with their covers), your own lyrics, settings and queue follow you. Changes reach your other signed-in devices within a few seconds, and an idle device picks up the queue where you left off.
 
-It runs on a free [Supabase](https://supabase.com) project. Without one, the site works as before and keeps everything on the device.
+It all runs on a free [Supabase](https://supabase.com) project. Without one (local development with no `.env.local`), the gate is skipped and everything stays on the device.
 
-1. Create a project at supabase.com.
-2. In **SQL Editor**, paste [`supabase/schema.sql`](supabase/schema.sql) and run it.
-3. In **Authentication → Sign In / Providers → Email**, turn off **Confirm email**. Supabase's built-in mailer only reaches your own team's addresses, so leave it on only if you add your own SMTP.
-4. In **Authentication → URL Configuration**, set the Site URL to your deployed address.
-5. Put the project URL and the anon (publishable) key in `.env.local` for local work, and in the Vercel project's environment variables:
+### Setup
+
+1. **Project.** Create a project at supabase.com. In **SQL Editor**, paste [`supabase/schema.sql`](supabase/schema.sql) and run it.
+2. **URLs.** In **Authentication → URL Configuration**, set the Site URL to `https://spindle-bice.vercel.app` and add `http://localhost:5173` to the redirect URLs.
+3. **Email codes.** In **Authentication → Sign In / Providers → Email**, keep **Confirm email** on and set the password minimum to 8.
+4. **Branded emails.** In **Authentication → Emails → Templates**:
+   - **Confirm signup**: subject `{{ .Token }} is your Spindle code`, body from [`supabase/emails/confirm-signup.html`](supabase/emails/confirm-signup.html)
+   - **Reset password**: subject `Reset your Spindle password`, body from [`supabase/emails/reset-password.html`](supabase/emails/reset-password.html)
+5. **Sending mail.** Supabase's built-in mailer only reaches your own team, so add your own under **Authentication → Emails → SMTP Settings**:
+   - Gmail: an app password from a Gmail account, host `smtp.gmail.com`, port `465`. Sends from that Gmail address.
+   - Your own domain: [Resend](https://resend.com) (3,000 emails a month free), host `smtp.resend.com`, port `465`, user `resend`. Sends from an address like `hello@yourdomain.com`.
+6. **Google.** In [Google Cloud Console](https://console.cloud.google.com/apis/credentials), create an OAuth client ID (Web application) with the redirect URI `https://<project>.supabase.co/auth/v1/callback`. Paste the client ID and secret into **Providers → Google**.
+7. **GitHub.** In [GitHub → Settings → Developer settings → OAuth Apps](https://github.com/settings/developers), create an app with that same callback URL. Paste its client ID and secret into **Providers → GitHub**.
+8. **Keys.** Put the project URL and anon key in `.env.local` locally, and in the Vercel project's environment variables:
 
 ```
 VITE_SUPABASE_URL=https://<project>.supabase.co
 VITE_SUPABASE_ANON_KEY=<anon key>
 ```
 
-Both values are public by design. Row-level security keeps each library readable only by its owner. Each library is one JSON document that merges entry by entry, so the newest change wins and deletions carry over (`src/lib/sync.ts`).
+Both values are public by design: row-level security keeps each library readable only by its owner. Each library is one JSON document that merges entry by entry, so the newest change wins and deletions carry over (`src/lib/sync.ts`).
 
 ## Karaoke
 

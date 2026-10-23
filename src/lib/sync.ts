@@ -53,6 +53,9 @@ const DEVICE = (() => {
 
 const QUEUE_LIMIT = 200
 
+/** Settings that follow the account. Volume stays per device: speakers differ. */
+const PREFS = ['country', 'hinglish', 'recent', 'videoHidden', 'videoView', 'customCursor', 'intro', 'liveBackground'] as const
+
 // ---------- projection: store → sections ----------
 
 function project(): Projection {
@@ -69,7 +72,7 @@ function project(): Projection {
     liked: { ...s.liked },
     playlists,
     lyrics: allUserLyrics(),
-    prefs: { country: s.country, hinglish: s.hinglish, recent: s.recent },
+    prefs: Object.fromEntries(PREFS.map((k) => [k, s[k]])),
     session: session ? { now: session } : {},
   }
 }
@@ -169,7 +172,7 @@ function apply(doc: Doc) {
   const s = usePlayer.getState()
   const liked = { ...s.liked }
   const playlists = new Map(s.playlists.map((p) => [p.id, p]))
-  const prefs: Partial<Pick<typeof s, 'country' | 'hinglish' | 'recent'>> = {}
+  const prefs: Partial<Pick<typeof s, (typeof PREFS)[number]>> = {}
   let likedChanged = false
   let playlistsChanged = false
   let lyricsChanged = false
@@ -195,7 +198,7 @@ function apply(doc: Doc) {
       } else if (sec === 'lyrics') {
         applyUserLyrics(k, e.del ? null : (e.v as { lines: never[]; synced: boolean }))
         lyricsChanged = true
-      } else if (sec === 'prefs' && !e.del) {
+      } else if (sec === 'prefs' && !e.del && (PREFS as readonly string[]).includes(k)) {
         ;(prefs as Record<string, unknown>)[k] = e.v
       } else continue
       sh[k] = e.del ? { at: e.at, h: '', del: true } : { at: e.at, h: hash(e.v) }
@@ -292,7 +295,7 @@ function start(user: User) {
   // Watch only the parts of the store that belong to the library.
   let last = ''
   unsubStore = usePlayer.subscribe((s) => {
-    const sig = [s.liked, s.playlists, s.recent, s.country, s.hinglish, s.lyricsNonce, s.queue, s.order, s.pos]
+    const sig = [s.liked, s.playlists, s.lyricsNonce, s.queue, s.order, s.pos, ...PREFS.map((k) => s[k])]
     const ref = sig.map((x) => (typeof x === 'object' ? identity(x) : String(x))).join('|')
     if (ref === last) return
     last = ref
@@ -335,8 +338,15 @@ function identity(o: object) {
 
 // ---------- auth ----------
 
+/** Message from a failed OAuth or email-link redirect, shown on the sign-in screen. */
+export const redirectError = (() => {
+  const q = new URLSearchParams(location.search)
+  return q.get('error_description') || q.get('error') || ''
+})()
+
 if (supabase) {
   supabase.auth.onAuthStateChange((_event, session) => {
+    if (/[?&](code|error)=/.test(location.search)) history.replaceState(null, '', location.pathname + location.hash)
     const user = session?.user ?? null
     useAccount.setState({ user, status: user ? 'in' : 'out' })
     // Supabase warns against awaiting its own calls inside this callback.
@@ -344,14 +354,34 @@ if (supabase) {
   })
 }
 
-export async function signUp(email: string, password: string, name: string) {
-  const { data, error } = await supabase!.auth.signUp({
-    email,
-    password,
-    options: { data: { name }, emailRedirectTo: location.origin + location.pathname },
-  })
+export type Provider = 'google' | 'github'
+
+const back = () => location.origin + location.pathname
+
+export async function signInWith(provider: Provider) {
+  const { error } = await supabase!.auth.signInWithOAuth({ provider, options: { redirectTo: back() } })
   if (error) throw error
-  return { needsConfirm: !data.session }
+}
+
+/** Creates the account and emails a 6-digit code; there's no session until it's entered. */
+export async function signUp(email: string, password: string, name: string) {
+  const { data, error } = await supabase!.auth.signUp({ email, password, options: { data: { name }, emailRedirectTo: back() } })
+  if (error) throw error
+  // Signing up again with an address that's already confirmed returns a user with no identities.
+  if (data.user && !data.user.identities?.length) throw new Error('already registered')
+  return { needsCode: !data.session }
+}
+
+export async function verifySignup(email: string, code: string) {
+  const first = await supabase!.auth.verifyOtp({ email, token: code, type: 'email' })
+  if (!first.error) return
+  const second = await supabase!.auth.verifyOtp({ email, token: code, type: 'signup' })
+  if (second.error) throw first.error
+}
+
+export async function resendSignupCode(email: string) {
+  const { error } = await supabase!.auth.resend({ type: 'signup', email, options: { emailRedirectTo: back() } })
+  if (error) throw error
 }
 
 export async function signIn(email: string, password: string) {
@@ -359,9 +389,34 @@ export async function signIn(email: string, password: string) {
   if (error) throw error
 }
 
+/** Emails a 6-digit code for choosing a new password. */
+export async function sendPasswordCode(email: string) {
+  const { error } = await supabase!.auth.resetPasswordForEmail(email, { redirectTo: back() })
+  if (error) throw error
+}
+
+/** Checks the reset code (which signs in), then sets the new password. */
+export async function resetPassword(email: string, code: string, password: string) {
+  const { error } = await supabase!.auth.verifyOtp({ email, token: code, type: 'recovery' })
+  if (error) throw error
+  await changePassword(password)
+}
+
+export async function changePassword(password: string) {
+  const { error } = await supabase!.auth.updateUser({ password })
+  if (error) throw error
+}
+
+/** Deletes the account and its synced library for good, then clears this device. */
+export async function deleteAccount() {
+  const { error } = await supabase!.rpc('delete_account')
+  if (error) throw error
+  await signOut(true, false)
+}
+
 /** Push anything unsent, then sign out. `forget` also clears this device's library. */
-export async function signOut(forget = false) {
-  if (uid) {
+export async function signOut(forget = false, flush = true) {
+  if (uid && flush) {
     collect()
     await syncNow()
   }

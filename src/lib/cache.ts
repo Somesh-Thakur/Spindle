@@ -41,5 +41,18 @@ function pruneCache() {
   }
 }
 
+/** Rough size of cached catalog data, in bytes (strings are UTF-16). */
+export function cacheSize() {
+  try {
+    return Object.keys(localStorage)
+      .filter((k) => k.startsWith(PREFIX))
+      .reduce((n, k) => n + (k.length + (localStorage.getItem(k)?.length ?? 0)) * 2, 0)
+  } catch {
+    return 0
+  }
+}
+
+export const clearCache = pruneCache
+
 export const HOUR = 60 * 60 * 1000
 export const DAY = 24 * HOUR

@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { Clock3, Compass, Download, Heart, Home, Library, Plus, Radio, Search, UserRound } from 'lucide-react'
+import { Clock3, Compass, Download, Heart, Home, Library, Plus, Radio, Search, Settings, UserRound } from 'lucide-react'
 import { useEffect } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { displayName, useAccount } from '../lib/sync'
@@ -7,7 +7,6 @@ import { usePlayer } from '../store/player'
 import { Initials } from './Avatar'
 import { Logo, Wordmark } from './Brand'
 import { PlaylistCover } from './PlaylistCover'
-import { RegionPicker } from './RegionPicker'
 
 const MAIN = [
   { to: '/', label: 'Home', icon: Home },
@@ -125,7 +124,6 @@ export function Sidebar() {
 
       <div className="side-region">
         <AccountChip />
-        <RegionPicker up />
       </div>
     </aside>
   )
@@ -136,16 +134,16 @@ function AccountChip() {
   const user = useAccount((s) => s.user)
   const sync = useAccount((s) => s.sync)
   const { pathname } = useLocation()
-  if (status === 'off' || status === 'loading') return null
   const name = status === 'in' ? displayName(user) : ''
   return (
-    <NavLink to="/account" className={`acct-chip ${pathname === '/account' ? 'is-on' : ''}`}>
+    <NavLink to="/settings" className={`acct-chip ${pathname === '/settings' ? 'is-on' : ''}`}>
       {status === 'in' ? <Initials name={name} size={28} /> : <span className="avatar is-empty"><UserRound size={15} /></span>}
       <span className="acct-chip-text">
-        <b>{status === 'in' ? name : 'Sign in'}</b>
-        <small>{status === 'in' ? (sync === 'syncing' ? 'Syncing…' : sync === 'idle' ? 'Synced' : 'Not synced') : 'Sync across devices'}</small>
+        <b>{status === 'in' ? name : 'This device'}</b>
+        <small>{status === 'in' ? (sync === 'syncing' ? 'Syncing…' : sync === 'idle' ? 'Synced' : 'Not synced') : 'Settings'}</small>
       </span>
       {status === 'in' && <span className={`sync-dot is-${sync}`} />}
+      <Settings size={16} className="acct-chip-gear" />
     </NavLink>
   )
 }

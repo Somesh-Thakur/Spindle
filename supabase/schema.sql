@@ -72,3 +72,17 @@ begin
 exception when duplicate_object then null;
 end
 $$;
+
+-- Let a signed-in listener delete their own account; their library goes with it (on delete cascade).
+create or replace function public.delete_account() returns void
+language plpgsql security definer set search_path = '' as $$
+begin
+  if auth.uid() is null then
+    raise exception 'not signed in';
+  end if;
+  delete from auth.users where id = auth.uid();
+end
+$$;
+
+revoke execute on function public.delete_account() from public, anon;
+grant execute on function public.delete_account() to authenticated;

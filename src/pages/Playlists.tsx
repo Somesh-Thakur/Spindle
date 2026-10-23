@@ -1,5 +1,5 @@
 import { motion, Reorder, useDragControls } from 'framer-motion'
-import { Cloud, Download, GripVertical, Heart, Pencil, Play, Plus, Search, Shuffle, Trash2, X } from 'lucide-react'
+import { Download, GripVertical, Heart, Pencil, Play, Plus, Search, Settings, Shuffle, Trash2, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Artwork } from '../components/Artwork'
@@ -157,20 +157,13 @@ export function PlaylistPage() {
   )
 }
 
-/** Account entry on the Library page; phones have no sidebar to hold it. */
+/** Account and settings entry on the Library page; phones have no sidebar to hold it. */
 function LibAccountButton() {
   const status = useAccount((s) => s.status)
   const user = useAccount((s) => s.user)
-  if (status === 'off' || status === 'loading') return null
-  if (status === 'in')
-    return (
-      <Link to="/account" className="lib-avatar" aria-label="Your account">
-        <Initials name={displayName(user)} size={34} />
-      </Link>
-    )
   return (
-    <Link to="/account" className="btn">
-      <Cloud size={16} /> Sign in
+    <Link to="/settings" className="lib-avatar" aria-label="Account and settings">
+      {status === 'in' ? <Initials name={displayName(user)} size={34} /> : <span className="avatar is-empty lib-gear"><Settings size={17} /></span>}
     </Link>
   )
 }

@@ -1,7 +1,9 @@
 import { AnimatePresence, LayoutGroup, motion } from 'framer-motion'
 import { useEffect, useRef } from 'react'
 import { Route, Routes, useLocation } from 'react-router-dom'
+import { useShallow } from 'zustand/react/shallow'
 import { Ambient } from './components/Ambient'
+import { AuthGate } from './components/AuthGate'
 import { AuraField } from './components/AuraField'
 import { Cursor } from './components/Cursor'
 import { AudioEngine } from './components/AudioEngine'
@@ -24,19 +26,35 @@ import {
   RecentPage,
 } from './pages/Collections'
 import { Home } from './pages/Home'
-import { AccountPage } from './pages/Account'
+import { SettingsPage } from './pages/Settings'
 import { ImportPage } from './pages/Import'
 import { LibraryPage, PlaylistPage } from './pages/Playlists'
 import { BrowsePage } from './pages/Browse'
 import { Search } from './pages/Search'
 import { ScrollRoot } from './lib/scroll'
+import { useAccount } from './lib/sync'
 import { useCurrent, usePlayer } from './store/player'
 
 export default function App() {
+  const status = useAccount((s) => s.status)
+  const customCursor = usePlayer((s) => s.customCursor)
+  // Spindle is members-only once accounts are switched on; 'off' is local development without Supabase.
+  if (status === 'loading' || status === 'out')
+    return (
+      <>
+        <AuthGate />
+        {customCursor && <Cursor />}
+      </>
+    )
+  return <Shell />
+}
+
+function Shell() {
   const location = useLocation()
   const mainRef = useRef<HTMLElement>(null)
   const hasTrack = !!useCurrent()
   const hasVideo = usePlayer((s) => s.mode === 'yt' && s.videoStarted && !s.videoHidden)
+  const { customCursor, intro, liveBackground } = usePlayer(useShallow((s) => ({ customCursor: s.customCursor, intro: s.intro, liveBackground: s.liveBackground })))
 
   useEffect(() => {
     mainRef.current?.scrollTo({ top: 0 })
@@ -44,9 +62,9 @@ export default function App() {
 
   return (
     <LayoutGroup>
-    <div className={`app ${hasTrack ? 'has-player' : ''} ${hasVideo ? 'has-video' : ''}`}>
+    <div className={`app ${hasTrack ? 'has-player' : ''} ${hasVideo ? 'has-video' : ''} ${liveBackground ? '' : 'no-live-bg'}`}>
       <Ambient />
-      <AuraField />
+      {liveBackground && <AuraField />}
       <AudioEngine />
       <Sidebar />
       <ScrollRoot.Provider value={mainRef}>
@@ -68,7 +86,8 @@ export default function App() {
               <Route path="/full" element={<FullTracksPage />} />
               <Route path="/library" element={<LibraryPage />} />
               <Route path="/import" element={<ImportPage />} />
-              <Route path="/account" element={<AccountPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/account" element={<SettingsPage />} />
               <Route path="/liked" element={<LikedPage />} />
               <Route path="/playlist/:id" element={<PlaylistPage />} />
               <Route path="/recent" element={<RecentPage />} />
@@ -88,8 +107,8 @@ export default function App() {
       <VideoDock />
       <LyricsEditor />
       <Toasts />
-      <Cursor />
-      <Intro />
+      {customCursor && <Cursor />}
+      {intro && <Intro />}
     </div>
     </LayoutGroup>
   )
