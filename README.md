@@ -1,5 +1,7 @@
 # Spindle
 
+**Live:** https://spindle-bice.vercel.app
+
 A music web app built like an after-hours record store: a living colour field behind everything, a crate of records to dig through, sleeves you can turn over, and a turntable that plays every song in full. No accounts, no API keys, no paid services.
 
 The name is the pin at the centre of a turntable that every record spins on. In the wordmark, the dot of the i is a tiny record that spins while music plays.
@@ -94,6 +96,8 @@ Open it with the microphone button in the player bar or the full player.
 - `src/styles/v3.css`, `v4.css`, `v5.css`: styles for all of the above
 
 ## Deploy for free
+
+This project is deployed on Vercel and linked to GitHub: every push to `main` goes live automatically.
 
 Deploy to **Vercel** (free Hobby plan): import the repo, keep the detected Vite settings, and it serves the site plus the `/api/import` function with no extra setup.
 
