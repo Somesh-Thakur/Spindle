@@ -157,3 +157,41 @@ grant execute on function public.share_item(text, text, text, text, text, jsonb,
 -- Visitors opening a shared link see what was shared, not who owns it internally.
 revoke select on public.shares from anon;
 grant select (code, kind, item_key, title, subtitle, image, payload, owner_name, created_at, updated_at) on public.shares to anon;
+
+-- ---------- Crash reports ----------
+-- The site adds a row when something breaks (src/lib/errors.ts). Signed-in
+-- listeners can only add their own; nobody can read them from the site. Read
+-- them in the Supabase dashboard: Table Editor → client_errors.
+create table if not exists public.client_errors (
+  id bigint generated always as identity primary key,
+  at timestamptz not null default now(),
+  user_id uuid default auth.uid() references auth.users on delete cascade,
+  message text not null check (length(message) <= 500),
+  stack text check (length(stack) <= 4000),
+  url text check (length(url) <= 300),
+  ua text check (length(ua) <= 300),
+  release text check (length(release) <= 40)
+);
+create index if not exists client_errors_at on public.client_errors (at desc);
+create index if not exists client_errors_user on public.client_errors (user_id, at desc);
+
+alter table public.client_errors enable row level security;
+drop policy if exists "add own reports" on public.client_errors;
+create policy "add own reports" on public.client_errors for insert to authenticated with check (user_id = (select auth.uid()));
+
+revoke all on public.client_errors from anon, authenticated;
+grant insert (message, stack, url, ua, release) on public.client_errors to authenticated;
+
+-- At most 50 reports per person per day, so a broken loop can't fill the database.
+create or replace function public.limit_client_errors() returns trigger
+language plpgsql security definer set search_path = '' as $$
+begin
+  if (select count(*) from public.client_errors where user_id = new.user_id and at > now() - interval '1 day') >= 50 then
+    return null;
+  end if;
+  return new;
+end
+$$;
+revoke execute on function public.limit_client_errors() from public, anon, authenticated;
+drop trigger if exists limit_client_errors on public.client_errors;
+create trigger limit_client_errors before insert on public.client_errors for each row execute function public.limit_client_errors();

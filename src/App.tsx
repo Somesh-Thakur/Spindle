@@ -1,43 +1,46 @@
 import { AnimatePresence, LayoutGroup, motion } from 'framer-motion'
-import { useEffect, useRef, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { useShallow } from 'zustand/react/shallow'
 import { Ambient } from './components/Ambient'
 import { InstallPrompt, OfflinePill } from './components/AppChrome'
-import { AuthGate } from './components/AuthGate'
 import { AuraField } from './components/AuraField'
 import { Cursor } from './components/Cursor'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { AudioEngine } from './components/AudioEngine'
 import { FullPlayer } from './components/FullPlayer'
 import { Intro } from './components/Intro'
-import { LyricsEditor } from './components/LyricsEditor'
 import { MiniPlayer } from './components/MiniPlayer'
-import { PublicShare } from './components/PublicShare'
-import { ShareSheet } from './components/ShareSheet'
 import { Sidebar, TabBar } from './components/Nav'
 import { Toasts } from './components/Toast'
 import { VideoDock } from './components/VideoDock'
+import { Home } from './pages/Home'
 import {
+  AboutPage,
   AlbumPage,
   ArtistPage,
+  AuthGate,
+  BrowsePage,
   ChartsPage,
+  DownloadsPage,
   EraPage,
   FullTracksPage,
   GenrePage,
+  ImportPage,
+  LibraryPage,
   LikedPage,
+  LyricsEditor,
   NotFound,
+  PlaylistPage,
+  prefetchAll,
+  PublicShare,
   RecentPage,
-} from './pages/Collections'
-import { AboutPage } from './pages/About'
-import { DownloadsPage } from './pages/Downloads'
-import { Home } from './pages/Home'
-import { SettingsPage } from './pages/Settings'
-import { ImportPage } from './pages/Import'
-import { LibraryPage, PlaylistPage } from './pages/Playlists'
-import { BrowsePage } from './pages/Browse'
-import { Search } from './pages/Search'
-import { StatsPage } from './pages/Stats'
-import { SharedPage } from './pages/Shared'
+  Search,
+  SettingsPage,
+  SharedPage,
+  ShareSheet,
+  StatsPage,
+} from './lazy'
 import { ScrollRoot } from './lib/scroll'
 import { codeFromPath, rememberShare, takeRememberedShare } from './lib/share'
 import { useAccount } from './lib/sync'
@@ -62,7 +65,7 @@ export default function App() {
   if (status === 'loading' || status === 'out') {
     const showLink = linkCode && !wantsIn && !(status === 'loading' && hadSession)
     return (
-      <>
+      <Suspense fallback={<div className="gate-loading" />}>
         {showLink ? (
           <PublicShare
             code={linkCode}
@@ -75,7 +78,7 @@ export default function App() {
           <AuthGate />
         )}
         {customCursor && <Cursor />}
-      </>
+      </Suspense>
     )
   }
   return <Shell />
@@ -102,6 +105,9 @@ function Shell() {
     // Runs once, when the app first opens.
   }, [])
 
+  // Once the first screen is up, fetch the other pages in the background.
+  useEffect(prefetchAll, [])
+
   return (
     <LayoutGroup>
     <div className={`app ${hasTrack ? 'has-player' : ''} ${hasVideo ? 'has-video' : ''} ${liveBackground ? '' : 'no-live-bg'}`}>
@@ -120,6 +126,9 @@ function Shell() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.12 }}
           >
+            {/* A crash in one page stays in that page: the player and navigation keep working. */}
+            <ErrorBoundary inline resetKey={location.pathname}>
+            <Suspense fallback={<div className="page page-loading" aria-busy="true" />}>
             <Routes location={location}>
               <Route path="/" element={<Home />} />
               <Route path="/search" element={<Search />} />
@@ -143,6 +152,8 @@ function Shell() {
               <Route path="/era/:key" element={<EraPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </Suspense>
+            </ErrorBoundary>
           </motion.div>
         </AnimatePresence>
       </main>
@@ -151,8 +162,10 @@ function Shell() {
       <TabBar />
       <FullPlayer />
       <VideoDock />
-      <LyricsEditor />
-      <ShareSheet />
+      <Suspense fallback={null}>
+        <LyricsEditor />
+        <ShareSheet />
+      </Suspense>
       <InstallPrompt />
       <OfflinePill />
       <Toasts />

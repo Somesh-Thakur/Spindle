@@ -65,6 +65,21 @@ function shareApi(env: Env): Plugin {
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), 'VITE_')
   return {
+    // Which deploy an error report came from (Vercel sets the commit during builds).
+    define: { __RELEASE__: JSON.stringify((process.env.VERCEL_GIT_COMMIT_SHA ?? 'local').slice(0, 7)) },
     plugins: [react(), importApi(), shareApi({ supabaseUrl: env.VITE_SUPABASE_URL, supabaseKey: env.VITE_SUPABASE_ANON_KEY })],
+    build: {
+      rollupOptions: {
+        output: {
+          // Libraries change less often than the app, so they get their own long-cached files.
+          manualChunks(id) {
+            if (!id.includes('node_modules')) return
+            if (/[\/](react|react-dom|react-router|react-router-dom|scheduler)[\/]/.test(id)) return 'react'
+            if (id.includes('framer-motion') || id.includes('motion-dom') || id.includes('motion-utils')) return 'motion'
+            if (id.includes('@supabase')) return 'supabase'
+          },
+        },
+      },
+    },
   }
 })

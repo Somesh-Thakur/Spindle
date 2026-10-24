@@ -87,6 +87,14 @@ npm run dev
 
 Open http://localhost:5173. Without Supabase keys, accounts are switched off and everything is saved on the device, which is handy for working on the UI.
 
+### Tests
+
+```bash
+npm test
+```
+
+Vitest covers stats, recommendations, share pages (including escaping), the importer's link checks and the database rules, which run against a real Postgres in memory (PGlite). GitHub Actions runs the type-check, tests and a build on every push.
+
 ### Environment
 
 Create `.env.local` (never committed):
@@ -119,6 +127,7 @@ The project is deployed on Vercel and every push to `main` goes live. To deploy 
 - Database functions run with a fixed search path, and write functions are callable only when signed in.
 - Security headers on every page (no framing, no MIME sniffing, strict referrer, locked-down permissions).
 - No secrets in the repository: keys live in `.env.local` and Vercel's environment settings.
+- Crashes are recorded to a write-only table (no one can read it from the site), capped in size and to 50 a day per person.
 
 Found something? Please email the address on the [privacy page](https://spindle-bice.vercel.app/privacy) instead of opening a public issue.
 
