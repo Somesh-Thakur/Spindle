@@ -12,6 +12,7 @@ import './styles/v5.css'
 import './styles/v6.css'
 import './styles/v7.css'
 import './styles/v8.css'
+import './styles/v9.css'
 import './styles/phone.css'
 
 // Offline start-up and fast repeat visits (public/sw.js). Not in development, where it would cache stale code.

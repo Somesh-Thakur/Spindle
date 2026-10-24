@@ -1,0 +1,277 @@
+/* =========================================================
+   v9: playlist views and recommended songs
+   ========================================================= */
+
+/* ---------- Toolbar: song count and the view switch ---------- */
+.pl-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 8px 0 14px;
+}
+.pl-count {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.pl-views button {
+  height: 32px;
+  padding: 0 12px;
+}
+
+/* ---------- Grid view: cover tiles like Home ---------- */
+.pl-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 26px 18px;
+}
+.pl-grid-item {
+  position: relative;
+  min-width: 0;
+}
+.pl-grid-menu {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 3;
+}
+.pl-grid-menu .icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: #fff;
+  background: rgba(10, 9, 14, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.pl-grid-item:hover .pl-grid-menu .icon-btn,
+.pl-grid-menu .icon-btn[aria-expanded='true'],
+.pl-grid-menu .icon-btn:focus-visible {
+  opacity: 1;
+}
+
+/* ---------- Compact view: slim rows, side by side ---------- */
+.pl-compact {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 2px 20px;
+}
+.pl-compact-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  height: 54px;
+  padding: 0 6px;
+  border-radius: 10px;
+  transition: background 0.12s;
+}
+.pl-compact-row:hover,
+.pl-compact-row.is-active {
+  background: var(--hover);
+}
+.pl-compact-row .menu-wrap .icon-btn {
+  opacity: 0;
+}
+.pl-compact-row:hover .menu-wrap .icon-btn,
+.pl-compact-row .menu-wrap .icon-btn[aria-expanded='true'] {
+  opacity: 1;
+}
+.pl-compact-art,
+.recs-art {
+  position: relative;
+  flex: none;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.pl-compact-art .art {
+  width: 40px;
+  height: 40px;
+}
+.pl-compact-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.pl-compact-text b,
+.pl-compact-text small {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pl-compact-text b {
+  font-weight: 550;
+  font-size: 13.5px;
+}
+.is-active .pl-compact-text b {
+  color: var(--accent);
+}
+.pl-compact-text small {
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+.pl-compact-time {
+  flex: none;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-3);
+}
+
+/* Shared hover play glyph for the compact rows and recommendations. */
+.recs-play {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.pl-compact-row:hover .recs-play,
+.pl-compact-row.is-active .recs-play,
+.recs-row:hover .recs-play,
+.recs-row.is-active .recs-play {
+  opacity: 1;
+}
+
+/* ---------- Recommended songs ---------- */
+.recs {
+  margin-top: 48px;
+  padding: 22px 22px 14px;
+  border-radius: 20px;
+  background: rgba(10, 9, 16, 0.45);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+}
+.recs-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+.recs-title {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 24px;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-variation-settings: 'wdth' 92;
+}
+.recs-sub {
+  margin: 4px 0 0;
+  font-size: 13.5px;
+  color: var(--text-2);
+}
+.recs-refresh {
+  flex: none;
+  border-radius: 999px;
+}
+.recs-list {
+  display: flex;
+  flex-direction: column;
+}
+.recs-row {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1.4fr) minmax(0, 1fr) 52px auto;
+  align-items: center;
+  gap: 14px;
+  height: 64px;
+  padding: 0 8px;
+  border-radius: 10px;
+  transition: background 0.12s;
+}
+.recs-row:hover,
+.recs-row.is-active {
+  background: var(--hover);
+}
+.recs-art .art {
+  width: 48px;
+  height: 48px;
+}
+.recs-main {
+  min-width: 0;
+}
+.recs-name,
+.recs-artist,
+.recs-album {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.recs-name {
+  font-weight: 550;
+}
+.recs-row.is-active .recs-name {
+  color: var(--accent);
+}
+.recs-artist,
+.recs-album {
+  font-size: 13px;
+  color: var(--text-2);
+}
+.recs-time {
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-3);
+  text-align: right;
+}
+.recs-add {
+  min-width: 0;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--hairline-strong);
+}
+.recs-add:hover:not(:disabled) {
+  color: #fff;
+  background: var(--accent);
+  box-shadow: none;
+}
+.recs-row.is-skel {
+  grid-template-columns: 48px 1fr;
+}
+.recs-skel-art {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+}
+.recs-skel-line {
+  height: 14px;
+  width: 50%;
+  border-radius: 7px;
+}
+
+@media (max-width: 860px) {
+  .pl-views span {
+    display: none;
+  }
+  .pl-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px 14px;
+  }
+  .pl-grid-menu .icon-btn,
+  .pl-compact-row .menu-wrap .icon-btn {
+    opacity: 1;
+  }
+  .pl-compact {
+    grid-template-columns: 1fr;
+  }
+  .recs {
+    padding: 16px 12px 8px;
+  }
+  .recs-row {
+    grid-template-columns: 48px minmax(0, 1fr) auto;
+  }
+  .recs-album,
+  .recs-time {
+    display: none;
+  }
+}

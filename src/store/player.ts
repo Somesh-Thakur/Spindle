@@ -73,6 +73,8 @@ interface PlayerState {
   customCursor: boolean
   intro: boolean
   liveBackground: boolean
+  /** How playlist songs are laid out. */
+  playlistView: 'list' | 'grid' | 'compact'
 
   current: () => Track | undefined
   upNext: () => Track[]
@@ -151,6 +153,7 @@ export const usePlayer = create<PlayerState>()(
       customCursor: true,
       intro: true,
       liveBackground: true,
+      playlistView: 'list',
 
       current: () => {
         const { queue, order, pos } = get()
@@ -261,6 +264,7 @@ export const usePlayer = create<PlayerState>()(
         customCursor: s.customCursor,
         intro: s.intro,
         liveBackground: s.liveBackground,
+        playlistView: s.playlistView,
         queue: s.queue,
         order: s.order,
         pos: s.pos,

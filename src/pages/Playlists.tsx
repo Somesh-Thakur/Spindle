@@ -1,5 +1,5 @@
 import { motion, Reorder, useDragControls } from 'framer-motion'
-import { ArrowDownToLine, Download, GripVertical, Heart, Pencil, Play, Plus, Search, Settings, Share, Shuffle, Trash2, X } from 'lucide-react'
+import { ArrowDownToLine, Columns2, Download, GripVertical, Heart, LayoutGrid, List, Pause, Pencil, Play, Plus, Search, Settings, Share, Shuffle, Trash2, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Artwork } from '../components/Artwork'
@@ -7,6 +7,7 @@ import { Initials } from '../components/Avatar'
 import { CoverEditor } from '../components/CoverEditor'
 import { KineticTitle } from '../components/Kinetic'
 import { PlaylistCover } from '../components/PlaylistCover'
+import { PlaylistRecs } from '../components/PlaylistRecs'
 import { Reveal } from '../components/Reveal'
 import { Shelf } from '../components/Shelf'
 import { SongTile } from '../components/Tiles'
@@ -27,6 +28,33 @@ function play(tracks: Track[], shuffle: boolean) {
   const st = usePlayer.getState()
   if (st.shuffle !== shuffle) st.toggleShuffle()
   st.playList(tracks, shuffle ? Math.floor(Math.random() * tracks.length) : 0)
+}
+
+const VIEWS = [
+  { id: 'list', label: 'List', icon: List },
+  { id: 'grid', label: 'Grid', icon: LayoutGrid },
+  { id: 'compact', label: 'Compact', icon: Columns2 },
+] as const
+
+/** A slim row for the compact view, laid out in columns. */
+function CompactRow({ track, onPlay }: { track: Track; onPlay: () => void }) {
+  const active = useCurrent()?.id === track.id
+  const isPlaying = usePlayer((s) => s.isPlaying)
+  const on = active && isPlaying
+  return (
+    <div className={`pl-compact-row ${active ? 'is-active' : ''}`}>
+      <button className="pl-compact-art" data-cursor="play" onClick={() => (active ? usePlayer.getState().toggle() : onPlay())} aria-label={`${on ? 'Pause' : 'Play'} ${track.title}`}>
+        <Artwork src={track.art} size={40} />
+        <span className="recs-play">{on ? <Pause size={12} fill="currentColor" strokeWidth={0} /> : <Play size={12} fill="currentColor" strokeWidth={0} />}</span>
+      </button>
+      <div className="pl-compact-text">
+        <b>{track.title}</b>
+        <small>{track.artist}</small>
+      </div>
+      <span className="pl-compact-time">{fmtTime(track.duration)}</span>
+      <TrackMenu track={track} />
+    </div>
+  )
 }
 
 function DraggableRow({ track, playlistId, index, all }: { track: Track; playlistId: string; index: number; all: Track[] }) {
@@ -67,6 +95,7 @@ export function PlaylistPage() {
   const { renamePlaylist, deletePlaylist, setPlaylistTracks } = usePlayer.getState()
   const [editing, setEditing] = useState(params.get('rename') === '1')
   const [confirm, setConfirm] = useState(false)
+  const view = usePlayer((s) => s.playlistView)
   const inputRef = useRef<HTMLInputElement>(null)
   const nav = useNavigate()
 
@@ -147,19 +176,50 @@ export function PlaylistPage() {
       </header>
 
       {p.tracks.length ? (
-        <Reorder.Group axis="y" values={p.tracks} onReorder={(t) => setPlaylistTracks(p.id, t)} className="list list-lined pl-list">
-          {p.tracks.map((t, i) => (
-            <DraggableRow key={t.id} track={t} playlistId={p.id} index={i} all={p.tracks} />
-          ))}
-        </Reorder.Group>
+        <>
+          <div className="pl-toolbar">
+            <span className="pl-count">{songs(p.tracks.length)}</span>
+            <div className="seg pl-views" role="radiogroup" aria-label="View">
+              {VIEWS.map(({ id, label, icon: Icon }) => (
+                <button key={id} role="radio" aria-checked={view === id} className={view === id ? 'is-on' : ''} onClick={() => usePlayer.setState({ playlistView: id })} title={label}>
+                  <Icon size={15} /> <span>{label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+          {view === 'grid' ? (
+            <div className="pl-grid">
+              {p.tracks.map((t, i) => (
+                <div key={t.id} className="pl-grid-item">
+                  <SongTile track={t} onPlay={() => usePlayer.getState().playList(p.tracks, i)} />
+                  <TrackMenu track={t} className="pl-grid-menu" />
+                </div>
+              ))}
+            </div>
+          ) : view === 'compact' ? (
+            <div className="pl-compact">
+              {p.tracks.map((t, i) => (
+                <CompactRow key={t.id} track={t} onPlay={() => usePlayer.getState().playList(p.tracks, i)} />
+              ))}
+            </div>
+          ) : (
+            <Reorder.Group axis="y" values={p.tracks} onReorder={(t) => setPlaylistTracks(p.id, t)} className="list list-lined pl-list">
+              {p.tracks.map((t, i) => (
+                <DraggableRow key={t.id} track={t} playlistId={p.id} index={i} all={p.tracks} />
+              ))}
+            </Reorder.Group>
+          )}
+        </>
       ) : (
         <div className="pl-empty-note">
-          <p>Find songs in Search and add them here from the ••• menu next to any song.</p>
+          <p>Find songs in Search and add them here from the ••• menu next to any song, or pick from the suggestions below.</p>
           <Link to="/search" className="btn btn-primary">
             <Search size={15} /> Find songs
           </Link>
         </div>
       )}
+
+      <PlaylistRecs playlist={p} />
     </div>
   )
 }
