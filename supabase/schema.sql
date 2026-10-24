@@ -138,3 +138,22 @@ end
 $$;
 
 grant execute on function public.share_item(text, text, text, text, text, jsonb, text) to authenticated;
+
+-- ---------- Hardening ----------
+-- Fixed search paths, so a function can't be tricked into calling a look-alike object.
+alter function public.merge_entries(jsonb, jsonb) set search_path = '';
+alter function public.merge_doc(jsonb, jsonb) set search_path = '';
+alter function public.sync_library(jsonb, text) set search_path = '';
+alter function public.share_item(text, text, text, text, text, jsonb, text) set search_path = '';
+
+-- Only signed-in listeners may call the write functions (they also check inside).
+revoke execute on function public.sync_library(jsonb, text) from public, anon;
+revoke execute on function public.share_item(text, text, text, text, text, jsonb, text) from public, anon;
+revoke execute on function public.merge_entries(jsonb, jsonb) from public, anon;
+revoke execute on function public.merge_doc(jsonb, jsonb) from public, anon;
+grant execute on function public.sync_library(jsonb, text) to authenticated;
+grant execute on function public.share_item(text, text, text, text, text, jsonb, text) to authenticated;
+
+-- Visitors opening a shared link see what was shared, not who owns it internally.
+revoke select on public.shares from anon;
+grant select (code, kind, item_key, title, subtitle, image, payload, owner_name, created_at, updated_at) on public.shares to anon;

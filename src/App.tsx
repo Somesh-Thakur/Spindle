@@ -28,6 +28,7 @@ import {
   NotFound,
   RecentPage,
 } from './pages/Collections'
+import { AboutPage } from './pages/About'
 import { DownloadsPage } from './pages/Downloads'
 import { Home } from './pages/Home'
 import { SettingsPage } from './pages/Settings'
@@ -133,6 +134,7 @@ function Shell() {
               <Route path="/liked" element={<LikedPage />} />
               <Route path="/downloads" element={<DownloadsPage />} />
               <Route path="/stats" element={<StatsPage />} />
+              <Route path="/about" element={<AboutPage />} />
               <Route path="/playlist/:id" element={<PlaylistPage />} />
               <Route path="/recent" element={<RecentPage />} />
               <Route path="/album/:id" element={<AlbumPage />} />

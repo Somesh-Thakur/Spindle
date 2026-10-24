@@ -9,6 +9,7 @@
 import type { RealtimeChannel, User } from '@supabase/supabase-js'
 import { create } from 'zustand'
 import { allUserLyrics, applyUserLyrics } from '../api/lyrics'
+import { mergeHistory, useHistory, type Play } from './history'
 import { toast } from '../components/Toast'
 import { usePlayer, type Playlist } from '../store/player'
 import { supabase } from './supabase'
@@ -60,6 +61,7 @@ const PREFS = ['country', 'hinglish', 'recent', 'videoHidden', 'videoView', 'cus
 
 function project(): Projection {
   const s = usePlayer.getState()
+  const h = useHistory.getState()
   const playlists: Record<string, Playlist> = {}
   for (const p of s.playlists) playlists[p.id] = p
   // Only the window around the current song travels, so huge queues stay light.
@@ -74,8 +76,13 @@ function project(): Projection {
     lyrics: allUserLyrics(),
     prefs: Object.fromEntries(PREFS.map((k) => [k, s[k]])),
     session: session ? { now: session } : {},
+    // Listening history: one entry per play, so devices add to each other's stats.
+    plays: Object.fromEntries(h.plays.map((p) => [playKey(p), p])),
+    ptracks: h.tracks,
   }
 }
+
+const playKey = (p: Play) => `${p.at}.${p.id}`
 
 // ---------- stable hashing, so key order from the database doesn't look like a change ----------
 
@@ -90,11 +97,20 @@ function stable(v: unknown): string {
     .join(',')}}`
 }
 
+// Items rarely change once made, so each object's fingerprint is kept (thousands of plays).
+const hashes = new WeakMap<object, string>()
+
 function hash(v: unknown) {
+  if (v && typeof v === 'object') {
+    const known = hashes.get(v)
+    if (known) return known
+  }
   const s = stable(v)
   let h = 5381
   for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0
-  return `${(h >>> 0).toString(36)}.${s.length}`
+  const out = `${(h >>> 0).toString(36)}.${s.length}`
+  if (v && typeof v === 'object') hashes.set(v, out)
+  return out
 }
 
 // ---------- per-account local bookkeeping ----------
@@ -137,6 +153,7 @@ let uid: string | null = null
 let shadow: Shadow = {}
 let channel: RealtimeChannel | null = null
 let unsubStore: (() => void) | null = null
+let unsubHistory: (() => void) | null = null
 let timer: ReturnType<typeof setTimeout> | undefined
 let busy = false
 let again = false
@@ -177,6 +194,8 @@ function apply(doc: Doc) {
   let playlistsChanged = false
   let lyricsChanged = false
   let session: Session | null = null
+  const newPlays: Play[] = []
+  const newTracks: Record<string, Track> = {}
 
   for (const [sec, entries] of Object.entries(doc)) {
     const sh = (shadow[sec] ||= {})
@@ -198,6 +217,10 @@ function apply(doc: Doc) {
       } else if (sec === 'lyrics') {
         applyUserLyrics(k, e.del ? null : (e.v as { lines: never[]; synced: boolean }))
         lyricsChanged = true
+      } else if (sec === 'plays' && !e.del && e.v) {
+        newPlays.push(e.v as Play)
+      } else if (sec === 'ptracks' && !e.del && e.v) {
+        newTracks[k] = e.v as Track
       } else if (sec === 'prefs' && !e.del && (PREFS as readonly string[]).includes(k)) {
         ;(prefs as Record<string, unknown>)[k] = e.v
       } else continue
@@ -222,6 +245,7 @@ function apply(doc: Doc) {
   applying = true
   try {
     if (Object.keys(patch).length) usePlayer.setState(patch)
+    if (newPlays.length || Object.keys(newTracks).length) mergeHistory(newPlays, newTracks)
   } finally {
     applying = false
   }
@@ -294,6 +318,16 @@ function start(user: User) {
 
   // Watch only the parts of the store that belong to the library.
   let last = ''
+  // Listening history lives in its own store; new plays sync too.
+  let lastHistory = ''
+  unsubHistory = useHistory.subscribe((h) => {
+    const ref = `${identity(h.plays)}|${identity(h.tracks)}`
+    if (ref === lastHistory) return
+    lastHistory = ref
+    collect()
+    if (!isEmpty(load<Doc>(pendingKey(user.id), {}))) schedule(3000)
+  })
+
   unsubStore = usePlayer.subscribe((s) => {
     const sig = [s.liked, s.playlists, s.lyricsNonce, s.queue, s.order, s.pos, ...PREFS.map((k) => s[k])]
     const ref = sig.map((x) => (typeof x === 'object' ? identity(x) : String(x))).join('|')
@@ -319,6 +353,8 @@ function stop() {
   clearTimeout(timer)
   unsubStore?.()
   unsubStore = null
+  unsubHistory?.()
+  unsubHistory = null
   if (channel) supabase?.removeChannel(channel)
   channel = null
   document.removeEventListener('visibilitychange', onFocus)

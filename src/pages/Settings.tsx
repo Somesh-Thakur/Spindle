@@ -19,6 +19,7 @@ import {
   Volume2,
 } from 'lucide-react'
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 import { COUNTRIES } from '../api/itunes'
 import { allUserLyrics, applyUserLyrics } from '../api/lyrics'
 import { friendly } from '../components/AuthGate'
@@ -122,6 +123,11 @@ export function SettingsPage() {
               <a className="btn btn-ghost" href="https://github.com/Somesh-Thakur/Spindle" target="_blank" rel="noreferrer">
                 Source
               </a>
+            </Row>
+            <Row title="Made by Somesh Sanjay Thakur" sub="Full-Stack & AI Automation Dev. Say hi on GitHub, LinkedIn or Instagram.">
+              <Link className="btn btn-ghost" to="/about">
+                About the developer
+              </Link>
             </Row>
             <Row title="Privacy and terms" sub="What we store, and the rules for using Spindle.">
               <div className="set-actions">

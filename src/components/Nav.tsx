@@ -124,6 +124,9 @@ export function Sidebar() {
 
       <div className="side-region">
         <AccountChip />
+        <NavLink to="/about" className="side-about">
+          Made by Somesh Thakur
+        </NavLink>
       </div>
     </aside>
   )

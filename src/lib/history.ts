@@ -32,6 +32,23 @@ function record(t: Track, at: number, secs: number) {
   })
 }
 
+/** Plays and songs from your other devices, merged in without duplicates (see sync.ts). */
+export function mergeHistory(plays: Play[], tracks: Record<string, Track>) {
+  useHistory.setState((h) => {
+    const byKey = new Map(h.plays.map((p) => [`${p.at}.${p.id}`, p]))
+    for (const p of plays) {
+      const k = `${p.at}.${p.id}`
+      const mine = byKey.get(k)
+      // Same play seen twice: keep the longer listening time.
+      if (!mine || p.secs > mine.secs) byKey.set(k, p)
+    }
+    return {
+      plays: [...byKey.values()].sort((a, b) => a.at - b.at).slice(-MAX_PLAYS),
+      tracks: { ...tracks, ...h.tracks },
+    }
+  })
+}
+
 let running = false
 
 /** Start counting listening time. Safe to call more than once. */
@@ -67,7 +84,7 @@ export function startHistory() {
         const id = s.queueSource.slice('playlist:'.length)
         usePlayer.setState((p) => ({ playlists: p.playlists.map((pl) => (pl.id === id ? { ...pl, plays: (pl.plays ?? 0) + 1 } : pl)) }))
       }
-    } else if (recorded && listened % 10 === 0) {
+    } else if (recorded && listened % 30 === 0) {
       // Keep the listening time of the current play up to date.
       useHistory.setState((h) => {
         const plays = h.plays.slice()
