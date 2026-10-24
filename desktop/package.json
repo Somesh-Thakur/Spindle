@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "scripts": {
-    "tauri": "tauri",
+    "tauri": "node ci-tauri.mjs",
     "dev": "tauri dev",
     "build": "tauri build",
     "icons": "tauri icon ../public/brand/spindle-icon-1024.png"

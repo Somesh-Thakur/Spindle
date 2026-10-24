@@ -35,6 +35,13 @@ jobs:
           workspaces: desktop/src-tauri
       - run: npm ci
         working-directory: desktop
+      - name: Check the update signing key
+        shell: bash
+        env:
+          KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        run: |
+          if [ -z "$KEY" ]; then echo "::error::The TAURI_SIGNING_PRIVATE_KEY secret is missing or empty."; exit 1; fi
+          echo "Signing key is set (${#KEY} characters)."
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
