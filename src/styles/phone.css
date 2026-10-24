@@ -3,6 +3,38 @@
    the desktop layout is untouched.
    ========================================================= */
 
+/* ---------- iOS home-screen viewport fix ----------
+   --vh-gap is the height iOS left unpainted at the bottom (see main.tsx); it's 0
+   everywhere else. The page grows by it, and every full-screen layer and every
+   bar pinned to the bottom reaches down into it. */
+html {
+  background: var(--bg);
+}
+html,
+body,
+#root {
+  min-height: calc(100% + var(--vh-gap, 0px));
+}
+.app {
+  height: calc(100% + var(--vh-gap, 0px));
+}
+.full,
+.sheet-scrim,
+.aura-field,
+.ledit-scrim,
+.intro,
+.gate,
+.gate-grain,
+.ps,
+.ps-veil,
+.share-scrim {
+  bottom: calc(0px - var(--vh-gap, 0px));
+}
+/* A canvas keeps its own height, so it gets the gap added directly. */
+.aura-field {
+  height: calc(100% + var(--vh-gap, 0px));
+}
+
 /* Shared pieces that also appear on larger screens */
 .lib-downloads .lib-liked-art {
   background: radial-gradient(120% 90% at 20% 10%, #3fd6a3 0%, #1f8a6b 45%, #0f3d4f 100%);
@@ -47,7 +79,7 @@
   z-index: 60;
   left: 12px;
   right: 12px;
-  bottom: calc(env(safe-area-inset-bottom) + 158px);
+  bottom: calc(env(safe-area-inset-bottom) + 158px - var(--vh-gap, 0px));
   display: flex;
   align-items: center;
   gap: 12px;
@@ -211,6 +243,11 @@
 }
 
 @media (max-width: 860px) {
+  :root {
+    /* Where the tab bar sits: just above the home indicator, like iOS's own floating tab bars. */
+    --dock-bottom: calc(max(10px, env(safe-area-inset-bottom) - 6px) - var(--vh-gap, 0px));
+  }
+
   /* ---------- Feel like an app, not a web page ---------- */
   html,
   body {
@@ -256,7 +293,7 @@
   .tabbar {
     left: 12px;
     right: 12px;
-    bottom: max(10px, calc(env(safe-area-inset-bottom) + 4px));
+    bottom: var(--dock-bottom);
     height: 64px;
     padding: 6px;
     gap: 4px;
@@ -306,7 +343,7 @@
   .bar {
     left: 12px;
     right: 12px;
-    bottom: calc(max(10px, calc(env(safe-area-inset-bottom) + 4px)) + 72px);
+    bottom: calc(var(--dock-bottom) + 72px);
     height: 64px;
     padding: 0 8px 0 8px;
     border-radius: 22px;
@@ -349,7 +386,7 @@
     border-radius: 2px;
   }
   .vdock {
-    bottom: calc(max(10px, calc(env(safe-area-inset-bottom) + 4px)) + 148px);
+    bottom: calc(var(--dock-bottom) + 146px);
   }
 
   /* ---------- Full player ---------- */
@@ -365,6 +402,74 @@
   .full-actions .ctl {
     width: 44px;
     height: 44px;
+  }
+
+  /* ---------- Buttons never break their label ---------- */
+  .btn {
+    white-space: nowrap;
+  }
+  .coll-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    width: 100%;
+  }
+  .coll-actions .btn {
+    height: 46px;
+    min-width: 0;
+    padding: 0 14px;
+    border-radius: 999px;
+    font-size: 15px;
+  }
+
+  /* ---------- Home: the Crate ---------- */
+  /* A plain 1fr column grows to its widest child; minmax(0, …) keeps it on screen. */
+  .crate-pin {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .crate-copy {
+    min-width: 0;
+  }
+  .crate-now {
+    align-items: center;
+    gap: 14px;
+  }
+  .crate-now-text {
+    flex: 1;
+    min-width: 0;
+  }
+  .crate-song {
+    max-width: none;
+    font-size: 24px;
+    line-height: 1.1;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .crate-artist {
+    margin-top: 4px;
+    font-size: 15px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .crate-play {
+    flex: none;
+    width: 58px;
+    height: 58px;
+    min-width: 0;
+    padding: 0;
+    border-radius: 50%;
+    box-shadow: 0 12px 30px -8px color-mix(in srgb, var(--accent) 80%, transparent);
+  }
+  .crate-play svg {
+    width: 22px;
+    height: 22px;
+    margin-left: 3px;
+  }
+  .crate-play-label {
+    display: none;
   }
 
   /* ---------- Search sits under the status bar ---------- */

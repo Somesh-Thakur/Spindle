@@ -70,6 +70,7 @@ export function Crate({ tracks, title, lede }: { tracks: Track[]; title: string;
               {t && (
                 <motion.div
                   key={t.id}
+                  className="crate-now-text"
                   initial={{ opacity: 0, y: 18, filter: 'blur(6px)' }}
                   animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
                   exit={{ opacity: 0, y: -12, filter: 'blur(6px)' }}
@@ -81,8 +82,8 @@ export function Crate({ tracks, title, lede }: { tracks: Track[]; title: string;
                 </motion.div>
               )}
             </AnimatePresence>
-            <button className="btn btn-primary" onClick={() => playList(tracks, active)} disabled={!t}>
-              <Play size={15} fill="currentColor" strokeWidth={0} /> Play from here
+            <button className="btn btn-primary crate-play" onClick={() => playList(tracks, active)} disabled={!t} aria-label="Play from here">
+              <Play size={15} fill="currentColor" strokeWidth={0} /> <span className="crate-play-label">Play from here</span>
             </button>
           </div>
           <div className="crate-progress" aria-hidden="true">
