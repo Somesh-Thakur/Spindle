@@ -90,9 +90,9 @@ html.cursor-on .cur-ring {
 .cur-ring {
   display: grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
-  margin: -18px 0 0 -18px;
+  width: 24px;
+  height: 24px;
+  margin: -12px 0 0 -12px;
   border-radius: 50%;
   border: 1.5px solid rgba(255, 255, 255, 0.45);
   transition:
@@ -110,8 +110,8 @@ html.cursor-down .cur-ring {
 }
 .cur-glyph {
   grid-area: 1 / 1;
-  width: 22px;
-  height: 22px;
+  width: 15px;
+  height: 15px;
   opacity: 0;
   scale: 0.4;
   transition:
@@ -120,25 +120,25 @@ html.cursor-down .cur-ring {
 }
 .cur-play {
   color: #fff;
-  margin-left: 3px;
+  margin-left: 2px;
 }
 .cur-open {
   color: #111;
 }
 .cur-ring[data-mode='link'] {
-  width: 48px;
-  height: 48px;
-  margin: -24px 0 0 -24px;
+  width: 30px;
+  height: 30px;
+  margin: -15px 0 0 -15px;
   border-color: rgba(255, 255, 255, 0.8);
   background: rgba(255, 255, 255, 0.05);
 }
 .cur-ring[data-mode='play'],
 .cur-ring[data-mode='open'] {
-  width: 68px;
-  height: 68px;
-  margin: -34px 0 0 -34px;
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
   border-color: transparent;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
 }
 .cur-ring[data-mode='play'] {
   background: var(--accent);
@@ -161,9 +161,9 @@ html.cursor-down .cur-ring {
   opacity: 0 !important;
 }
 .cur-ring[data-mode='drag'] {
-  width: 26px;
-  height: 26px;
-  margin: -13px 0 0 -13px;
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
   border-color: var(--accent);
 }
 /* The old in-tile play button is redundant under the cursor's own play glyph. */
@@ -550,17 +550,17 @@ html.has-cursor .tile-play:not(.is-on) {
 }
 .cur-ring[data-mode='hand'],
 .cur-ring[data-mode='grab'] {
-  width: 56px;
-  height: 56px;
-  margin: -28px 0 0 -28px;
+  width: 36px;
+  height: 36px;
+  margin: -18px 0 0 -18px;
   border-color: transparent;
   background: rgba(246, 243, 236, 0.95);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
 }
 .cur-ring[data-mode='grab'] {
-  width: 48px;
-  height: 48px;
-  margin: -24px 0 0 -24px;
+  width: 32px;
+  height: 32px;
+  margin: -16px 0 0 -16px;
 }
 .cur-ring[data-mode='hand'] .cur-hand,
 .cur-ring[data-mode='grab'] .cur-grab {

@@ -414,6 +414,7 @@ function PlaybackSection() {
   const videoHidden = usePlayer((s) => s.videoHidden)
   const shuffle = usePlayer((s) => s.shuffle)
   const repeat = usePlayer((s) => s.repeat)
+  const autoplay = usePlayer((s) => s.autoplay)
   const set = usePlayer((s) => s.set)
   return (
     <Section id="playback" title="Playback">
@@ -436,6 +437,9 @@ function PlaybackSection() {
       </Row>
       <Row title="Open the full player on the video" sub="Instead of the record player, when a video is available.">
         <Switch on={videoView} onChange={(v) => set({ videoView: v, ...(v ? { videoHidden: false } : {}) })} label="Open on the video" />
+      </Row>
+      <Row title="Autoplay" sub="When your music ends, keep playing similar songs so it never stops.">
+        <Switch on={autoplay} onChange={(v) => set({ autoplay: v })} label="Autoplay" />
       </Row>
       <Row title="Shuffle" sub="Applies to what you play next.">
         <Switch on={shuffle} onChange={() => usePlayer.getState().toggleShuffle()} label="Shuffle" />

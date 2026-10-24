@@ -275,3 +275,239 @@
     display: none;
   }
 }
+
+/* ---------- Smart Shuffle and added songs ---------- */
+.btn-smart svg {
+  color: #b69cff;
+}
+.added-badge {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: -4px 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #cbb8ff;
+}
+.added-badge button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  color: #fff;
+  background: rgba(182, 156, 255, 0.22);
+  box-shadow: inset 0 0 0 1px rgba(182, 156, 255, 0.4);
+}
+.added-badge button:hover {
+  background: rgba(182, 156, 255, 0.35);
+}
+.added-kept {
+  color: var(--text-2);
+  font-weight: 500;
+}
+.q-added {
+  flex: none;
+  color: #b69cff;
+}
+.pl-plays {
+  white-space: nowrap;
+}
+.pl-plays svg {
+  display: inline-block;
+  vertical-align: -2px;
+  margin: 0 2px 0 4px;
+}
+
+/* ---------- Stats ---------- */
+.lib-stats .lib-liked-art {
+  background: radial-gradient(120% 90% at 20% 10%, #ffb36b 0%, #ff3b5c 45%, #3b0a4e 100%);
+}
+.stats-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.stats-actions .seg button {
+  height: 32px;
+  padding: 0 14px;
+}
+.stats-actions .btn {
+  border-radius: 999px;
+}
+.stats-empty {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.stats-empty p {
+  margin: 0;
+  line-height: 1.55;
+}
+.stats-empty a {
+  color: var(--accent);
+}
+.stats-cards {
+  display: grid;
+  grid-template-columns: 1.4fr repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 36px;
+}
+.stats-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(10, 9, 16, 0.5);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+}
+.stats-card svg {
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+.stats-card b {
+  font-family: var(--display);
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1;
+}
+.stats-card span {
+  font-size: 13px;
+  color: var(--text-2);
+}
+.stats-card.is-big {
+  background: linear-gradient(140deg, color-mix(in srgb, var(--accent) 40%, transparent), rgba(10, 9, 16, 0.5));
+}
+.stats-card.is-big b {
+  font-size: 54px;
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 32px;
+}
+.stats-h {
+  margin: 0 0 14px;
+  font-family: var(--display);
+  font-size: 24px;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-variation-settings: 'wdth' 92;
+}
+.stats-songs,
+.stats-artists {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.stats-songs li {
+  display: grid;
+  grid-template-columns: 28px 48px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  height: 64px;
+  padding: 0 8px;
+  border-radius: 10px;
+}
+.stats-songs li:hover {
+  background: var(--hover);
+}
+.stats-rank {
+  font-family: var(--display);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-3);
+  text-align: right;
+}
+.stats-song-art .art {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+}
+.stats-song-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.stats-song-text b,
+.stats-song-text small {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.stats-song-text b {
+  font-weight: 600;
+}
+.stats-song-text small,
+.stats-count {
+  font-size: 13px;
+  color: var(--text-2);
+}
+.stats-artists {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 22px 16px;
+}
+.stats-artists li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+  min-width: 0;
+}
+.stats-artist-art {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin-bottom: 6px;
+}
+.stats-artist-art .art {
+  width: 120px;
+  height: 120px;
+}
+.stats-artist-rank {
+  position: absolute;
+  left: -4px;
+  bottom: -4px;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-weight: 800;
+  color: #fff;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px var(--bg);
+}
+.stats-artists b {
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.stats-artists small {
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+.stats-note {
+  margin-top: 28px;
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+@media (max-width: 1100px) {
+  .stats-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .stats-card.is-big {
+    grid-column: 1 / -1;
+  }
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -18,7 +18,7 @@ const leadArtist = (artist: string) => artist.split(/,|&| x | feat\.? /i)[0].tri
  * Songs to suggest for `seed`, best first. `exclude` is what's already in the
  * playlist (by id, and by title + artist so other versions don't sneak in).
  */
-export async function recommend(seed: Track[], exclude: Track[], country: string): Promise<Track[]> {
+export async function recommend(seed: Track[], exclude: Track[], country: string, perArtist = PER_ARTIST): Promise<Track[]> {
   // Which artists does this playlist lean on? Apple ids where we have them…
   const byId = new Map<string, number>()
   const byName = new Map<string, number>()
@@ -44,7 +44,7 @@ export async function recommend(seed: Track[], exclude: Track[], country: string
     .map(([id]) => Number(id))
   if (!ids.length) return []
 
-  const songs = await artistsTopSongs(`rec:${[...ids].sort().join(',')}`, ids, country, PER_ARTIST)
+  const songs = await artistsTopSongs(`rec:${perArtist}:${[...ids].sort().join(',')}`, ids, country, perArtist)
   const have = new Set(exclude.map((t) => t.id))
   const haveKeys = new Set(exclude.map(key))
   const seen = new Set<string>()

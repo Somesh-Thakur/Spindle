@@ -5,6 +5,7 @@ import { trackArt, year } from '../lib/format'
 import { useIsPhone } from '../lib/useIsPhone'
 import { openShare, trackShare } from '../lib/share'
 import { useCurrent, usePlayer } from '../store/player'
+import { AddedBadge } from './AddedBadge'
 import { Scrubber, TransportControls, VolumeControl } from './Controls'
 import { Deck } from './Deck'
 import { KaraokeStage } from './Karaoke'
@@ -155,6 +156,7 @@ function Sheet() {
                 <TrackMenu track={track} className="menu-up" />
               </div>
             </div>
+            <AddedBadge track={track} />
             <Scrubber />
             <TransportControls big />
             <div className="full-volume">

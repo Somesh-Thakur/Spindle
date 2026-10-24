@@ -3,6 +3,8 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { HashRouter } from 'react-router-dom'
 import App from './App'
+import { startAutoplay } from './lib/autoplay'
+import { startHistory } from './lib/history'
 import './lib/sync'
 import { usePlayer } from './store/player'
 import './styles/app.css'
@@ -19,6 +21,11 @@ import './styles/phone.css'
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}))
 }
+
+// Count listening time for Stats and playlist play counts.
+startHistory()
+// Keep the music going with similar songs when the queue ends.
+startAutoplay()
 
 // Dev-only handle for poking at player state from the console.
 if (import.meta.env.DEV) Object.assign(window, { __player: usePlayer })

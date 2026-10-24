@@ -391,3 +391,115 @@ export async function drawStory(canvas: HTMLCanvasElement, card: StoryCard) {
 export function storyBlob(canvas: HTMLCanvasElement): Promise<Blob> {
   return new Promise((resolve, reject) => canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('empty'))), 'image/png'))
 }
+
+// ---------- Stats card ----------
+
+export interface StatsCard {
+  c1: string
+  c2: string
+  /** "Last 4 weeks", "All time"… */
+  period: string
+  /** The listener's name, or empty for "My Spindle". */
+  name: string
+  minutes: number
+  plays: number
+  songs: number
+  streak: number
+  topArtist?: { name: string; art: string }
+  topSongs: { title: string; artist: string; art: string; count: number }[]
+}
+
+function circle(ctx: CanvasRenderingContext2D, img: HTMLImageElement | null, cx: number, cy: number, r: number) {
+  ctx.save()
+  ctx.shadowColor = 'rgba(0,0,0,0.45)'
+  ctx.shadowBlur = 40
+  ctx.shadowOffsetY = 18
+  ctx.beginPath()
+  ctx.arc(cx, cy, r, 0, Math.PI * 2)
+  ctx.fillStyle = '#1a1720'
+  ctx.fill()
+  ctx.restore()
+  ctx.save()
+  ctx.beginPath()
+  ctx.arc(cx, cy, r, 0, Math.PI * 2)
+  ctx.clip()
+  if (img) drawCover(ctx, img, cx - r, cy - r, r * 2, r * 2)
+  ctx.restore()
+}
+
+/** "My Spindle stats": minutes, top artist and top five songs on a 1080×1920 card. */
+export async function drawStats(canvas: HTMLCanvasElement, card: StatsCard) {
+  const songs = card.topSongs.slice(0, 5)
+  const [artistImg, songImgs, icon] = await Promise.all([loadArt(card.topArtist?.art), Promise.all(songs.map((s) => loadArt(s.art))), loadBrand(), fontsReady()])
+  canvas.width = STORY_W
+  canvas.height = STORY_H
+  const ctx = canvas.getContext('2d')!
+  const ink = '#ffffff'
+  background(ctx, card.c1, card.c2)
+
+  ctx.fillStyle = ink
+  ctx.textAlign = 'left'
+  ctx.textBaseline = 'top'
+  ctx.globalAlpha = 0.75
+  ctx.font = `700 30px ${SANS}`
+  ctx.fillText(`${card.name ? `${card.name.toUpperCase()}’S` : 'MY'} SPINDLE · ${card.period.toUpperCase()}`, 90, 150)
+  ctx.globalAlpha = 1
+  ctx.font = `800 150px Anybody, ${SANS}`
+  ctx.fillText(card.minutes.toLocaleString(), 84, 200)
+  ctx.font = `600 46px ${SANS}`
+  ctx.fillText('minutes listened', 90, 370)
+
+  // Top artist
+  let y = 500
+  if (card.topArtist) {
+    circle(ctx, artistImg, 90 + 130, y + 130, 130)
+    ctx.globalAlpha = 0.75
+    ctx.font = `700 28px ${SANS}`
+    ctx.fillText('TOP ARTIST', 400, y + 70)
+    ctx.globalAlpha = 1
+    ctx.font = `700 60px ${SANS}`
+    fillLines(ctx, wrap(ctx, card.topArtist.name, 600, 2), 400, y + 112, 66)
+    y += 330
+  }
+
+  // Top songs
+  ctx.globalAlpha = 0.75
+  ctx.font = `700 28px ${SANS}`
+  ctx.fillText('TOP SONGS', 90, y)
+  ctx.globalAlpha = 1
+  y += 56
+  songs.forEach((s, i) => {
+    const rowY = y + i * 130
+    ctx.font = `800 54px Anybody, ${SANS}`
+    ctx.textBaseline = 'middle'
+    ctx.fillText(String(i + 1), 90, rowY + 54)
+    drawArt(ctx, [songImgs[i]], 160, rowY, 108, 14, false)
+    ctx.textBaseline = 'top'
+    ctx.font = `700 42px ${SANS}`
+    fillLines(ctx, wrap(ctx, s.title, 660, 1), 300, rowY + 10, 50)
+    ctx.globalAlpha = 0.75
+    ctx.font = `500 32px ${SANS}`
+    fillLines(ctx, wrap(ctx, `${s.artist} · ${s.count} ${s.count === 1 ? 'play' : 'plays'}`, 660, 1), 300, rowY + 62, 40)
+    ctx.globalAlpha = 1
+  })
+
+  // Totals
+  // Totals sit below the songs, never over them.
+  const totalsY = Math.max(y + songs.length * 130 + 40, STORY_H - 320)
+  const totals = [
+    [card.plays.toLocaleString(), card.plays === 1 ? 'play' : 'plays'],
+    [card.songs.toLocaleString(), card.songs === 1 ? 'song' : 'different songs'],
+    [String(card.streak), 'day streak'],
+  ]
+  totals.forEach(([n, label], i) => {
+    const x = 90 + i * 310
+    ctx.textBaseline = 'top'
+    ctx.font = `800 64px Anybody, ${SANS}`
+    ctx.fillText(n, x, totalsY)
+    ctx.globalAlpha = 0.75
+    ctx.font = `500 28px ${SANS}`
+    ctx.fillText(label, x, totalsY + 78)
+    ctx.globalAlpha = 1
+  })
+  brand(ctx, icon, ink, STORY_H - 130)
+}

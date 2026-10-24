@@ -21,6 +21,8 @@ export interface Playlist {
   createdAt: number
   /** The listener's own image (a resized JPEG data URL). Falls back to the songs' covers. */
   cover?: string
+  /** How many times it's been listened to (sessions started from it). */
+  plays?: number
 }
 
 export const DEFAULT_PALETTE: Palette = { base: '#2a1d5c', accent: '#ff4f79', glow: '#7a5cff', light: 0.2 }
@@ -75,10 +77,19 @@ interface PlayerState {
   liveBackground: boolean
   /** How playlist songs are laid out. */
   playlistView: 'list' | 'grid' | 'compact'
+  /** Keep playing similar songs when the queue runs out. */
+  autoplay: boolean
+  /** Where the current queue came from, e.g. "playlist:abc123", and a number for each new start. */
+  queueSource: string
+  queueSession: number
+  /** Songs in the queue that Autoplay or Smart Shuffle added (not chosen by the listener). */
+  addedIds: string[]
 
   current: () => Track | undefined
   upNext: () => Track[]
-  playList: (tracks: Track[], start?: number) => void
+  playList: (tracks: Track[], start?: number, source?: string, added?: string[]) => void
+  /** Add songs to the end of the queue without interrupting (Autoplay). */
+  extendQueue: (tracks: Track[], added: boolean) => void
   playTrack: (t: Track) => void
   playNext: (t: Track) => void
   addToQueue: (t: Track) => void
@@ -154,6 +165,10 @@ export const usePlayer = create<PlayerState>()(
       intro: true,
       liveBackground: true,
       playlistView: 'list',
+      autoplay: true,
+      queueSource: '',
+      queueSession: 0,
+      addedIds: [],
 
       current: () => {
         const { queue, order, pos } = get()
@@ -164,11 +179,31 @@ export const usePlayer = create<PlayerState>()(
         return order.slice(pos + 1).map((i) => queue[i])
       },
 
-      playList: (tracks, start = 0) => {
+      playList: (tracks, start = 0, source = '', added = []) => {
         if (!tracks.length) return
         const order = get().shuffle ? shuffled(tracks.length, start) : linear(tracks.length)
-        set({ queue: tracks, order, pos: get().shuffle ? 0 : start, isPlaying: true, currentTime: 0 })
+        set({
+          queue: tracks,
+          order,
+          pos: get().shuffle ? 0 : start,
+          isPlaying: true,
+          currentTime: 0,
+          queueSource: source,
+          queueSession: get().queueSession + 1,
+          addedIds: added,
+        })
         remember(tracks[start])
+      },
+      extendQueue: (tracks, added) => {
+        const { queue, order, addedIds } = get()
+        const have = new Set(queue.map((t) => t.id))
+        const fresh = tracks.filter((t) => !have.has(t.id))
+        if (!fresh.length) return
+        set({
+          queue: [...queue, ...fresh],
+          order: [...order, ...fresh.map((_, i) => queue.length + i)],
+          addedIds: added ? [...addedIds, ...fresh.map((t) => t.id)] : addedIds,
+        })
       },
       playTrack: (t) => get().playList([t], 0),
       playNext: (t) => {
@@ -265,6 +300,9 @@ export const usePlayer = create<PlayerState>()(
         intro: s.intro,
         liveBackground: s.liveBackground,
         playlistView: s.playlistView,
+        autoplay: s.autoplay,
+        addedIds: s.addedIds,
+        queueSource: s.queueSource,
         queue: s.queue,
         order: s.order,
         pos: s.pos,

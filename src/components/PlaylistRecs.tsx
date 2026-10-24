@@ -24,12 +24,14 @@ export function PlaylistRecs({ playlist }: { playlist: Playlist }) {
   const current = useCurrent()
   const isPlaying = usePlayer((s) => s.isPlaying)
   const [page, setPage] = useState(0)
+  // Each pass through every suggestion digs deeper into the artists' catalogues.
+  const [depth, setDepth] = useState(1)
 
   // An empty playlist borrows from what you like and play.
   const seed = playlist.tracks.length ? playlist.tracks : [...Object.values(liked), ...recent].slice(0, 40)
   // Only refetch when the set of artists changes, not on every add or reorder.
   const seedKey = useMemo(() => [...new Set(seed.map((t) => t.artistId || t.artist))].sort().join('|'), [seed])
-  const { data, loading } = useAsync(() => recommend(seed, [], country), [seedKey, country])
+  const { data, loading } = useAsync(() => recommend(seed, [], country, 5 * depth), [seedKey, country, depth])
 
   const inList = useMemo(() => {
     const ids = new Set(playlist.tracks.map((t) => t.id))
@@ -39,6 +41,12 @@ export function PlaylistRecs({ playlist }: { playlist: Playlist }) {
   const pool = (data ?? []).filter((t) => !inList(t))
   const pages = Math.max(1, Math.ceil(pool.length / PAGE))
   const shown = pool.slice((page % pages) * PAGE, (page % pages) * PAGE + PAGE)
+  const refresh = () => {
+    if (page + 1 < pages || depth >= 4) return setPage((n) => n + 1)
+    // Seen them all: fetch more songs per artist and start from the top.
+    setDepth((d) => d + 1)
+    setPage(0)
+  }
 
   if (!loading && !pool.length) return null
 
@@ -55,11 +63,9 @@ export function PlaylistRecs({ playlist }: { playlist: Playlist }) {
           </h2>
           <p className="recs-sub">{playlist.tracks.length ? 'Based on what’s in this playlist' : 'Based on what you like and play'}</p>
         </div>
-        {pages > 1 && (
-          <button className="btn btn-ghost recs-refresh" onClick={() => setPage((n) => n + 1)}>
-            <RefreshCw size={15} /> Refresh
-          </button>
-        )}
+        <button className="btn btn-ghost recs-refresh" onClick={refresh} disabled={loading}>
+          <RefreshCw size={15} className={loading && data ? 'spin' : ''} /> Refresh
+        </button>
       </div>
 
       {loading && !data ? (

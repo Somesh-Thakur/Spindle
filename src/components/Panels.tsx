@@ -1,3 +1,4 @@
+import { Sparkles } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useEffect, useRef } from 'react'
 import { useSongLyrics } from '../lib/useSongLyrics'
@@ -63,6 +64,7 @@ export function QueuePanel() {
   const pos = usePlayer((s) => s.pos)
   const isPlaying = usePlayer((s) => s.isPlaying)
   const jumpTo = usePlayer((s) => s.jumpTo)
+  const added = usePlayer((s) => s.addedIds)
   const current = queue[order[pos]]
   const upcoming = order.slice(pos + 1)
 
@@ -100,6 +102,7 @@ export function QueuePanel() {
               <b>{t.title}</b>
               <small>{t.artist}</small>
             </div>
+            {added.includes(t.id) && <Sparkles size={14} className="q-added" aria-label="Added for you" />}
           </motion.button>
         )
       })}

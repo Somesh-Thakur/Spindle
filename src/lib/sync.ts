@@ -54,7 +54,7 @@ const DEVICE = (() => {
 const QUEUE_LIMIT = 200
 
 /** Settings that follow the account. Volume stays per device: speakers differ. */
-const PREFS = ['country', 'hinglish', 'recent', 'videoHidden', 'videoView', 'customCursor', 'intro', 'liveBackground', 'playlistView'] as const
+const PREFS = ['country', 'hinglish', 'recent', 'videoHidden', 'videoView', 'customCursor', 'intro', 'liveBackground', 'playlistView', 'autoplay'] as const
 
 // ---------- projection: store → sections ----------
 

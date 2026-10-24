@@ -35,6 +35,7 @@ import { ImportPage } from './pages/Import'
 import { LibraryPage, PlaylistPage } from './pages/Playlists'
 import { BrowsePage } from './pages/Browse'
 import { Search } from './pages/Search'
+import { StatsPage } from './pages/Stats'
 import { SharedPage } from './pages/Shared'
 import { ScrollRoot } from './lib/scroll'
 import { codeFromPath, rememberShare, takeRememberedShare } from './lib/share'
@@ -131,6 +132,7 @@ function Shell() {
               <Route path="/account" element={<SettingsPage />} />
               <Route path="/liked" element={<LikedPage />} />
               <Route path="/downloads" element={<DownloadsPage />} />
+              <Route path="/stats" element={<StatsPage />} />
               <Route path="/playlist/:id" element={<PlaylistPage />} />
               <Route path="/recent" element={<RecentPage />} />
               <Route path="/album/:id" element={<AlbumPage />} />

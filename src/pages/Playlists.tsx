@@ -1,5 +1,5 @@
 import { motion, Reorder, useDragControls } from 'framer-motion'
-import { ArrowDownToLine, Columns2, Download, GripVertical, Heart, LayoutGrid, List, Pause, Pencil, Play, Plus, Search, Settings, Share, Shuffle, Trash2, X } from 'lucide-react'
+import { ArrowDownToLine, ChartNoAxesColumn, Columns2, Headphones, Loader2, Sparkles, Download, GripVertical, Heart, LayoutGrid, List, Pause, Pencil, Play, Plus, Search, Settings, Share, Shuffle, Trash2, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Artwork } from '../components/Artwork'
@@ -16,6 +16,7 @@ import { TrackMenu } from '../components/TrackRow'
 import { fmtTime } from '../lib/format'
 import { useDownloads } from '../lib/offline'
 import { openShare, playlistShare } from '../lib/share'
+import { smartShuffle } from '../lib/smartShuffle'
 import { displayName, useAccount } from '../lib/sync'
 import type { Track } from '../lib/types'
 import { useCurrent, usePlayer } from '../store/player'
@@ -23,11 +24,11 @@ import { useCurrent, usePlayer } from '../store/player'
 const minutes = (tracks: Track[]) => Math.round(tracks.reduce((s, t) => s + t.duration, 0) / 60)
 const songs = (n: number) => `${n} ${n === 1 ? 'song' : 'songs'}`
 
-function play(tracks: Track[], shuffle: boolean) {
+function play(tracks: Track[], shuffle: boolean, source = '') {
   if (!tracks.length) return
   const st = usePlayer.getState()
   if (st.shuffle !== shuffle) st.toggleShuffle()
-  st.playList(tracks, shuffle ? Math.floor(Math.random() * tracks.length) : 0)
+  st.playList(tracks, shuffle ? Math.floor(Math.random() * tracks.length) : 0, source)
 }
 
 const VIEWS = [
@@ -66,7 +67,7 @@ function DraggableRow({ track, playlistId, index, all }: { track: Track; playlis
       <span className="pl-grip" onPointerDown={(e) => controls.start(e)} aria-label="Drag to reorder" role="button" tabIndex={-1}>
         <GripVertical size={16} />
       </span>
-      <button className="row-lead" onClick={() => usePlayer.getState().playList(all, index)} aria-label={`Play ${track.title}`}>
+      <button className="row-lead" onClick={() => usePlayer.getState().playList(all, index, `playlist:${playlistId}`)} aria-label={`Play ${track.title}`}>
         <span className="row-art">
           <Artwork src={track.art} size={48} />
           <span className="row-art-cover">
@@ -96,6 +97,7 @@ export function PlaylistPage() {
   const [editing, setEditing] = useState(params.get('rename') === '1')
   const [confirm, setConfirm] = useState(false)
   const view = usePlayer((s) => s.playlistView)
+  const [smartBusy, setSmartBusy] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const nav = useNavigate()
 
@@ -148,13 +150,34 @@ export function PlaylistPage() {
               <Pencil size={20} className="pl-pencil" />
             </h1>
           )}
-          <div className="sleeve-meta">{p.tracks.length ? `${songs(p.tracks.length)}, ${minutes(p.tracks)} minutes` : 'No songs yet'}</div>
+          <div className="sleeve-meta">
+            {p.tracks.length ? `${songs(p.tracks.length)}, ${minutes(p.tracks)} minutes` : 'No songs yet'}
+            {!!p.plays && (
+              <span className="pl-plays">
+                {' · '}
+                <Headphones size={14} /> Played {p.plays} {p.plays === 1 ? 'time' : 'times'}
+              </span>
+            )}
+          </div>
           <div className="coll-actions">
-            <button className="btn btn-primary" onClick={() => play(p.tracks, false)} disabled={!p.tracks.length}>
+            <button className="btn btn-primary" onClick={() => play(p.tracks, false, `playlist:${p.id}`)} disabled={!p.tracks.length}>
               <Play size={15} fill="currentColor" strokeWidth={0} /> Play
             </button>
-            <button className="btn" onClick={() => play(p.tracks, true)} disabled={!p.tracks.length}>
+            <button className="btn" onClick={() => play(p.tracks, true, `playlist:${p.id}`)} disabled={!p.tracks.length}>
               <Shuffle size={15} /> Shuffle
+            </button>
+            <button
+              className="btn btn-smart"
+              disabled={!p.tracks.length || smartBusy}
+              onClick={() => {
+                setSmartBusy(true)
+                smartShuffle(p)
+                  .then((n) => toast(n ? `Smart Shuffle: ${n} new picks mixed in` : 'Smart Shuffle: no new picks right now, playing shuffled'))
+                  .finally(() => setSmartBusy(false))
+              }}
+              title="Shuffle with recommended songs mixed in"
+            >
+              {smartBusy ? <Loader2 size={15} className="spin" /> : <Sparkles size={15} />} Smart Shuffle
             </button>
             <button className="btn" onClick={() => openShare(playlistShare(p))} disabled={!p.tracks.length}>
               <Share size={15} /> Share
@@ -191,7 +214,7 @@ export function PlaylistPage() {
             <div className="pl-grid">
               {p.tracks.map((t, i) => (
                 <div key={t.id} className="pl-grid-item">
-                  <SongTile track={t} onPlay={() => usePlayer.getState().playList(p.tracks, i)} />
+                  <SongTile track={t} onPlay={() => usePlayer.getState().playList(p.tracks, i, `playlist:${p.id}`)} />
                   <TrackMenu track={t} className="pl-grid-menu" />
                 </div>
               ))}
@@ -199,7 +222,7 @@ export function PlaylistPage() {
           ) : view === 'compact' ? (
             <div className="pl-compact">
               {p.tracks.map((t, i) => (
-                <CompactRow key={t.id} track={t} onPlay={() => usePlayer.getState().playList(p.tracks, i)} />
+                <CompactRow key={t.id} track={t} onPlay={() => usePlayer.getState().playList(p.tracks, i, `playlist:${p.id}`)} />
               ))}
             </div>
           ) : (
@@ -277,6 +300,15 @@ export function LibraryPage() {
             </span>
             <span className="lib-name">Downloads</span>
             <span className="lib-sub">{downloads ? songs(downloads) : 'Listen offline'}</span>
+          </Link>
+        </Reveal>
+        <Reveal i={2}>
+          <Link to="/stats" className="lib-card lib-liked lib-stats" data-cursor="open">
+            <span className="lib-liked-art">
+              <ChartNoAxesColumn size={44} />
+            </span>
+            <span className="lib-name">Your stats</span>
+            <span className="lib-sub">Top songs, artists and minutes</span>
           </Link>
         </Reveal>
         {playlists.map((p, i) => (
