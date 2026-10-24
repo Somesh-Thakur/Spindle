@@ -1,9 +1,10 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "site",
-  "description": "What the Spindle website may ask the desktop app to do: show Discord status, open links in the browser, run its own title bar and install updates. Nothing else.",
+  "description": "What the Spindle website may ask the desktop app to do: show Discord status, open links in the browser, run its title bar, fullscreen and mini player, and install updates. Nothing else.",
   "windows": [
-    "main"
+    "main",
+    "mini"
   ],
   "remote": {
     "urls": [
@@ -21,6 +22,11 @@
     "core:window:allow-internal-toggle-maximize",
     "core:window:allow-is-maximized",
     "core:window:allow-close",
-    "core:window:allow-start-dragging"
+    "core:window:allow-start-dragging",
+    "allow-toggle-mini",
+    "allow-show-main",
+    "core:window:allow-set-always-on-top",
+    "core:window:allow-set-fullscreen",
+    "core:window:allow-is-fullscreen"
   ]
 }

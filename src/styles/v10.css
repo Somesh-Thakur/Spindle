@@ -676,3 +676,108 @@
 .cur-dot {
   z-index: 2147483647;
 }
+
+/* ---------- Screensaver ---------- */
+.set-select {
+  height: 38px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 10px;
+  color: var(--text);
+  font: inherit;
+  font-size: 13.5px;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: inset 0 0 0 1px var(--hairline-strong);
+}
+/* Everything underneath stops painting; only the music keeps going. */
+.is-saver #root,
+.is-saver .titlebar,
+.is-saver .update-card {
+  visibility: hidden;
+}
+.is-saver,
+.is-saver body {
+  cursor: none;
+}
+.is-saver .cur-ring,
+.is-saver .cur-dot {
+  visibility: hidden !important; /* the cursor sets its own opacity inline */
+}
+.saver {
+  position: fixed;
+  z-index: 2147483600;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: #000;
+  cursor: none;
+  user-select: none;
+}
+.saver-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+  transition: transform 8s ease-in-out;
+}
+.saver-time {
+  color: rgba(255, 255, 255, 0.5);
+  font-family: var(--display);
+  font-size: clamp(64px, 12vw, 160px);
+  font-weight: 300;
+  font-stretch: 110%;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.saver-date {
+  color: rgba(255, 255, 255, 0.28);
+  font-size: clamp(14px, 1.6vw, 18px);
+  letter-spacing: 0.02em;
+}
+.saver-now {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: clamp(28px, 6vh, 56px);
+  text-align: left;
+}
+.saver-now img {
+  border-radius: 10px;
+  opacity: 0.55;
+}
+.saver-now div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 46vw;
+}
+.saver-now b {
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 17px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.saver-now span {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 14px;
+}
+.saver-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 40px;
+  color: rgba(255, 255, 255, 0.3);
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+/* Desktop fullscreen (F11): no title bar. */
+.is-desktop.is-fullscreen {
+  --titlebar: 0px;
+}
+.is-fullscreen .titlebar {
+  display: none;
+}

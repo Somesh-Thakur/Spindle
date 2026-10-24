@@ -29,6 +29,7 @@ import { KineticTitle } from '../components/Kinetic'
 import { toast } from '../components/Toast'
 import { cacheSize, clearCache } from '../lib/cache'
 import { isDesktop } from '../lib/desktop'
+import { startSaver } from '../lib/saver'
 import { DISCORD_INVITE, feedbackHref, useIsAdmin } from '../lib/feedback'
 import { deleteShare, myShares, shareUrl, type Share } from '../lib/share'
 import { changePassword, deleteAccount, displayName, signOut, syncAgain, updateName, useAccount } from '../lib/sync'
@@ -56,6 +57,7 @@ const SHORTCUTS = [
   ['↑ ↓', 'Volume'],
   ['M', 'Mute'],
   ['F', 'Open or close the full player'],
+  ['Z', 'Screensaver'],
   ['/ or Ctrl K', 'Search'],
 ]
 
@@ -520,6 +522,7 @@ function AppearanceSection() {
   const customCursor = usePlayer((s) => s.customCursor)
   const intro = usePlayer((s) => s.intro)
   const liveBackground = usePlayer((s) => s.liveBackground)
+  const screensaver = usePlayer((s) => s.screensaver)
   const set = usePlayer((s) => s.set)
   return (
     <Section id="appearance" title="Appearance">
@@ -528,6 +531,20 @@ function AppearanceSection() {
       </Row>
       <Row title="Custom cursor" sub="The ring that reacts to what’s under it, and the hand on the record player.">
         <Switch on={customCursor} onChange={(v) => set({ customCursor: v })} label="Custom cursor" />
+      </Row>
+      <Row title="Screensaver" sub="A dim clock and what’s playing after you’ve been away, with almost no battery use. Press Z to start it any time.">
+        <div className="set-actions">
+          <select className="set-select" value={screensaver} onChange={(e) => set({ screensaver: Number(e.target.value) })} aria-label="Screensaver delay">
+            {[0, 2, 5, 10, 20].map((m) => (
+              <option key={m} value={m}>
+                {m ? `After ${m} min` : 'Off'}
+              </option>
+            ))}
+          </select>
+          <button className="btn btn-ghost" onClick={startSaver}>
+            Preview
+          </button>
+        </div>
       </Row>
       <Row title="Opening animation" sub="The record spin-up when you open Spindle.">
         <Switch on={intro} onChange={(v) => set({ intro: v })} label="Opening animation" />

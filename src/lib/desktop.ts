@@ -76,6 +76,21 @@ export function startDesktop() {
   addEventListener('resize', syncMaximized)
   void syncMaximized()
 
+  // F11 fills the screen (the title bar steps aside); F11 or Esc comes back.
+  const setFullscreen = async (value: boolean) => {
+    await tauri.invoke('plugin:window|set_fullscreen', { label: 'main', value }).catch(() => toast('Update Spindle to use fullscreen'))
+    const fs = !!(await tauri.invoke('plugin:window|is_fullscreen', { label: 'main' }).catch(() => false))
+    document.documentElement.classList.toggle('is-fullscreen', fs)
+  }
+  addEventListener('keydown', (e) => {
+    if (e.key === 'F11') {
+      e.preventDefault()
+      void setFullscreen(!document.documentElement.classList.contains('is-fullscreen'))
+    } else if (e.key === 'Escape' && document.documentElement.classList.contains('is-fullscreen') && !usePlayer.getState().fullOpen) {
+      void setFullscreen(false)
+    }
+  })
+
   // Look for a new version of the app shortly after start, then every few hours.
   setTimeout(checkUpdate, 8000)
   setInterval(checkUpdate, 4 * 3600_000)

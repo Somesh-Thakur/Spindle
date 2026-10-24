@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { Eye, EyeOff, Heart, ListMusic, Mic2, Captions, SkipForward } from 'lucide-react'
+import { Eye, EyeOff, Heart, ListMusic, Mic2, Captions, PictureInPicture2, SkipForward } from 'lucide-react'
+import { canPopOut, popOut } from '../lib/popout'
 import { useIsPhone } from '../lib/useIsPhone'
 import { useCurrent, usePlayer } from '../store/player'
 import { Artwork } from './Artwork'
@@ -89,6 +90,11 @@ export function MiniPlayer() {
             <button className="ctl ctl-minor" onClick={() => (usePlayer.setState({ panel: 'queue' }), setFull(true))} aria-label="Up next">
               <ListMusic size={16} />
             </button>
+            {canPopOut && (
+              <button className="ctl ctl-minor" onClick={popOut} aria-label="Pop out mini player" title="Mini player, always on top">
+                <PictureInPicture2 size={16} />
+              </button>
+            )}
             <VolumeControl />
           </div>
 

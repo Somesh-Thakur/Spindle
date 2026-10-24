@@ -16,7 +16,7 @@ use serde::Deserialize;
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::webview::PageLoadEvent;
-use tauri::{AppHandle, Manager, State, WebviewWindow, WindowEvent};
+use tauri::{AppHandle, Manager, PhysicalPosition, State, WebviewUrl, WebviewWindow, WebviewWindowBuilder, WindowEvent};
 use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Shortcut, ShortcutState};
 use tauri_plugin_opener::OpenerExt;
@@ -96,6 +96,48 @@ async fn install_update(app: AppHandle, state: State<'_, Shared>) -> Result<(), 
     let update = state.update.lock().unwrap().take().ok_or("No update to install.")?;
     update.download_and_install(|_, _| {}, || {}).await.map_err(|e| e.to_string())?;
     app.restart();
+}
+
+// ---------- mini player ----------
+
+/// Opens the pop-out mini player (the site's remote.html) pinned on top in the
+/// bottom-right corner, or closes it if it's open. Async: creating a window
+/// from a synchronous command can deadlock on Windows.
+#[tauri::command]
+async fn toggle_mini(app: AppHandle) -> Result<(), String> {
+    if let Some(mini) = app.get_webview_window("mini") {
+        return mini.close().map_err(|e| e.to_string());
+    }
+    let main = app.get_webview_window("main").ok_or("Spindle isn't open.")?;
+    let url = main.url().map_err(|e| e.to_string())?.join("/remote.html").map_err(|e| e.to_string())?;
+    let (w, h) = (360.0, 104.0);
+    let mini = WebviewWindowBuilder::new(&app, "mini", WebviewUrl::External(url))
+        .title("Spindle mini player")
+        .inner_size(w, h)
+        .resizable(false)
+        .maximizable(false)
+        .decorations(false)
+        .always_on_top(true)
+        .skip_taskbar(true)
+        .shadow(true)
+        .background_color(tauri::window::Color(11, 10, 16, 255))
+        .visible(false)
+        .build()
+        .map_err(|e| e.to_string())?;
+    if let Ok(Some(monitor)) = main.current_monitor() {
+        let area = monitor.work_area();
+        let scale = monitor.scale_factor();
+        let (pw, ph, margin) = ((w * scale) as i32, (h * scale) as i32, (16.0 * scale) as i32);
+        let x = area.position.x + area.size.width as i32 - pw - margin;
+        let y = area.position.y + area.size.height as i32 - ph - margin;
+        let _ = mini.set_position(PhysicalPosition::new(x, y));
+    }
+    mini.show().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn show_main(app: AppHandle) {
+    show(&app);
 }
 
 // ---------- signing in through the browser ----------
@@ -295,7 +337,7 @@ fn main() {
                 .build(),
         )
         .manage(Shared { discord, playing: AtomicBool::new(false), auth: Mutex::new(None), update: Mutex::new(None) })
-        .invoke_handler(tauri::generate_handler![now_playing, open_url, check_update, install_update])
+        .invoke_handler(tauri::generate_handler![now_playing, open_url, check_update, install_update, toggle_mini, show_main])
         // The window opens once the page has painted, so there's no white flash.
         .on_page_load(|webview, payload| {
             if payload.event() == PageLoadEvent::Finished {
@@ -337,6 +379,7 @@ fn main() {
                     &MenuItem::with_id(app, "toggle", "Play / Pause", true, None::<&str>)?,
                     &MenuItem::with_id(app, "next", "Next song", true, None::<&str>)?,
                     &MenuItem::with_id(app, "prev", "Previous song", true, None::<&str>)?,
+                    &MenuItem::with_id(app, "mini", "Mini player", true, None::<&str>)?,
                     &PredefinedMenuItem::separator(app)?,
                     &MenuItem::with_id(app, "quit", "Quit Spindle", true, None::<&str>)?,
                 ],
@@ -349,6 +392,12 @@ fn main() {
                 .on_menu_event(|app, event| match event.id().as_ref() {
                     "show" => show(app),
                     "quit" => app.exit(0),
+                    "mini" => {
+                        let app = app.clone();
+                        tauri::async_runtime::spawn(async move {
+                            let _ = toggle_mini(app).await;
+                        });
+                    }
                     action @ ("toggle" | "next" | "prev") => player(app, action),
                     _ => {}
                 })
@@ -361,6 +410,8 @@ fn main() {
             Ok(())
         })
         .on_window_event(|window, event| match event {
+            // The mini player closes like any window; only the main one goes to the tray.
+            _ if window.label() != "main" => {}
             // Closing while music plays keeps it going from the tray, like Spotify.
             WindowEvent::CloseRequested { api, .. } => {
                 if window.state::<Shared>().playing.load(Ordering::Relaxed) {

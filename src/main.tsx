@@ -7,6 +7,7 @@ import { TitleBar, UpdateBanner } from './components/DesktopChrome'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { startAutoplay } from './lib/autoplay'
 import { startDesktop } from './lib/desktop'
+import { startRemoteHost } from './lib/remote'
 import { startErrorReporting } from './lib/errors'
 import { startHistory } from './lib/history'
 import './lib/sync'
@@ -32,6 +33,9 @@ startErrorReporting()
 
 // Discord status, tray and media keys in the desktop app.
 startDesktop()
+
+// The pop-out mini player's buttons come here.
+startRemoteHost(() => window.focus())
 
 // Count listening time for Stats and playlist play counts.
 startHistory()

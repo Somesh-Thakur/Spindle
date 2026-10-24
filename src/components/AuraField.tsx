@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { setEnergy } from '../lib/beat'
 import { bass } from '../lib/engine'
+import { useSaver } from '../lib/saver'
 import { usePlayer } from '../store/player'
 
 // Domain-warped noise, tinted with three colours from the current cover.
@@ -105,12 +106,15 @@ export function AuraField() {
       raf = requestAnimationFrame(frame)
     }
     raf = requestAnimationFrame(frame)
+    // Stop drawing while the tab is hidden or the screensaver is up.
     const onVis = () => {
       cancelAnimationFrame(raf)
-      if (!document.hidden) raf = requestAnimationFrame(frame)
+      if (!document.hidden && !useSaver.getState().on) raf = requestAnimationFrame(frame)
     }
     document.addEventListener('visibilitychange', onVis)
+    const unsubSaver = useSaver.subscribe(onVis)
     return () => {
+      unsubSaver()
       cancelAnimationFrame(raf)
       removeEventListener('resize', resize)
       document.removeEventListener('visibilitychange', onVis)

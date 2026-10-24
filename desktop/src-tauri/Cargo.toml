@@ -1,6 +1,6 @@
 [package]
 name = "spindle"
-version = "1.0.0"
+version = "1.1.0"
 description = "Spindle for desktop"
 authors = ["Somesh Sanjay Thakur"]
 edition = "2021"

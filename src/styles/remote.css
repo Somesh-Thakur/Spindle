@@ -1,0 +1,193 @@
+/* The pop-out mini player (remote.html). */
+:root {
+  color-scheme: dark;
+  --accent: #ff3b5c;
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #0b0a10;
+  color: #f4f4f5;
+  font: 13px/1.35 Geist, 'Segoe UI', system-ui, sans-serif;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.mini {
+  position: relative;
+  height: 100%;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 10px 14px 12px;
+  overflow: hidden;
+  isolation: isolate;
+}
+/* The album art, blurred, as the backdrop. */
+.mini-bg {
+  position: absolute;
+  inset: -30px;
+  z-index: -1;
+  background-position: center;
+  background-size: cover;
+  filter: blur(28px) saturate(1.3);
+  opacity: 0.5;
+  pointer-events: none;
+}
+.mini-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(8, 7, 12, 0.55), rgba(8, 7, 12, 0.8));
+}
+.mini-art {
+  width: 72px;
+  height: 72px;
+  border-radius: 10px;
+  object-fit: cover;
+  box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+}
+.mini-art[hidden] {
+  display: block;
+  visibility: hidden;
+  background: rgba(255, 255, 255, 0.06);
+}
+.mini-main {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.mini-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.mini-text > * {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+.mini-text b {
+  font-size: 14px;
+  font-weight: 600;
+}
+.mini-text span {
+  color: rgba(244, 244, 245, 0.6);
+  font-size: 12.5px;
+}
+.mini-controls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: -6px;
+}
+button {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  color: rgba(244, 244, 245, 0.85);
+  background: none;
+  cursor: pointer;
+  transition:
+    background 0.12s,
+    color 0.12s,
+    transform 0.12s;
+}
+.mini-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+.mini-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+.mini-btn:active {
+  transform: scale(0.92);
+}
+.mini-play {
+  width: 36px;
+  height: 36px;
+  margin: 0 2px;
+  color: #0b0a10;
+  background: #fff;
+}
+.mini-play:hover {
+  color: #0b0a10;
+  background: #fff;
+  transform: scale(1.05);
+}
+#like.is-on {
+  color: var(--accent);
+}
+.is-empty .mini-controls {
+  opacity: 0.4;
+  pointer-events: none;
+}
+.mini-tools {
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  justify-content: flex-start;
+  gap: 2px;
+  margin-top: -4px;
+}
+.mini-tool {
+  width: 26px;
+  height: 24px;
+  border-radius: 7px;
+  color: rgba(244, 244, 245, 0.55);
+}
+.mini-tool svg {
+  width: 14px;
+  height: 14px;
+}
+.mini-tool:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+.mini-tool.is-on {
+  color: var(--accent);
+}
+#close:hover {
+  background: #e81123;
+}
+.mini-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 6px;
+  cursor: pointer;
+}
+.mini-bar::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.1);
+}
+.mini-bar i {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: 3px;
+  background: var(--accent);
+  transition: width 0.5s linear;
+}
+.mini-bar:hover::before,
+.mini-bar:hover i {
+  height: 5px;
+}

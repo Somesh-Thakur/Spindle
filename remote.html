@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Spindle mini player</title>
+    <link rel="icon" href="/brand/spindle-favicon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <main class="mini" id="mini" data-tauri-drag-region>
+      <div class="mini-bg" id="bg"></div>
+      <img class="mini-art" id="art" alt="" width="72" height="72" />
+      <div class="mini-main" data-tauri-drag-region>
+        <div class="mini-text" data-tauri-drag-region>
+          <b id="title">Nothing playing</b>
+          <span id="artist">Play something in Spindle</span>
+        </div>
+        <div class="mini-controls">
+          <button id="like" class="mini-btn" aria-label="Like" title="Like"></button>
+          <button id="prev" class="mini-btn" aria-label="Previous" title="Previous"></button>
+          <button id="play" class="mini-btn mini-play" aria-label="Play" title="Play"></button>
+          <button id="next" class="mini-btn" aria-label="Next" title="Next"></button>
+        </div>
+      </div>
+      <div class="mini-tools">
+        <button id="pin" class="mini-tool" aria-label="Unpin from top" title="Unpin from top" hidden></button>
+        <button id="open" class="mini-tool" aria-label="Open Spindle" title="Open Spindle"></button>
+        <button id="close" class="mini-tool" aria-label="Close mini player" title="Close"></button>
+      </div>
+      <div class="mini-bar" id="bar" role="slider" aria-label="Seek" tabindex="0"><i id="fill"></i></div>
+    </main>
+    <script type="module" src="/src/remote.ts"></script>
+  </body>
+</html>

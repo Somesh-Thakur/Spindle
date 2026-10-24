@@ -42,21 +42,25 @@ jobs:
         run: |
           if [ -z "$KEY" ]; then echo "::error::The TAURI_SIGNING_PRIVATE_KEY secret is missing or empty."; exit 1; fi
           echo "Signing key is set (${#KEY} characters)."
+      - name: Release notes
+        id: notes
+        shell: bash
+        run: |
+          { echo 'body<<NOTES_EOF'; cat desktop/release-notes.md; echo 'NOTES_EOF'; } >> "$GITHUB_OUTPUT"
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Shows "Listening to <song>" on Discord. Set it under Settings → Secrets and variables → Actions → Variables.
           # Signs each release so installed apps can update themselves. Added under Settings → Secrets and variables → Actions.
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ''
+          # Shows "Listening to <song>" on Discord. Set it under Settings → Secrets and variables → Actions → Variables.
           SPINDLE_DISCORD_APP_ID: ${{ vars.SPINDLE_DISCORD_APP_ID || '1563529699844558880' }}
         with:
           projectPath: desktop
           tagName: ${{ github.ref_type == 'tag' && github.ref_name || 'desktop-v__VERSION__' }}
           releaseName: Spindle for desktop v__VERSION__
-          releaseBody: |
-            **Windows:** download `Spindle_..._x64-setup.exe` and run it. If Windows warns about an unknown publisher, click *More info → Run anyway*.
-            **Mac:** download the `.dmg`, drag Spindle to Applications, then right-click it and choose *Open* the first time.
+          # The notes show in the app's update card, so keep them about what changed.
+          releaseBody: ${{ steps.notes.outputs.body }}
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}

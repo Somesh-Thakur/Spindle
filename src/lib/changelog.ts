@@ -10,6 +10,16 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: '1.2',
+    date: '2026-10-24',
+    title: 'Mini player and screensaver',
+    items: [
+      { emoji: '📌', text: 'Pop out a mini player that stays on top of other windows: the new button next to the volume.' },
+      { emoji: '🌙', text: 'A dim, battery-friendly screensaver with the time and what’s playing. Press Z, or set it in Settings → Appearance.' },
+      { emoji: '🖥️', text: 'In the desktop app, F11 now goes fullscreen.' },
+    ],
+  },
+  {
     version: '1.1',
     date: '2026-10-24',
     title: 'Feedback, Discord and a desktop app',

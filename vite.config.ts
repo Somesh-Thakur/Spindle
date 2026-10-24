@@ -70,6 +70,8 @@ export default defineConfig(({ mode }) => {
     plugins: [react(), importApi(), shareApi({ supabaseUrl: env.VITE_SUPABASE_URL, supabaseKey: env.VITE_SUPABASE_ANON_KEY })],
     build: {
       rollupOptions: {
+        // The app, and the pop-out mini player (src/remote.ts).
+        input: { main: 'index.html', remote: 'remote.html' },
         output: {
           // Libraries change less often than the app, so they get their own long-cached files.
           manualChunks(id) {
