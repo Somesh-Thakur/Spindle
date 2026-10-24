@@ -3,36 +3,8 @@
    the desktop layout is untouched.
    ========================================================= */
 
-/* ---------- iOS home-screen viewport fix ----------
-   --vh-gap is the height iOS left unpainted at the bottom (see main.tsx); it's 0
-   everywhere else. The page grows by it, and every full-screen layer and every
-   bar pinned to the bottom reaches down into it. */
 html {
   background: var(--bg);
-}
-html,
-body,
-#root {
-  min-height: calc(100% + var(--vh-gap, 0px));
-}
-.app {
-  height: calc(100% + var(--vh-gap, 0px));
-}
-.full,
-.sheet-scrim,
-.aura-field,
-.ledit-scrim,
-.intro,
-.gate,
-.gate-grain,
-.ps,
-.ps-veil,
-.share-scrim {
-  bottom: calc(0px - var(--vh-gap, 0px));
-}
-/* A canvas keeps its own height, so it gets the gap added directly. */
-.aura-field {
-  height: calc(100% + var(--vh-gap, 0px));
 }
 
 /* Shared pieces that also appear on larger screens */
@@ -79,7 +51,7 @@ body,
   z-index: 60;
   left: 12px;
   right: 12px;
-  bottom: calc(env(safe-area-inset-bottom) + 158px - var(--vh-gap, 0px));
+  bottom: calc(env(safe-area-inset-bottom) + 158px);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -245,7 +217,7 @@ body,
 @media (max-width: 860px) {
   :root {
     /* Where the tab bar sits: just above the home indicator, like iOS's own floating tab bars. */
-    --dock-bottom: calc(max(10px, env(safe-area-inset-bottom) - 6px) - var(--vh-gap, 0px));
+    --dock-bottom: max(10px, env(safe-area-inset-bottom) - 6px);
   }
 
   /* ---------- Feel like an app, not a web page ---------- */
@@ -488,5 +460,77 @@ body,
   }
   .share-sheet {
     padding-bottom: calc(env(safe-area-inset-bottom) + 18px);
+  }
+}
+
+/* The 2×2 cover mosaic: fixed quarters. With plain 1fr tracks, Safari lets the
+   covers' natural size stretch the grid, pushing cards past their box. */
+.pl-mosaic {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+}
+.pl-mosaic > *,
+.pl-mosaic img {
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (max-width: 860px) {
+  /* Nothing pushes the page sideways. */
+  .main,
+  .page {
+    overflow-x: clip;
+  }
+
+  /* ---------- Library ---------- */
+  .lib-head {
+    gap: 14px;
+  }
+  .lib-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) minmax(0, 1.3fr);
+    gap: 8px;
+  }
+  .lib-actions .btn,
+  .lib-actions .lib-avatar {
+    height: 44px;
+    min-width: 0;
+    padding: 0 12px;
+    border-radius: 999px;
+    font-size: 14.5px;
+  }
+  .lib-actions .lib-avatar {
+    width: 44px;
+    padding: 0;
+  }
+  .lib-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px 14px;
+  }
+  .lib-grid > *,
+  .lib-card {
+    min-width: 0;
+  }
+  .lib-card .pl-cover,
+  .lib-liked-art,
+  .lib-new-art {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 16px;
+  }
+  .lib-name,
+  .lib-sub {
+    display: block;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .lib-name {
+    font-size: 15px;
   }
 }
