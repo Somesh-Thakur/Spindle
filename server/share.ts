@@ -107,16 +107,17 @@ export function shareHtml(index: string, s: Share, origin: string, userAgent = '
 
 // ---------- Preview image ----------
 
-type Node = { type: string; props: Record<string, unknown> & { children?: unknown } }
-const h = (type: string, style: Record<string, unknown>, ...children: unknown[]): Node => ({
+export type Node = { type: string; props: Record<string, unknown> & { children?: unknown } }
+/** A box for the image renderer. It needs flex on any box with several children, so that's the default. */
+export const h = (type: string, style: Record<string, unknown>, ...children: unknown[]): Node => ({
   type,
-  props: { style, children: children.length === 1 ? children[0] : children },
+  props: { style: { display: 'flex', ...style }, ...(children.length ? { children: children.length === 1 ? children[0] : children } : {}) },
 })
-const img = (src: string, style: Record<string, unknown>): Node => ({ type: 'img', props: { src, style } })
+export const img = (src: string, style: Record<string, unknown>): Node => ({ type: 'img', props: { src, style } })
 
 let fonts: Promise<{ name: string; data: ArrayBuffer; weight: 500 | 700 | 800; style: 'normal' }[]> | null = null
 const FONT = 'https://cdn.jsdelivr.net/npm/@fontsource'
-function loadFonts() {
+export function loadFonts() {
   fonts ??= Promise.all(
     [
       ['Anybody', `${FONT}/anybody@5/files/anybody-latin-800-normal.woff`, 800],
@@ -136,10 +137,10 @@ function loadFonts() {
   return fonts
 }
 
-const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1).trimEnd()}…` : s)
+export const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1).trimEnd()}…` : s)
 
-function coverNode(s: Share, size: number): Node {
-  const box = { width: size, height: size, borderRadius: 28, overflow: 'hidden', display: 'flex', flexWrap: 'wrap', boxShadow: '0 40px 80px rgba(0,0,0,0.55)', backgroundColor: '#1a1720' }
+export function coverNode(s: Share, size: number, radius = 28): Node {
+  const box = { width: size, height: size, borderRadius: radius, overflow: 'hidden', display: 'flex', flexWrap: 'wrap', boxShadow: '0 24px 36px rgba(0,0,0,0.45)', backgroundColor: '#1a1720' }
   const own = s.payload.cover || s.image
   if (own) return h('div', box, img(own.startsWith('data:') ? own : artAt(own, 600), { width: size, height: size, objectFit: 'cover' }))
   const arts = [...new Set((s.payload.tracks ?? []).map((t) => t.art).filter(Boolean))].slice(0, 4)

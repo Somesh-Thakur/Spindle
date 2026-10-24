@@ -1,9 +1,10 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { Check, Copy, Link2, Loader2, Mail, Share2, X } from 'lucide-react'
+import { Check, Clapperboard, Copy, Link2, Loader2, Mail, Share2, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { createShare, shareUrl, useShareSheet, type ShareItem } from '../lib/share'
 import { Artwork } from './Artwork'
 import { PlaylistCover } from './PlaylistCover'
+import { StoryMaker } from './StoryMaker'
 import { toast } from './Toast'
 
 const KIND = { track: 'Song', playlist: 'Playlist', album: 'Album' } as const
@@ -53,6 +54,7 @@ export function ShareSheet() {
   const [code, setCode] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
+  const [view, setView] = useState<'links' | 'story'>('links')
 
   useEffect(() => {
     if (!item) return
@@ -60,6 +62,7 @@ export function ShareSheet() {
     setCode(null)
     setError('')
     setCopied(false)
+    setView('links')
     ;(item.code ? Promise.resolve(item.code) : createShare(item))
       .then((c) => alive && setCode(c))
       .catch((e) => alive && setError(e instanceof Error ? e.message : 'Couldn’t make a link. Try again.'))
@@ -90,6 +93,7 @@ export function ShareSheet() {
   const openTarget = (href: string) => window.open(href, '_blank', 'noopener,noreferrer')
   const enc = encodeURIComponent
   const targets = [
+    { label: 'Story', icon: <Clapperboard size={20} />, tint: '#ff7a59', go: () => setView('story') },
     { label: 'WhatsApp', icon: <WhatsAppMark />, tint: '#25d366', go: () => openTarget(`https://wa.me/?text=${enc(`${text} ${url}`)}`) },
     { label: 'Telegram', icon: <TelegramMark />, tint: '#2aabee', go: () => openTarget(`https://t.me/share/url?url=${enc(url)}&text=${enc(text)}`) },
     { label: 'X', icon: <XMark />, tint: '#e7e9ea', go: () => openTarget(`https://x.com/intent/post?text=${enc(text)}&url=${enc(url)}`) },
@@ -102,7 +106,8 @@ export function ShareSheet() {
       {item && (
         <motion.div className="share-scrim" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} onClick={close}>
           <motion.div
-            className="share-sheet glass"
+            className={`share-sheet glass ${view === 'story' && code ? 'is-story' : ''}`}
+            layout
             role="dialog"
             aria-modal="true"
             aria-label={`Share ${item.title}`}
@@ -112,41 +117,47 @@ export function ShareSheet() {
             transition={{ type: 'spring', stiffness: 380, damping: 34 }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="share-head">
-              <h2>Share</h2>
-              <button className="icon-btn" onClick={close} aria-label="Close">
-                <X size={18} />
-              </button>
-            </div>
-            <Preview item={item} />
+            {view === 'story' && code ? (
+              <StoryMaker item={item} code={code} onBack={() => setView('links')} />
+            ) : (
+              <>
+                <div className="share-head">
+                  <h2>Share</h2>
+                  <button className="icon-btn" onClick={close} aria-label="Close">
+                    <X size={18} />
+                  </button>
+                </div>
+                <Preview item={item} />
 
-            <div className={`share-link ${code ? '' : 'is-loading'}`}>
-              <Link2 size={16} />
-              <input readOnly value={url || (error ? 'No link' : 'Making your link…')} aria-label="Share link" onFocus={(e) => e.target.select()} />
-              <button className="btn btn-primary" onClick={copy} disabled={!code}>
-                {!code && !error ? <Loader2 size={15} className="spin" /> : copied ? <Check size={15} /> : <Copy size={15} />}
-                {copied ? 'Copied' : 'Copy'}
-              </button>
-            </div>
-            {error && <p className="import-error">{error}</p>}
+                <div className={`share-link ${code ? '' : 'is-loading'}`}>
+                  <Link2 size={16} />
+                  <input readOnly value={url || (error ? 'No link' : 'Making your link…')} aria-label="Share link" onFocus={(e) => e.target.select()} />
+                  <button className="btn btn-primary" onClick={copy} disabled={!code}>
+                    {!code && !error ? <Loader2 size={15} className="spin" /> : copied ? <Check size={15} /> : <Copy size={15} />}
+                    {copied ? 'Copied' : 'Copy'}
+                  </button>
+                </div>
+                {error && <p className="import-error">{error}</p>}
 
-            <div className="share-targets">
-              {targets.map((t) => (
-                <button key={t.label} onClick={t.go} disabled={!code} style={{ ['--tint' as string]: t.tint }}>
-                  <span className="share-target-icon">{t.icon}</span>
-                  {t.label}
-                </button>
-              ))}
-              {canNative && (
-                <button onClick={() => navigator.share({ title: item.title, text, url }).catch(() => {})} disabled={!code} style={{ ['--tint' as string]: '#b69cff' }}>
-                  <span className="share-target-icon">
-                    <Share2 size={20} />
-                  </span>
-                  More
-                </button>
-              )}
-            </div>
-            <p className="share-note">Anyone with the link can see this {KIND[item.kind].toLowerCase()} and play a preview. They sign in to hear full songs.</p>
+                <div className="share-targets">
+                  {targets.map((t) => (
+                    <button key={t.label} onClick={t.go} disabled={!code} style={{ ['--tint' as string]: t.tint }}>
+                      <span className="share-target-icon">{t.icon}</span>
+                      {t.label}
+                    </button>
+                  ))}
+                  {canNative && (
+                    <button onClick={() => navigator.share({ title: item.title, text, url }).catch(() => {})} disabled={!code} style={{ ['--tint' as string]: '#b69cff' }}>
+                      <span className="share-target-icon">
+                        <Share2 size={20} />
+                      </span>
+                      More
+                    </button>
+                  )}
+                </div>
+                <p className="share-note">Anyone with the link can see this {KIND[item.kind].toLowerCase()} and play a preview. They sign in to hear full songs.</p>
+              </>
+            )}
           </motion.div>
         </motion.div>
       )}
