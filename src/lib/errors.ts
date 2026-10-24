@@ -1,6 +1,7 @@
 // Crash reports. Errors from this browser go to the client_errors table
 // (supabase/schema.sql), which signed-in people can add to but nobody can read
 // from the site. Kept small: each distinct error once, at most a few per visit.
+import { isDesktop } from './desktop'
 import { supabase } from './supabase'
 
 declare const __RELEASE__: string
@@ -25,7 +26,7 @@ export function reportError(error: unknown, where = 'window') {
       stack: clip(err.stack, 4000),
       // Path only: no query string, which may hold codes from a sign-in link.
       url: clip(location.pathname + location.hash.split('?')[0], 300),
-      ua: clip(navigator.userAgent, 300),
+      ua: `${navigator.userAgent}${isDesktop ? ' Spindle/desktop' : ''}`.slice(-300),
       release: clip(__RELEASE__, 40),
     })
   })().catch(() => {})

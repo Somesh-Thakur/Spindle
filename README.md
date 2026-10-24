@@ -47,6 +47,8 @@ The name is the pin at the centre of a turntable that every record spins on. In 
 **Everywhere**
 - Accounts with GitHub or email (6-digit code), and a library that syncs live between devices
 - Installable as an app from Safari or Chrome, opens offline, lock-screen controls
+- **Desktop app** for Windows and Mac: Discord “Listening to” status, media keys, and music that keeps playing from the tray ([download](https://github.com/Somesh-Thakur/Spindle/releases/latest))
+- **Feedback** page for bug reports and ideas, with replies from the developer
 - Search across iTunes and YouTube Music at once (press **/** or **Ctrl+K**)
 
 ## Tech
@@ -103,6 +105,7 @@ Create `.env.local` (never committed):
 VITE_SUPABASE_URL=https://<project>.supabase.co
 VITE_SUPABASE_ANON_KEY=<publishable key>
 VITE_AUTH_PROVIDERS=github            # sign-in buttons to show: github, google
+VITE_DISCORD_INVITE=<optional>        # invite link for the community Discord, shown on Feedback and Settings
 VITE_YT_API_KEY=<optional>            # YouTube Data API, only used if the free mirrors fail
 ```
 
@@ -116,10 +119,36 @@ The Supabase URL and publishable key are public by design; row-level security ke
 4. **Templates:** *Confirm signup* uses [`confirm-signup.html`](supabase/emails/confirm-signup.html) (subject `{{ .Token }} is your Spindle code`); *Reset password* uses [`reset-password.html`](supabase/emails/reset-password.html).
 5. **SMTP:** connect a sender (Gmail with an app password, or Resend with your own domain). Supabase's built-in mailer only reaches your own team.
 6. **GitHub / Google sign-in:** create an OAuth app with the callback `https://<project>.supabase.co/auth/v1/callback`, then paste its ID and secret under *Providers*.
+7. **Admin inbox:** make yourself an admin so `#/admin` shows all feedback and crash reports:
+   ```sql
+   insert into public.admins select id from auth.users where email = 'you@example.com' on conflict do nothing;
+   ```
+8. **Discord alerts (optional):** in a Discord channel, *Edit channel → Integrations → Webhooks → New webhook → Copy webhook URL*, then save it. New feedback and new crashes post there:
+   ```sql
+   insert into private.settings values ('discord_webhook', 'https://discord.com/api/webhooks/…')
+   on conflict (key) do update set value = excluded.value;
+   ```
 
 ### Deploy
 
 The project is deployed on Vercel and every push to `main` goes live. To deploy your own copy, import the repo into Vercel (free Hobby plan) and add the environment variables above.
+
+## Desktop app
+
+`desktop/` is a [Tauri](https://tauri.app) app: a small native window around the live site, using the browser engine already on the computer (WebView2 on Windows), so the installer is a few MB and it updates whenever the site does. It adds:
+
+- Discord Rich Presence (“Listening to *song*” with cover art and a progress bar)
+- Media keys, a tray icon, and closing to the tray while music plays
+- Lower memory while hidden or minimised; outside links open in your browser
+
+```bash
+cd desktop
+npm install
+npm run dev     # run it
+npm run build   # make an installer in src-tauri/target/release/bundle
+```
+
+It needs [Rust](https://rustup.rs). To show Discord status, create an application at [discord.com/developers](https://discord.com/developers/applications) named **Spindle** and build with its Application ID in `SPINDLE_DISCORD_APP_ID`. Pushing a tag like `desktop-v1.0.0` builds Windows and Mac installers on GitHub and publishes them as a release (set the ID as an Actions variable of the same name).
 
 ## Security
 

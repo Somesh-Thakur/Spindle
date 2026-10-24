@@ -1,0 +1,51 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Spindle",
+  "version": "1.0.0",
+  "identifier": "app.spindle.desktop",
+  "build": {
+    "frontendDist": "https://spindle-bice.vercel.app",
+    "devUrl": "https://spindle-bice.vercel.app"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "label": "main",
+        "title": "Spindle",
+        "width": 1320,
+        "height": 840,
+        "minWidth": 940,
+        "minHeight": 600,
+        "center": true,
+        "theme": "Dark",
+        "backgroundColor": "#07060b",
+        "visible": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis", "dmg", "app"],
+    "publisher": "Somesh Sanjay Thakur",
+    "copyright": "© Somesh Sanjay Thakur",
+    "category": "Music",
+    "shortDescription": "Spindle music player",
+    "longDescription": "Spindle for desktop: full songs, live lyrics, karaoke and your synced library, with Discord status, media keys and a tray icon.",
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"],
+    "windows": {
+      "webviewInstallMode": { "type": "downloadBootstrapper", "silent": true },
+      "nsis": {
+        "installMode": "currentUser",
+        "installerIcon": "icons/icon.ico",
+        "startMenuFolder": "Spindle"
+      }
+    },
+    "macOS": {
+      "minimumSystemVersion": "11.0"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "site",
+  "description": "What the Spindle website may ask the desktop app to do: show Discord status, report play state and open links in the browser. Nothing else.",
+  "windows": ["main"],
+  "remote": {
+    "urls": ["https://spindle-bice.vercel.app", "https://spindle-bice.vercel.app/*"]
+  },
+  "permissions": ["allow-now-playing", "allow-open-url"]
+}

@@ -54,6 +54,14 @@ begin
   if auth.uid() is null then
     raise exception 'not signed in';
   end if;
+  -- Listening history has its own table now (below); older app versions still send it here.
+  if patch ? 'plays' or patch ? 'ptracks' then
+    perform public.add_plays(
+      coalesce((select jsonb_agg(e -> 'v') from jsonb_each(patch -> 'plays') x (k, e) where e ? 'v'), '[]'::jsonb),
+      coalesce((select jsonb_object_agg(k, e -> 'v') from jsonb_each(patch -> 'ptracks') x (k, e) where e ? 'v'), '{}'::jsonb)
+    );
+    patch := patch - 'plays' - 'ptracks';
+  end if;
   insert into public.libraries as l (user_id, doc, device)
   values (auth.uid(), public.merge_doc('{}'::jsonb, patch), device)
   on conflict (user_id) do update
@@ -195,3 +203,247 @@ $$;
 revoke execute on function public.limit_client_errors() from public, anon, authenticated;
 drop trigger if exists limit_client_errors on public.client_errors;
 create trigger limit_client_errors before insert on public.client_errors for each row execute function public.limit_client_errors();
+
+-- ---------- Listening history ----------
+-- Every play, for Stats and playlist play counts. Kept out of the library
+-- document so the library stays small however much someone listens.
+create table if not exists public.plays (
+  user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  at bigint not null, -- when the play started, in ms
+  track_id text not null check (length(track_id) <= 200),
+  secs integer not null default 0 check (secs between 0 and 86400),
+  updated_at timestamptz not null default now(),
+  primary key (user_id, at, track_id)
+);
+create index if not exists plays_pull on public.plays (user_id, updated_at);
+
+-- Each played song's details, stored once per listener.
+create table if not exists public.play_tracks (
+  user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  track_id text not null check (length(track_id) <= 200),
+  track jsonb not null,
+  primary key (user_id, track_id)
+);
+
+alter table public.plays enable row level security;
+alter table public.play_tracks enable row level security;
+drop policy if exists "own plays: read" on public.plays;
+create policy "own plays: read" on public.plays for select to authenticated using (user_id = (select auth.uid()));
+drop policy if exists "own play tracks: read" on public.play_tracks;
+create policy "own play tracks: read" on public.play_tracks for select to authenticated using (user_id = (select auth.uid()));
+-- Writes go through add_plays only.
+revoke all on public.plays, public.play_tracks from anon, authenticated;
+grant select on public.plays, public.play_tracks to authenticated;
+
+-- Add plays (and their songs) for the signed-in listener. The same play sent
+-- twice keeps the longer listening time.
+create or replace function public.add_plays(p_plays jsonb, p_tracks jsonb default '{}'::jsonb) returns void
+language plpgsql security definer set search_path = '' as $$
+declare
+  me uuid := auth.uid();
+begin
+  if me is null then
+    raise exception 'not signed in';
+  end if;
+  if jsonb_typeof(p_plays) <> 'array' or jsonb_array_length(p_plays) > 20000 then
+    raise exception 'send plays as an array of at most 20000';
+  end if;
+  insert into public.plays as p (user_id, at, track_id, secs)
+  select distinct on (at, id) me, at, id, secs
+  from (
+    select (e ->> 'at')::bigint as at, e ->> 'id' as id, least(greatest(coalesce((e ->> 'secs')::int, 0), 0), 86400) as secs
+    from jsonb_array_elements(p_plays) e
+    where e ->> 'id' is not null and length(e ->> 'id') <= 200 and (e ->> 'at') ~ '^\d{1,15}$'
+  ) rows
+  order by at, id, secs desc
+  on conflict (user_id, at, track_id) do update set secs = excluded.secs, updated_at = now()
+    where excluded.secs > p.secs;
+
+  if jsonb_typeof(p_tracks) = 'object' then
+    insert into public.play_tracks (user_id, track_id, track)
+    select me, key, value
+    from jsonb_each(p_tracks)
+    where length(key) <= 200 and jsonb_typeof(value) = 'object' and pg_column_size(value) <= 8000
+    limit 20000
+    on conflict do nothing;
+  end if;
+end
+$$;
+revoke execute on function public.add_plays(jsonb, jsonb) from public, anon;
+grant execute on function public.add_plays(jsonb, jsonb) to authenticated;
+
+-- One-time move of plays out of library documents (does nothing once they're moved).
+insert into public.plays (user_id, at, track_id, secs)
+select distinct on (user_id, at, track_id) user_id, at, track_id, secs
+from (
+  select l.user_id, (e -> 'v' ->> 'at')::bigint as at, e -> 'v' ->> 'id' as track_id,
+    least(greatest(coalesce((e -> 'v' ->> 'secs')::int, 0), 0), 86400) as secs
+  from public.libraries l, jsonb_each(l.doc -> 'plays') x (k, e)
+  where e ? 'v' and length(e -> 'v' ->> 'id') <= 200 and (e -> 'v' ->> 'at') ~ '^\d{1,15}$'
+) old
+order by user_id, at, track_id, secs desc
+on conflict do nothing;
+insert into public.play_tracks (user_id, track_id, track)
+select l.user_id, k, e -> 'v'
+from public.libraries l, jsonb_each(l.doc -> 'ptracks') x (k, e)
+where e ? 'v' and length(k) <= 200 and jsonb_typeof(e -> 'v') = 'object'
+on conflict do nothing;
+update public.libraries set doc = doc - 'plays' - 'ptracks' where doc ? 'plays' or doc ? 'ptracks';
+
+-- Tell a listener's other devices about new plays.
+do $$
+begin
+  alter publication supabase_realtime add table public.plays;
+exception when duplicate_object then null;
+end
+$$;
+
+-- ---------- Feedback ----------
+-- Bug reports and ideas from listeners. Each person sees their own, with the
+-- reply; admins see and answer all of them in the app (#/admin).
+create table if not exists public.admins (
+  user_id uuid primary key references auth.users (id) on delete cascade
+);
+alter table public.admins enable row level security; -- no policies: invisible to the site
+revoke all on public.admins from anon, authenticated;
+
+create or replace function public.is_admin() returns boolean
+language sql stable security definer set search_path = '' as $$
+  select exists (select 1 from public.admins where user_id = auth.uid())
+$$;
+revoke execute on function public.is_admin() from public, anon;
+grant execute on function public.is_admin() to authenticated;
+
+create table if not exists public.feedback (
+  id bigint generated always as identity primary key,
+  at timestamptz not null default now(),
+  user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  email text,
+  name text check (length(name) <= 80),
+  kind text not null check (kind in ('bug', 'idea', 'other')),
+  message text not null check (length(message) between 3 and 4000),
+  page text check (length(page) <= 300),
+  ua text check (length(ua) <= 300),
+  release text check (length(release) <= 40),
+  status text not null default 'new' check (status in ('new', 'seen', 'planned', 'fixed', 'closed')),
+  reply text check (length(reply) <= 4000),
+  updated_at timestamptz not null default now()
+);
+create index if not exists feedback_user on public.feedback (user_id, at desc);
+create index if not exists feedback_status on public.feedback (status, at desc);
+
+alter table public.feedback enable row level security;
+drop policy if exists "feedback: add own" on public.feedback;
+create policy "feedback: add own" on public.feedback for insert to authenticated with check (user_id = (select auth.uid()));
+drop policy if exists "feedback: read own, admins all" on public.feedback;
+create policy "feedback: read own, admins all" on public.feedback for select to authenticated using (user_id = (select auth.uid()) or (select public.is_admin()));
+drop policy if exists "feedback: admins answer" on public.feedback;
+create policy "feedback: admins answer" on public.feedback for update to authenticated using ((select public.is_admin())) with check ((select public.is_admin()));
+
+revoke all on public.feedback from anon, authenticated;
+grant select on public.feedback to authenticated;
+grant insert (kind, message, page, ua, release, name) on public.feedback to authenticated;
+grant update (status, reply) on public.feedback to authenticated;
+
+-- Fills in who sent it (so it can't be faked) and keeps it to 20 a day per person.
+create or replace function public.feedback_before() returns trigger
+language plpgsql security definer set search_path = '' as $$
+begin
+  if tg_op = 'INSERT' then
+    if (select count(*) from public.feedback where user_id = new.user_id and at > now() - interval '1 day') >= 20 then
+      raise exception 'You''ve sent a lot today. Try again tomorrow.';
+    end if;
+    new.email := (select email from auth.users where id = new.user_id);
+  end if;
+  new.updated_at := now();
+  return new;
+end
+$$;
+revoke execute on function public.feedback_before() from public, anon, authenticated;
+drop trigger if exists feedback_before on public.feedback;
+create trigger feedback_before before insert or update on public.feedback for each row execute function public.feedback_before();
+
+-- Admins can read and clear crash reports in the app.
+drop policy if exists "crash reports: admins read" on public.client_errors;
+create policy "crash reports: admins read" on public.client_errors for select to authenticated using ((select public.is_admin()));
+drop policy if exists "crash reports: admins clear" on public.client_errors;
+create policy "crash reports: admins clear" on public.client_errors for delete to authenticated using ((select public.is_admin()));
+grant select, delete on public.client_errors to authenticated;
+
+-- ---------- Discord alerts ----------
+-- New feedback, and crashes not seen in the last day, post to a Discord channel.
+-- Switch on by saving a channel webhook (see README); nothing is sent without one.
+do $$
+begin
+  create extension if not exists pg_net;
+exception when others then
+  raise notice 'pg_net is not available, so Discord alerts are off: %', sqlerrm;
+end
+$$;
+
+create schema if not exists private;
+revoke all on schema private from public, anon, authenticated;
+create table if not exists private.settings (key text primary key, value text not null);
+
+create or replace function private.discord(embed jsonb) returns void
+language plpgsql security definer set search_path = '' as $$
+declare
+  hook text := (select value from private.settings where key = 'discord_webhook');
+begin
+  if hook is null then
+    return;
+  end if;
+  perform net.http_post(
+    url := hook,
+    body := jsonb_build_object('username', 'Spindle', 'embeds', jsonb_build_array(embed)),
+    headers := '{"Content-Type": "application/json"}'::jsonb
+  );
+exception when others then
+  null; -- An alert must never stop feedback or a crash report from saving.
+end
+$$;
+revoke execute on function private.discord(jsonb) from public, anon, authenticated;
+
+create or replace function public.feedback_alert() returns trigger
+language plpgsql security definer set search_path = '' as $$
+begin
+  perform private.discord(jsonb_build_object(
+    'title', case new.kind when 'bug' then '🐞 Bug report' when 'idea' then '💡 Idea' else '💬 Feedback' end,
+    'description', left(new.message, 3500),
+    'color', case new.kind when 'bug' then 15548997 when 'idea' then 16705372 else 5793266 end,
+    'fields', jsonb_build_array(
+      jsonb_build_object('name', 'From', 'value', coalesce(nullif(new.name, ''), 'Someone') || ' · ' || coalesce(new.email, 'no email'), 'inline', true),
+      jsonb_build_object('name', 'Page', 'value', coalesce(nullif(new.page, ''), '/'), 'inline', true)
+    ),
+    'footer', jsonb_build_object('text', 'Reply in Spindle → Admin · #' || new.id),
+    'timestamp', to_jsonb(new.at)
+  ));
+  return new;
+end
+$$;
+revoke execute on function public.feedback_alert() from public, anon, authenticated;
+drop trigger if exists feedback_alert on public.feedback;
+create trigger feedback_alert after insert on public.feedback for each row execute function public.feedback_alert();
+
+create or replace function public.crash_alert() returns trigger
+language plpgsql security definer set search_path = '' as $$
+begin
+  if exists (select 1 from public.client_errors where message = new.message and id <> new.id and at > now() - interval '1 day') then
+    return new;
+  end if;
+  perform private.discord(jsonb_build_object(
+    'title', '💥 New crash',
+    'description', '```' || left(new.message, 400) || chr(10) || left(coalesce(new.stack, ''), 1200) || '```',
+    'color', 15158332,
+    'fields', jsonb_build_array(
+      jsonb_build_object('name', 'Page', 'value', coalesce(nullif(new.url, ''), '/'), 'inline', true),
+      jsonb_build_object('name', 'Version', 'value', coalesce(new.release, '?'), 'inline', true)
+    ),
+    'timestamp', to_jsonb(new.at)
+  ));
+  return new;
+end
+$$;
+revoke execute on function public.crash_alert() from public, anon, authenticated;
+drop trigger if exists crash_alert on public.client_errors;
+create trigger crash_alert after insert on public.client_errors for each row execute function public.crash_alert();

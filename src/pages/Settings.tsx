@@ -7,6 +7,7 @@ import {
   Keyboard,
   KeyRound,
   Link2,
+  MessageSquareHeart,
   Languages,
   Loader2,
   LogOut,
@@ -27,6 +28,8 @@ import { Initials } from '../components/Avatar'
 import { KineticTitle } from '../components/Kinetic'
 import { toast } from '../components/Toast'
 import { cacheSize, clearCache } from '../lib/cache'
+import { isDesktop } from '../lib/desktop'
+import { DISCORD_INVITE, feedbackHref, useIsAdmin } from '../lib/feedback'
 import { deleteShare, myShares, shareUrl, type Share } from '../lib/share'
 import { changePassword, deleteAccount, displayName, signOut, syncAgain, updateName, useAccount } from '../lib/sync'
 import { usePlayer } from '../store/player'
@@ -42,6 +45,7 @@ const SECTIONS = [
   { id: 'appearance', label: 'Appearance', icon: Palette },
   { id: 'storage', label: 'Storage', icon: Gauge },
   { id: 'shortcuts', label: 'Shortcuts', icon: Keyboard },
+  { id: 'feedback', label: 'Feedback', icon: MessageSquareHeart },
   { id: 'about', label: 'About', icon: Info },
 ] as const
 
@@ -118,12 +122,20 @@ export function SettingsPage() {
               ))}
             </div>
           </Section>
+          <FeedbackSection />
           <Section id="about" title="About">
             <Row title="Spindle" sub="Free music with full songs, live lyrics and karaoke. Songs stream from YouTube, iTunes previews and Audius; lyrics from LRCLIB.">
               <a className="btn btn-ghost" href="https://github.com/Somesh-Thakur/Spindle" target="_blank" rel="noreferrer">
                 Source
               </a>
             </Row>
+            {!isDesktop && (
+              <Row title="Spindle for desktop" sub="A light app for Windows and Mac: Discord status, media keys, and music that keeps playing from the tray.">
+                <a className="btn btn-ghost" href="https://github.com/Somesh-Thakur/Spindle/releases/latest" target="_blank" rel="noreferrer">
+                  Download
+                </a>
+              </Row>
+            )}
             <Row title="Made by Somesh Sanjay Thakur" sub="Full-Stack & AI Automation Dev. Say hi on GitHub, LinkedIn or Instagram.">
               <Link className="btn btn-ghost" to="/about">
                 About the developer
@@ -544,6 +556,33 @@ function StorageSection() {
           Clear
         </button>
       </Row>
+    </Section>
+  )
+}
+
+function FeedbackSection() {
+  const admin = useIsAdmin()
+  return (
+    <Section id="feedback" title="Feedback">
+      <Row title="Report a bug or suggest an idea" sub="It goes straight to the developer, and you’ll see the reply on the Feedback page.">
+        <Link className="btn btn-primary" to={feedbackHref()}>
+          Send feedback
+        </Link>
+      </Row>
+      {DISCORD_INVITE && (
+        <Row title="Spindle on Discord" sub="Chat with other listeners and hear about updates first.">
+          <a className="btn btn-ghost" href={DISCORD_INVITE} target="_blank" rel="noreferrer">
+            Join the Discord
+          </a>
+        </Row>
+      )}
+      {admin && (
+        <Row title="Admin inbox" sub="Answer feedback and see crash reports.">
+          <Link className="btn btn-ghost" to="/admin">
+            Open inbox
+          </Link>
+        </Row>
+      )}
     </Section>
   )
 }

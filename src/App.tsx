@@ -17,6 +17,7 @@ import { VideoDock } from './components/VideoDock'
 import { Home } from './pages/Home'
 import {
   AboutPage,
+  AdminPage,
   AlbumPage,
   ArtistPage,
   AuthGate,
@@ -24,6 +25,7 @@ import {
   ChartsPage,
   DownloadsPage,
   EraPage,
+  FeedbackPage,
   FullTracksPage,
   GenrePage,
   ImportPage,
@@ -144,6 +146,8 @@ function Shell() {
               <Route path="/downloads" element={<DownloadsPage />} />
               <Route path="/stats" element={<StatsPage />} />
               <Route path="/about" element={<AboutPage />} />
+              <Route path="/feedback" element={<FeedbackPage />} />
+              <Route path="/admin" element={<AdminPage />} />
               <Route path="/playlist/:id" element={<PlaylistPage />} />
               <Route path="/recent" element={<RecentPage />} />
               <Route path="/album/:id" element={<AlbumPage />} />

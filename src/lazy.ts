@@ -34,6 +34,8 @@ export const SettingsPage = named(() => import('./pages/Settings'), 'SettingsPag
 export const DownloadsPage = named(() => import('./pages/Downloads'), 'DownloadsPage')
 export const StatsPage = named(() => import('./pages/Stats'), 'StatsPage')
 export const AboutPage = named(() => import('./pages/About'), 'AboutPage')
+export const FeedbackPage = named(() => import('./pages/Feedback'), 'FeedbackPage')
+export const AdminPage = named(() => import('./pages/Admin'), 'AdminPage')
 
 export const ShareSheet = named(() => import('./components/ShareSheet'), 'ShareSheet')
 export const LyricsEditor = named(() => import('./components/LyricsEditor'), 'LyricsEditor')

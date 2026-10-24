@@ -1,5 +1,6 @@
 import { Component, type ReactNode } from 'react'
 import { isStaleChunk, reloadForUpdate, reportError } from '../lib/errors'
+import { feedbackHref } from '../lib/feedback'
 import { Logo } from './Brand'
 
 type Props = { children: ReactNode; /** A smaller notice inside the page area, so the player keeps going. */ inline?: boolean; resetKey?: string }
@@ -43,6 +44,16 @@ export class ErrorBoundary extends Component<Props, State> {
             <button className="btn btn-ghost" onClick={() => this.setState({ error: null })}>
               Try again
             </button>
+          )}
+          {!stale && (
+            <a
+              className="btn btn-ghost"
+              href={`#${feedbackHref('bug', error.message)}`}
+              // Outside a page the app itself is down, so reload into the form.
+              onClick={this.props.inline ? undefined : (e) => (e.preventDefault(), (location.hash = feedbackHref('bug', error.message)), location.reload())}
+            >
+              Tell us what happened
+            </a>
           )}
         </div>
       </div>

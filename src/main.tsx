@@ -5,6 +5,7 @@ import { HashRouter } from 'react-router-dom'
 import App from './App'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { startAutoplay } from './lib/autoplay'
+import { startDesktop } from './lib/desktop'
 import { startErrorReporting } from './lib/errors'
 import { startHistory } from './lib/history'
 import './lib/sync'
@@ -17,6 +18,7 @@ import './styles/v6.css'
 import './styles/v7.css'
 import './styles/v8.css'
 import './styles/v9.css'
+import './styles/v10.css'
 import './styles/phone.css'
 
 // Offline start-up and fast repeat visits (public/sw.js). Not in development, where it would cache stale code.
@@ -26,6 +28,9 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
 
 // Record crashes so they can be fixed (src/lib/errors.ts).
 startErrorReporting()
+
+// Discord status, tray and media keys in the desktop app.
+startDesktop()
 
 // Count listening time for Stats and playlist play counts.
 startHistory()

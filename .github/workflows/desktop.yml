@@ -1,0 +1,52 @@
+# Builds the desktop app (desktop/) for Windows and macOS and publishes it as a
+# GitHub Release. Run it by pushing a tag like desktop-v1.0.0, or from the Actions tab.
+name: Desktop app
+
+on:
+  push:
+    tags: ['desktop-v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            args: ''
+          - os: macos-latest
+            args: --target universal-apple-darwin
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.os == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: desktop/src-tauri
+      - run: npm ci
+        working-directory: desktop
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Shows "Listening to <song>" on Discord. Set it under Settings → Secrets and variables → Actions → Variables.
+          SPINDLE_DISCORD_APP_ID: ${{ vars.SPINDLE_DISCORD_APP_ID }}
+        with:
+          projectPath: desktop
+          tagName: ${{ github.ref_type == 'tag' && github.ref_name || 'desktop-v__VERSION__' }}
+          releaseName: Spindle for desktop ${{ github.ref_type == 'tag' && github.ref_name || 'v__VERSION__' }}
+          releaseBody: |
+            **Windows:** download `Spindle_..._x64-setup.exe` and run it. If Windows warns about an unknown publisher, click *More info → Run anyway*.
+            **Mac:** download the `.dmg`, drag Spindle to Applications, then right-click it and choose *Open* the first time.
+          releaseDraft: false
+          prerelease: false
+          args: ${{ matrix.args }}

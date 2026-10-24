@@ -9,7 +9,8 @@
 import type { RealtimeChannel, User } from '@supabase/supabase-js'
 import { create } from 'zustand'
 import { allUserLyrics, applyUserLyrics } from '../api/lyrics'
-import { mergeHistory, useHistory, type Play } from './history'
+import { mergeHistory, type Play } from './history'
+import { startPlays } from './playSync'
 import { toast } from '../components/Toast'
 import { usePlayer, type Playlist } from '../store/player'
 import { supabase } from './supabase'
@@ -61,7 +62,6 @@ const PREFS = ['country', 'hinglish', 'recent', 'videoHidden', 'videoView', 'cus
 
 function project(): Projection {
   const s = usePlayer.getState()
-  const h = useHistory.getState()
   const playlists: Record<string, Playlist> = {}
   for (const p of s.playlists) playlists[p.id] = p
   // Only the window around the current song travels, so huge queues stay light.
@@ -76,13 +76,9 @@ function project(): Projection {
     lyrics: allUserLyrics(),
     prefs: Object.fromEntries(PREFS.map((k) => [k, s[k]])),
     session: session ? { now: session } : {},
-    // Listening history: one entry per play, so devices add to each other's stats.
-    plays: Object.fromEntries(h.plays.map((p) => [playKey(p), p])),
-    ptracks: h.tracks,
+    // Listening history syncs separately (playSync.ts).
   }
 }
-
-const playKey = (p: Play) => `${p.at}.${p.id}`
 
 // ---------- stable hashing, so key order from the database doesn't look like a change ----------
 
@@ -153,7 +149,7 @@ let uid: string | null = null
 let shadow: Shadow = {}
 let channel: RealtimeChannel | null = null
 let unsubStore: (() => void) | null = null
-let unsubHistory: (() => void) | null = null
+let plays: ReturnType<typeof startPlays> | null = null
 let timer: ReturnType<typeof setTimeout> | undefined
 let busy = false
 let again = false
@@ -218,6 +214,7 @@ function apply(doc: Doc) {
         applyUserLyrics(k, e.del ? null : (e.v as { lines: never[]; synced: boolean }))
         lyricsChanged = true
       } else if (sec === 'plays' && !e.del && e.v) {
+        // Only from before history moved to its own table.
         newPlays.push(e.v as Play)
       } else if (sec === 'ptracks' && !e.del && e.v) {
         newTracks[k] = e.v as Track
@@ -313,20 +310,22 @@ function start(user: User) {
   stop()
   uid = user.id
   shadow = load<Shadow>(shadowKey(uid), {})
+  // Plays used to travel in the library; drop that bookkeeping (and any unsent plays, which playSync sends).
+  if (shadow.plays || shadow.ptracks) {
+    delete shadow.plays
+    delete shadow.ptracks
+    save(shadowKey(uid), shadow)
+    const pending = load<Doc>(pendingKey(uid), {})
+    delete pending.plays
+    delete pending.ptracks
+    save(pendingKey(uid), pending)
+  }
   collect()
   syncNow()
+  plays = startPlays(uid)
 
   // Watch only the parts of the store that belong to the library.
   let last = ''
-  // Listening history lives in its own store; new plays sync too.
-  let lastHistory = ''
-  unsubHistory = useHistory.subscribe((h) => {
-    const ref = `${identity(h.plays)}|${identity(h.tracks)}`
-    if (ref === lastHistory) return
-    lastHistory = ref
-    collect()
-    if (!isEmpty(load<Doc>(pendingKey(user.id), {}))) schedule(3000)
-  })
 
   unsubStore = usePlayer.subscribe((s) => {
     const sig = [s.liked, s.playlists, s.lyricsNonce, s.queue, s.order, s.pos, ...PREFS.map((k) => s[k])]
@@ -353,8 +352,8 @@ function stop() {
   clearTimeout(timer)
   unsubStore?.()
   unsubStore = null
-  unsubHistory?.()
-  unsubHistory = null
+  plays?.stop()
+  plays = null
   if (channel) supabase?.removeChannel(channel)
   channel = null
   document.removeEventListener('visibilitychange', onFocus)
@@ -454,7 +453,7 @@ export async function deleteAccount() {
 export async function signOut(forget = false, flush = true) {
   if (uid && flush) {
     collect()
-    await syncNow()
+    await Promise.all([syncNow(), plays?.flush()])
   }
   const was = uid
   await supabase!.auth.signOut()
