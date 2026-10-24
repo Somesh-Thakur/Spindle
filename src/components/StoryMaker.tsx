@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { extractPalette } from '../lib/color'
 import { artUrl } from '../lib/format'
 import { shareUrl, type ShareItem } from '../lib/share'
+import { drawStory, STORY_H, STORY_W, storyBlob } from '../lib/storyCard'
 import { useSongLyrics } from '../lib/useSongLyrics'
 import type { Track } from '../lib/types'
 import { toast } from './Toast'
@@ -59,9 +60,10 @@ export function StoryMaker({ item, code, onBack }: { item: ShareItem; code: stri
   const [colors, setColors] = useState<[string, string] | null>(null)
   const [suggested, setSuggested] = useState<[string, string][]>([])
   const [lyricText, setLyricText] = useState<string[]>([])
-  const [loaded, setLoaded] = useState('')
-  const [failed, setFailed] = useState('')
-  const [busy, setBusy] = useState<'' | 'download' | 'share'>('')
+  const [drawn, setDrawn] = useState<HTMLCanvasElement | null>(null)
+  const [drawing, setDrawing] = useState(true)
+  const [busy, setBusy] = useState<'' | 'share'>('')
+  const view = useRef<HTMLCanvasElement>(null)
 
   // Colours from the artwork, the way Spotify tints its story backgrounds.
   useEffect(() => {
@@ -86,50 +88,59 @@ export function StoryMaker({ item, code, onBack }: { item: ShareItem; code: stri
     }
   }, [item.cover, item.art])
 
-  /** The card's address. The preview shows it and Download reuses the browser's copy. */
-  const src = useMemo(() => {
-    if (!colors) return ''
-    const q = new URLSearchParams({ code, style, c1: colors[0].replace('#', ''), c2: colors[1].replace('#', '') })
-    if (style === 'lyrics' && lyricText.length) q.set('lines', lyricText.join('\n'))
-    return `/api/story?${q}`
-  }, [code, style, colors, lyricText])
+  const arts = useMemo(() => {
+    if (item.cover) return [item.cover]
+    if (item.kind === 'playlist') return [...new Set(item.tracks.map((t) => t.art).filter(Boolean))].slice(0, 4)
+    return [item.art || item.tracks[0]?.art || ''].filter(Boolean)
+  }, [item])
+  const count = item.tracks.length
+  const subtitle =
+    item.kind === 'track' ? item.subtitle ?? '' : item.kind === 'album' ? `Album · ${item.subtitle ?? ''}` : `Playlist · ${count} ${count === 1 ? 'song' : 'songs'}`
+  const lyricsReady = style !== 'lyrics' || lyricText.length > 0
 
-  // Wait for a pause in clicking before drawing a new preview (the first one shows at once).
-  const [preview, setPreview] = useState('')
-  const shown = useRef(false)
+  // Draw the card in the browser: instant, works offline, any language.
+  // Each draw goes to its own canvas and only the newest is shown.
+  const latest = useRef(0)
   useEffect(() => {
-    if (!src) return
-    const id = setTimeout(() => setPreview(src), shown.current ? 280 : 0)
-    shown.current = true
-    return () => clearTimeout(id)
-  }, [src])
+    if (!colors || !lyricsReady) return
+    const token = ++latest.current
+    const canvas = document.createElement('canvas')
+    setDrawing(true)
+    drawStory(canvas, { style, c1: colors[0], c2: colors[1], title: item.title, subtitle, arts, lines: style === 'lyrics' ? lyricText : [] })
+      .then(() => {
+        if (token !== latest.current) return
+        const v = view.current
+        if (v) {
+          v.width = canvas.width
+          v.height = canvas.height
+          v.getContext('2d')!.drawImage(canvas, 0, 0)
+        }
+        setDrawn(canvas)
+      })
+      .catch(() => toast('Couldn’t draw the card. Try again.'))
+      .finally(() => token === latest.current && setDrawing(false))
+  }, [style, colors, lyricText, lyricsReady, item.title, subtitle, arts])
 
-  const fileName = `spindle-${item.title.replace(/[^\w]+/g, '-').toLowerCase().slice(0, 40)}-story.png`
-  const blob = async () => {
-    const res = await fetch(src)
-    if (!res.ok) throw new Error(String(res.status))
-    return res.blob()
-  }
+  const fileName = `spindle-${item.title.replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '').toLowerCase().slice(0, 40) || 'song'}-story.png`
   const download = async () => {
-    setBusy('download')
+    if (!drawn) return
     try {
-      const url = URL.createObjectURL(await blob())
+      const url = URL.createObjectURL(await storyBlob(drawn))
       const a = Object.assign(document.createElement('a'), { href: url, download: fileName })
       a.click()
       setTimeout(() => URL.revokeObjectURL(url), 2000)
       toast('Saved your story image')
     } catch {
-      toast('Couldn’t make the image. Try again.')
-    } finally {
-      setBusy('')
+      toast('Couldn’t save the image. Try again.')
     }
   }
   const file = typeof File !== 'undefined' ? new File([], fileName, { type: 'image/png' }) : null
   const canShareFiles = !!file && typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] })
   const share = async () => {
+    if (!drawn) return
     setBusy('share')
     try {
-      const f = new File([await blob()], fileName, { type: 'image/png' })
+      const f = new File([await storyBlob(drawn)], fileName, { type: 'image/png' })
       await navigator.share({ files: [f], title: item.title, text: shareUrl(code) })
     } catch {
       /* cancelled */
@@ -138,19 +149,13 @@ export function StoryMaker({ item, code, onBack }: { item: ShareItem; code: stri
     }
   }
 
-  const waiting = !!preview && loaded !== preview
-  const lyricsReady = style !== 'lyrics' || lyricText.length > 0
-
   return (
     <motion.div className="story-maker" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
       <div className="story-stage">
         <div className="story-phone">
-          {preview && lyricsReady && failed !== preview && (
-            <img src={preview} alt="Story preview" onLoad={() => setLoaded(preview)} onError={() => setFailed(preview)} className={waiting ? 'is-loading' : ''} />
-          )}
+          <canvas ref={view} width={STORY_W} height={STORY_H} className={drawing && !drawn ? 'is-loading' : ''} aria-label="Story preview" role="img" hidden={!lyricsReady} />
           {!lyricsReady && <p className="story-empty">Pick up to four lines from the lyrics →</p>}
-          {failed === preview && lyricsReady && <p className="story-empty">Couldn’t draw this one. Try another look or colour.</p>}
-          {waiting && lyricsReady && failed !== preview && (
+          {drawing && !drawn && lyricsReady && (
             <span className="story-spinner">
               <Loader2 size={24} className="spin" />
             </span>
@@ -204,11 +209,11 @@ export function StoryMaker({ item, code, onBack }: { item: ShareItem; code: stri
         )}
 
         <div className="story-actions">
-          <button className="btn btn-primary" onClick={download} disabled={!src || !lyricsReady || !!busy}>
-            {busy === 'download' ? <Loader2 size={16} className="spin" /> : <Download size={16} />} Download image
+          <button className="btn btn-primary" onClick={download} disabled={!drawn || !lyricsReady}>
+            <Download size={16} /> Download image
           </button>
           {canShareFiles && (
-            <button className="btn" onClick={share} disabled={!src || !lyricsReady || !!busy}>
+            <button className="btn" onClick={share} disabled={!drawn || !lyricsReady || !!busy}>
               {busy === 'share' ? <Loader2 size={16} className="spin" /> : <Share2 size={16} />} Share
             </button>
           )}

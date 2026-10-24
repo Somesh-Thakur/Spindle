@@ -3,7 +3,6 @@ import { defineConfig, loadEnv, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import { ImportError, importFromUrl } from './server/import'
 import { fetchShare, shareHtml, shareImage, type Env } from './server/share'
-import { storyImage, storyOptions } from './server/story'
 
 /** Serves /api/import during development, matching the Vercel function in api/import.ts. */
 function importApi(): Plugin {
@@ -28,7 +27,7 @@ function importApi(): Plugin {
   }
 }
 
-/** Serves /s/<code>, /api/og and /api/story during development, matching the functions in api/. */
+/** Serves /s/<code> and /api/og during development, matching the functions in api/. */
 function shareApi(env: Env): Plugin {
   return {
     name: 'spindle-share-api',
@@ -43,17 +42,6 @@ function shareApi(env: Env): Plugin {
             const index = await server.transformIndexHtml(req.url ?? '/', await readFile('index.html', 'utf8'))
             res.setHeader('content-type', 'text/html; charset=utf-8')
             return res.end(share ? shareHtml(index, share, origin, req.headers['user-agent'] ?? '') : index)
-          }
-          if (url.pathname === '/api/story') {
-            const share = await fetchShare(url.searchParams.get('code') ?? '', env)
-            if (!share) {
-              res.statusCode = 404
-              return res.end()
-            }
-            const img = await storyImage(share, origin, storyOptions(url.searchParams))
-            res.setHeader('content-type', 'image/png')
-            res.setHeader('cache-control', img.headers.get('cache-control') ?? 'no-store')
-            return res.end(Buffer.from(await img.arrayBuffer()))
           }
           if (url.pathname === '/api/og') {
             const share = await fetchShare(url.searchParams.get('code') ?? '', env)
