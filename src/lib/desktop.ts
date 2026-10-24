@@ -1,6 +1,8 @@
 // When Spindle runs inside the desktop app (desktop/), tell it what's playing
 // (for Discord status and the tray), let its tray and media keys drive the
 // player, and open outside links in the real browser.
+import { create } from 'zustand'
+import { toast } from '../components/Toast'
 import { artUrl } from './format'
 import { usePlayer } from '../store/player'
 
@@ -13,9 +15,80 @@ export const isDesktop = !!tauri
 
 const call = (cmd: string, args?: Record<string, unknown>) => tauri?.invoke(cmd, args).catch(() => {})
 
+/** True on a Mac, where the window keeps its own traffic-light buttons. */
+export const isMac = /Mac OS/.test(navigator.userAgent)
+
+export interface DesktopUpdate {
+  version: string
+  notes: string | null
+}
+
+/** Desktop window and update state, for the title bar and update banner. */
+export const useDesktop = create<{ maximized: boolean; update: DesktopUpdate | null; installing: boolean }>(() => ({
+  maximized: false,
+  update: null,
+  installing: false,
+}))
+
+/** Open a web link in the real browser. */
+export async function openExternal(url: string) {
+  if (!tauri) return void window.open(url, '_blank', 'noopener')
+  await tauri.invoke('open_url', { url })
+}
+
+/** Window buttons for the custom title bar. */
+export const win = {
+  minimize: () => call('plugin:window|minimize', { label: 'main' }),
+  toggleMaximize: () => call('plugin:window|toggle_maximize', { label: 'main' }),
+  close: () => call('plugin:window|close', { label: 'main' }),
+}
+
+/** Download and install the waiting update; Spindle restarts when it's done. */
+export async function installUpdate() {
+  if (!tauri || useDesktop.getState().installing) return
+  useDesktop.setState({ installing: true })
+  try {
+    await tauri.invoke('install_update')
+  } catch (e) {
+    useDesktop.setState({ installing: false })
+    toast(`Couldn’t update: ${(e as Error)?.message ?? e}`)
+  }
+}
+
+async function checkUpdate() {
+  try {
+    const found = (await tauri!.invoke('check_update')) as DesktopUpdate | null
+    if (found) useDesktop.setState({ update: found })
+  } catch {
+    /* offline, or no release yet */
+  }
+}
+
 export function startDesktop() {
   if (!tauri) return
-  document.documentElement.classList.add('is-desktop')
+  document.documentElement.classList.add('is-desktop', isMac ? 'is-mac' : 'is-win')
+
+  // Keep the title bar's maximise button in step with the window.
+  const syncMaximized = async () => {
+    const max = await tauri.invoke('plugin:window|is_maximized', { label: 'main' }).catch(() => false)
+    useDesktop.setState({ maximized: !!max })
+  }
+  addEventListener('resize', syncMaximized)
+  void syncMaximized()
+
+  // Look for a new version of the app shortly after start, then every few hours.
+  setTimeout(checkUpdate, 8000)
+  setInterval(checkUpdate, 4 * 3600_000)
+
+  // GitHub sign-in finishes in the browser, which sends the code back here.
+  const auth = async (link: string) => {
+    try {
+      const { finishDesktopSignIn } = await import('./sync')
+      await finishDesktopSignIn(link)
+    } catch (e) {
+      toast(`Sign-in didn’t finish: ${(e as Error)?.message ?? e}`)
+    }
+  }
 
   // The tray menu and media keys call these (desktop/src-tauri/src/main.rs).
   const p = () => usePlayer.getState()
@@ -25,8 +98,14 @@ export function startDesktop() {
       pause: () => p().setPlaying(false),
       next: () => p().next(),
       prev: () => p().prev(),
+      auth,
     },
   })
+  const pending = (window as { __spindleAuth?: string }).__spindleAuth
+  if (pending) {
+    delete (window as { __spindleAuth?: string }).__spindleAuth
+    void auth(pending)
+  }
 
   // Report the song, play state and position; again after a seek, since Discord shows a progress bar.
   let last = ''

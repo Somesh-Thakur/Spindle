@@ -39,7 +39,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Shows "Listening to <song>" on Discord. Set it under Settings → Secrets and variables → Actions → Variables.
-          SPINDLE_DISCORD_APP_ID: ${{ vars.SPINDLE_DISCORD_APP_ID }}
+          # Signs each release so installed apps can update themselves. Added under Settings → Secrets and variables → Actions.
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ''
+          SPINDLE_DISCORD_APP_ID: ${{ vars.SPINDLE_DISCORD_APP_ID || '1563529699844558880' }}
         with:
           projectPath: desktop
           tagName: ${{ github.ref_type == 'tag' && github.ref_name || 'desktop-v__VERSION__' }}

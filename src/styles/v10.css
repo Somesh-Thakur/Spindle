@@ -430,3 +430,243 @@
     align-items: stretch;
   }
 }
+
+/* ---------- Desktop app: title bar and update notice ---------- */
+:root {
+  --titlebar: 0px;
+}
+.is-desktop.is-win {
+  --titlebar: 36px;
+}
+.is-desktop.is-mac {
+  --titlebar: 30px;
+}
+/* The app sits below the title bar; fixed layers inside it follow, since the transform makes #root their frame. */
+.is-desktop #root {
+  position: fixed;
+  top: var(--titlebar);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: auto;
+  transform: translateZ(0);
+}
+.is-desktop .crate-pin,
+.is-desktop .tl-pin {
+  height: calc(100vh - var(--titlebar));
+}
+.titlebar {
+  position: fixed;
+  z-index: 2147483000;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--titlebar);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-left: 14px;
+  color: var(--text-2);
+  font-size: 12px;
+  background: #050409;
+  border-bottom: 1px solid var(--hairline);
+  user-select: none;
+  -webkit-user-select: none;
+}
+.is-mac .titlebar {
+  padding-left: 80px; /* room for the traffic lights */
+}
+.titlebar-brand,
+.titlebar-now {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.titlebar-brand > *,
+.titlebar-now > * {
+  pointer-events: none;
+}
+.titlebar-brand span {
+  color: var(--text);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+.titlebar-now {
+  flex: 1;
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-align: center;
+  color: var(--text-3);
+}
+.titlebar-now b {
+  color: var(--text-2);
+  font-weight: 500;
+}
+.titlebar-buttons {
+  display: flex;
+  align-self: stretch;
+}
+.titlebar-buttons button {
+  width: 46px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  color: var(--text-2);
+  background: transparent;
+  cursor: default;
+  transition:
+    background 0.12s,
+    color 0.12s;
+}
+.titlebar-buttons button:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.08);
+}
+.titlebar-buttons button.is-close:hover {
+  color: #fff;
+  background: #e81123;
+}
+
+.update-card {
+  position: fixed;
+  z-index: 2147482000;
+  top: calc(var(--titlebar) + 12px);
+  right: 16px;
+  width: min(360px, calc(100vw - 32px));
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(22, 20, 30, 0.92);
+  backdrop-filter: blur(18px);
+  box-shadow:
+    inset 0 0 0 1px var(--hairline-strong),
+    0 24px 60px -20px rgba(0, 0, 0, 0.8);
+}
+.update-head {
+  display: flex;
+  gap: 12px;
+}
+.update-head > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.update-head b {
+  color: var(--text);
+  font-size: 14px;
+}
+.update-icon {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  color: #fff;
+  background: var(--accent);
+}
+.update-notes-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 10px 0 0 46px;
+  padding: 0;
+  border: 0;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 12.5px;
+  background: none;
+  cursor: pointer;
+}
+.update-notes {
+  max-height: 180px;
+  margin: 8px 0 0 46px;
+  overflow: auto;
+  color: var(--text-2);
+  font-size: 12.5px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+.update-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+/* ---------- What's new ---------- */
+.wn-scrim {
+  position: fixed;
+  z-index: 2147481000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(4, 3, 8, 0.6);
+  backdrop-filter: blur(6px);
+}
+.wn-card {
+  position: relative;
+  width: min(460px, 100%);
+  padding: 28px 26px 22px;
+  border-radius: 24px;
+  background: radial-gradient(420px 220px at 0% 0%, rgba(255, 59, 92, 0.2), transparent 70%), #121019;
+  box-shadow:
+    inset 0 0 0 1px var(--hairline-strong),
+    0 40px 90px -30px rgba(0, 0, 0, 0.9);
+}
+.wn-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  color: var(--text-2);
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+}
+.wn-kicker {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.wn-card h2 {
+  margin: 6px 0 18px;
+  font-family: var(--display);
+  font-size: 26px;
+  line-height: 1.1;
+}
+.wn-card ul {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.wn-card li {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  gap: 8px;
+  color: var(--text-2);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.wn-card li span {
+  font-size: 17px;
+}
+.wn-go {
+  width: 100%;
+  margin-top: 22px;
+  justify-content: center;
+}

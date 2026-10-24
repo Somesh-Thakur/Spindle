@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowLeft, Eye, EyeOff, Loader2, Mail } from 'lucide-react'
+import { isDesktop } from '../lib/desktop'
 import { useEffect, useRef, useState, type ClipboardEvent, type FormEvent, type KeyboardEvent } from 'react'
 import {
   redirectError,
@@ -264,7 +265,10 @@ export function AuthGate() {
                         </button>
                       )}
                       {PROVIDERS.includes('github') && (
-                        <button className="gate-provider" disabled={working} onClick={() => run('github', () => signInWith('github'))}>
+                        <button className="gate-provider" disabled={working} onClick={() => run('github', async () => {
+                            await signInWith('github')
+                            if (isDesktop) setNote('Finish signing in in your browser. Spindle opens again by itself.')
+                          })}>
                           {busy === 'github' ? <Loader2 className="spin" size={18} /> : <GitHubMark />}
                           Continue with GitHub
                         </button>

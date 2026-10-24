@@ -1,10 +1,26 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "site",
-  "description": "What the Spindle website may ask the desktop app to do: show Discord status, report play state and open links in the browser. Nothing else.",
-  "windows": ["main"],
+  "description": "What the Spindle website may ask the desktop app to do: show Discord status, open links in the browser, run its own title bar and install updates. Nothing else.",
+  "windows": [
+    "main"
+  ],
   "remote": {
-    "urls": ["https://spindle-bice.vercel.app", "https://spindle-bice.vercel.app/*"]
+    "urls": [
+      "https://spindle-bice.vercel.app",
+      "https://spindle-bice.vercel.app/*"
+    ]
   },
-  "permissions": ["allow-now-playing", "allow-open-url"]
+  "permissions": [
+    "allow-now-playing",
+    "allow-open-url",
+    "allow-check-update",
+    "allow-install-update",
+    "core:window:allow-minimize",
+    "core:window:allow-toggle-maximize",
+    "core:window:allow-internal-toggle-maximize",
+    "core:window:allow-is-maximized",
+    "core:window:allow-close",
+    "core:window:allow-start-dragging"
+  ]
 }

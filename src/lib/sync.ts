@@ -12,6 +12,7 @@ import { allUserLyrics, applyUserLyrics } from '../api/lyrics'
 import { mergeHistory, type Play } from './history'
 import { startPlays } from './playSync'
 import { toast } from '../components/Toast'
+import { isDesktop, openExternal } from './desktop'
 import { usePlayer, type Playlist } from '../store/player'
 import { supabase } from './supabase'
 import type { Track } from './types'
@@ -394,7 +395,26 @@ export type Provider = 'google' | 'github'
 const back = () => location.origin + location.pathname
 
 export async function signInWith(provider: Provider) {
+  if (isDesktop) {
+    // In the desktop app, sign in through the real browser (already signed in to
+    // GitHub), which hands the code back via public/desktop-auth.html → spindle://.
+    const { data, error } = await supabase!.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: `${location.origin}/desktop-auth`, skipBrowserRedirect: true },
+    })
+    if (error) throw error
+    await openExternal(data.url)
+    return
+  }
   const { error } = await supabase!.auth.signInWithOAuth({ provider, options: { redirectTo: back() } })
+  if (error) throw error
+}
+
+/** Finish a desktop sign-in from the spindle://auth?code= link the browser sent back. */
+export async function finishDesktopSignIn(link: string) {
+  const code = new URL(link).searchParams.get('code')
+  if (!code || useAccount.getState().status === 'in') return
+  const { error } = await supabase!.auth.exchangeCodeForSession(code)
   if (error) throw error
 }
 

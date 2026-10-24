@@ -14,6 +14,7 @@ import { MiniPlayer } from './components/MiniPlayer'
 import { Sidebar, TabBar } from './components/Nav'
 import { Toasts } from './components/Toast'
 import { VideoDock } from './components/VideoDock'
+import { WhatsNew } from './components/WhatsNew'
 import { Home } from './pages/Home'
 import {
   AboutPage,
@@ -173,6 +174,7 @@ function Shell() {
       <InstallPrompt />
       <OfflinePill />
       <Toasts />
+      <WhatsNew />
       {customCursor && <Cursor />}
       {intro && <Intro />}
     </div>

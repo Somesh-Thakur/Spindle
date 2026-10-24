@@ -3,6 +3,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { HashRouter } from 'react-router-dom'
 import App from './App'
+import { TitleBar, UpdateBanner } from './components/DesktopChrome'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { startAutoplay } from './lib/autoplay'
 import { startDesktop } from './lib/desktop'
@@ -44,6 +45,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <MotionConfig reducedMotion="user">
       {/* Hash routing keeps deep links working on any free static host. */}
+      {/* Desktop app only: the window's title bar and update notice, outside the app so they survive a crash. */}
+      <TitleBar />
+      <UpdateBanner />
       <HashRouter>
         <ErrorBoundary>
           <App />

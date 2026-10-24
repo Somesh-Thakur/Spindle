@@ -1,0 +1,20 @@
+{
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Spindle",
+        "width": 1320,
+        "height": 840,
+        "minWidth": 940,
+        "minHeight": 600,
+        "center": true,
+        "theme": "Dark",
+        "backgroundColor": "#07060b",
+        "visible": false,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true
+      }
+    ]
+  }
+}

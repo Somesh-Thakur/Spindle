@@ -5,6 +5,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Mutex;
 use std::sync::mpsc::{self, Receiver, RecvTimeoutError, Sender};
 use std::thread;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
@@ -16,8 +17,10 @@ use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::webview::PageLoadEvent;
 use tauri::{AppHandle, Manager, State, WebviewWindow, WindowEvent};
+use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Shortcut, ShortcutState};
 use tauri_plugin_opener::OpenerExt;
+use tauri_plugin_updater::{Update, UpdaterExt};
 use tauri_plugin_window_state::StateFlags;
 
 /// The Discord application whose name shows as "Listening to …". Set at build time.
@@ -42,6 +45,17 @@ struct NowPlaying {
 struct Shared {
     discord: Sender<Option<NowPlaying>>,
     playing: AtomicBool,
+    /// A sign-in link that arrived before the page was ready.
+    auth: Mutex<Option<String>>,
+    /// The update found by check_update, ready to install.
+    update: Mutex<Option<Update>>,
+}
+
+/// What the website shows in its update banner.
+#[derive(serde::Serialize)]
+struct UpdateInfo {
+    version: String,
+    notes: Option<String>,
 }
 
 // ---------- commands the website may call (capabilities/site.json) ----------
@@ -66,6 +80,47 @@ fn open_url(app: AppHandle, url: String) -> Result<(), String> {
         return Err("Only web links can be opened.".into());
     }
     app.opener().open_url(url, None::<&str>).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn check_update(app: AppHandle, state: State<'_, Shared>) -> Result<Option<UpdateInfo>, String> {
+    let update = app.updater().map_err(|e| e.to_string())?.check().await.map_err(|e| e.to_string())?;
+    let info = update.as_ref().map(|u| UpdateInfo { version: u.version.clone(), notes: u.body.clone() });
+    *state.update.lock().unwrap() = update;
+    Ok(info)
+}
+
+/// Downloads and installs the update found by check_update, then restarts Spindle.
+#[tauri::command]
+async fn install_update(app: AppHandle, state: State<'_, Shared>) -> Result<(), String> {
+    let update = state.update.lock().unwrap().take().ok_or("No update to install.")?;
+    update.download_and_install(|_, _| {}, || {}).await.map_err(|e| e.to_string())?;
+    app.restart();
+}
+
+// ---------- signing in through the browser ----------
+
+/// GitHub sign-in happens in the real browser (already signed in to GitHub), which
+/// hands the result back through a spindle://auth link. Pass it to the page.
+fn deliver_auth(app: &AppHandle, url: String) {
+    if !url.starts_with("spindle://auth") {
+        return;
+    }
+    *app.state::<Shared>().auth.lock().unwrap() = Some(url);
+    flush_auth(app);
+    *app.state::<Shared>().auth.lock().unwrap() = None;
+    show(app);
+}
+
+fn flush_auth(app: &AppHandle) {
+    let Some(url) = app.state::<Shared>().auth.lock().unwrap().clone() else { return };
+    if let Some(w) = app.get_webview_window("main") {
+        let js = serde_json::to_string(&url).unwrap_or_default();
+        // If the page hasn't loaded its bridge yet, it picks the link up when it does.
+        let _ = w.eval(format!(
+            "window.spindleDesktop && window.spindleDesktop.auth ? window.spindleDesktop.auth({js}) : (window.__spindleAuth = {js})"
+        ));
+    }
 }
 
 // ---------- Discord ----------
@@ -213,6 +268,8 @@ fn main() {
     tauri::Builder::default()
         // Opening Spindle again brings the running window forward.
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| show(app)))
+        .plugin(tauri_plugin_deep_link::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(
             tauri_plugin_window_state::Builder::default()
                 .with_state_flags(StateFlags::all() & !StateFlags::VISIBLE)
@@ -235,15 +292,36 @@ fn main() {
                 })
                 .build(),
         )
-        .manage(Shared { discord, playing: AtomicBool::new(false) })
-        .invoke_handler(tauri::generate_handler![now_playing, open_url])
+        .manage(Shared { discord, playing: AtomicBool::new(false), auth: Mutex::new(None), update: Mutex::new(None) })
+        .invoke_handler(tauri::generate_handler![now_playing, open_url, check_update, install_update])
         // The window opens once the page has painted, so there's no white flash.
         .on_page_load(|webview, payload| {
             if payload.event() == PageLoadEvent::Finished {
                 let _ = webview.window().show();
+                // A sign-in that's waiting goes to the freshly loaded page; it's cleared once used.
+                let app = webview.app_handle().clone();
+                if app.state::<Shared>().auth.lock().unwrap().is_some() {
+                    flush_auth(&app);
+                    *app.state::<Shared>().auth.lock().unwrap() = None;
+                }
             }
         })
         .setup(|app| {
+            // spindle:// links (sign-in from the browser) come here, whether Spindle was running or not.
+            #[cfg(any(windows, target_os = "linux"))]
+            let _ = app.deep_link().register_all();
+            let handle = app.handle().clone();
+            app.deep_link().on_open_url(move |event| {
+                for url in event.urls() {
+                    deliver_auth(&handle, url.to_string());
+                }
+            });
+            if let Ok(Some(urls)) = app.deep_link().get_current() {
+                for url in urls {
+                    *app.state::<Shared>().auth.lock().unwrap() = Some(url.to_string());
+                }
+            }
+
             // Media keys work even when Spindle isn't the focused window.
             for key in [Code::MediaPlayPause, Code::MediaTrackNext, Code::MediaTrackPrevious, Code::MediaStop] {
                 let _ = app.global_shortcut().register(Shortcut::new(None, key));

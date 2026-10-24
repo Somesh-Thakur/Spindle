@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Back to Spindle</title>
+    <link rel="icon" href="/brand/spindle-favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Anybody:wdth,wght@50..150,600..900&family=Geist:wght@400..600&display=swap" rel="stylesheet" />
+    <style>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        color: #f4f4f5;
+        font: 15px/1.55 Geist, system-ui, sans-serif;
+        background: radial-gradient(900px 600px at 30% 10%, rgba(255, 59, 92, 0.22), transparent 60%), radial-gradient(800px 600px at 80% 90%, rgba(110, 70, 255, 0.2), transparent 60%), #07060b;
+      }
+      main { max-width: 420px; text-align: center; }
+      img { width: 72px; height: 72px; }
+      h1 { margin: 18px 0 8px; font: 800 34px/1.05 Anybody, Geist, sans-serif; font-stretch: 125%; text-transform: uppercase; letter-spacing: -0.01em; }
+      p { margin: 0 0 22px; color: #a1a1aa; }
+      a.btn { display: inline-flex; align-items: center; height: 44px; padding: 0 22px; border-radius: 99px; color: #fff; font-weight: 600; text-decoration: none; background: #ff3b5c; }
+      small { display: block; margin-top: 18px; color: #71717a; }
+      .err h1 { font-size: 28px; }
+    </style>
+  </head>
+  <body>
+    <main id="box">
+      <img src="/brand/spindle-icon-192.png" alt="" />
+      <h1>You're signed in</h1>
+      <p>Opening Spindle… If your browser asks, choose <b>Open Spindle</b>.</p>
+      <a class="btn" id="open" href="#">Open Spindle</a>
+      <small>You can close this tab once Spindle opens.</small>
+    </main>
+    <script>
+      // The GitHub sign-in for the desktop app finishes here, in the browser, then
+      // hands the one-time code to the app through a spindle:// link.
+      const q = new URLSearchParams(location.search)
+      const code = q.get('code') || ''
+      const error = q.get('error_description') || q.get('error')
+      const box = document.getElementById('box')
+      if (error || !/^[\w-]{8,200}$/.test(code)) {
+        box.className = 'err'
+        box.querySelector('h1').textContent = 'Sign-in didn’t finish'
+        box.querySelector('p').textContent = error || 'This link is missing its sign-in code. Go back to Spindle and try again.'
+        box.querySelector('a').remove()
+        box.querySelector('small').remove()
+      } else {
+        const link = 'spindle://auth?code=' + encodeURIComponent(code)
+        document.getElementById('open').href = link
+        // Don't leave the code sitting in the address bar or history.
+        history.replaceState(null, '', location.pathname)
+        location.href = link
+      }
+    </script>
+  </body>
+</html>

@@ -140,6 +140,7 @@ The project is deployed on Vercel and every push to `main` goes live. To deploy 
 - Discord Rich Presence (“Listening to *song*” with cover art and a progress bar)
 - Media keys, a tray icon, and closing to the tray while music plays
 - Lower memory while hidden or minimised; outside links open in your browser
+- Its own title bar, GitHub sign-in through your browser (via a `spindle://` link), and updates that install from inside the app
 
 ```bash
 cd desktop
@@ -149,6 +150,8 @@ npm run build   # make an installer in src-tauri/target/release/bundle
 ```
 
 It needs [Rust](https://rustup.rs). To show Discord status, create an application at [discord.com/developers](https://discord.com/developers/applications) named **Spindle** and build with its Application ID in `SPINDLE_DISCORD_APP_ID`. Pushing a tag like `desktop-v1.0.0` builds Windows and Mac installers on GitHub and publishes them as a release (set the ID as an Actions variable of the same name).
+
+**Updates:** releases are signed so installed apps can update themselves. The signing key lives outside the repo; its contents go in the `TAURI_SIGNING_PRIVATE_KEY` Actions secret, and its public half is in `tauri.conf.json`. To ship an update, raise `version` in `desktop/src-tauri/tauri.conf.json` and `Cargo.toml`, then push a new `desktop-v…` tag. The release text becomes the notes in the app's update card. Website changes need no app update: the app loads the live site.
 
 ## Security
 
