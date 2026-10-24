@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowLeft, Eye, EyeOff, Loader2, Mail } from 'lucide-react'
 import { isDesktop } from '../lib/desktop'
+import { Landing } from './Landing'
 import { useEffect, useRef, useState, type ClipboardEvent, type FormEvent, type KeyboardEvent } from 'react'
 import {
   redirectError,
@@ -217,8 +218,16 @@ export function AuthGate() {
 
   const working = !!busy
 
+  const scroller = useRef<HTMLDivElement>(null)
+  const startFromLanding = (m: 'up' | 'in') => {
+    setMode(m)
+    go('start')
+    scroller.current?.scrollTo({ top: 0, behavior: 'smooth' })
+    setTimeout(() => scroller.current?.querySelector<HTMLInputElement>('.gate-form input')?.focus(), 500)
+  }
+
   return (
-    <div className="gate">
+    <div className={`gate ${isDesktop ? '' : 'has-landing'}`} ref={scroller}>
       {liveBackground && <AuraField />}
       <div className="gate-grain" aria-hidden="true" />
 
@@ -414,6 +423,9 @@ export function AuthGate() {
           By continuing you agree to the <a href="/terms">Terms</a> and <a href="/privacy">Privacy Policy</a>. Music streams from YouTube, iTunes and Audius.
         </p>
       </motion.section>
+
+      {/* The public front page, for visitors and search engines. The desktop app goes straight to signing in. */}
+      {!isDesktop && <Landing onStart={startFromLanding} />}
     </div>
   )
 }

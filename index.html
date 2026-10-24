@@ -30,11 +30,34 @@
       href="https://fonts.googleapis.com/css2?family=Anybody:wdth,wght@50..150,300..900&family=Geist:wght@300..700&family=Mukta:wght@400;600;800&display=swap"
       rel="stylesheet"
     />
-    <title>Spindle</title>
-    <meta name="description" content="Spindle: every song, old and new, on a record player in your browser." />
+    <title>Spindle · Free music player with full songs, live lyrics and karaoke</title>
+    <meta name="description" content="Spindle is a free music player: full songs, live lyrics, karaoke and story cards, with your playlists synced between your phone, your computer and the desktop app. Import from Spotify, Apple Music and YouTube Music." />
+    <link rel="canonical" href="https://spindle-bice.vercel.app/" />
+    <meta name="robots" content="index, follow" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Spindle",
+        "url": "https://spindle-bice.vercel.app/",
+        "description": "A free music player with full songs, live lyrics, karaoke and story cards, and a library that syncs between your devices.",
+        "applicationCategory": "MultimediaApplication",
+        "operatingSystem": "Web, Windows, macOS, iOS, Android",
+        "image": "https://spindle-bice.vercel.app/brand/og-image.png",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "author": { "@type": "Person", "name": "Somesh Sanjay Thakur", "url": "https://github.com/Somesh-Thakur" },
+        "downloadUrl": "https://github.com/Somesh-Thakur/Spindle/releases/latest"
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
+    <!-- For anything that doesn't run the app's code: what Spindle is, in plain HTML. -->
+    <noscript>
+      <h1>Spindle: a free music player</h1>
+      <p>Full songs, live lyrics, karaoke and story cards, with your library synced between your phone, your computer and the desktop app. Import playlists from Spotify, Apple Music and YouTube Music. Spindle needs JavaScript to play music.</p>
+      <p><a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/Somesh-Thakur/Spindle/releases/latest">Desktop app</a></p>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

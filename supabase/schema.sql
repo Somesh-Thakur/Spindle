@@ -447,3 +447,100 @@ $$;
 revoke execute on function public.crash_alert() from public, anon, authenticated;
 drop trigger if exists crash_alert on public.client_errors;
 create trigger crash_alert after insert on public.client_errors for each row execute function public.crash_alert();
+
+-- ---------- Insights ----------
+-- Spindle's own visitor counting: no third party, no cookies. Each browser
+-- keeps a random ID (no name, email or IP) and is counted once a day, along
+-- with the site it came from. Signed-in visits also mark the account active
+-- that day. Nobody can read these from the site; admins see totals in #/admin.
+create table if not exists public.visits (
+  day date not null default (now() at time zone 'utc')::date,
+  visitor uuid not null,
+  signed_in boolean not null default false,
+  desktop boolean not null default false,
+  source text check (length(source) <= 100),
+  first_at timestamptz not null default now(),
+  primary key (day, visitor)
+);
+alter table public.visits enable row level security; -- no policies: write-only through track_visit
+revoke all on public.visits from anon, authenticated;
+
+create table if not exists public.active_days (
+  user_id uuid not null references auth.users (id) on delete cascade,
+  day date not null default (now() at time zone 'utc')::date,
+  primary key (user_id, day)
+);
+alter table public.active_days enable row level security;
+revoke all on public.active_days from anon, authenticated;
+
+create or replace function public.track_visit(p_visitor uuid, p_source text default null, p_desktop boolean default false) returns void
+language plpgsql security definer set search_path = '' as $$
+declare
+  today date := (now() at time zone 'utc')::date;
+begin
+  insert into public.visits (day, visitor, signed_in, desktop, source)
+  values (today, p_visitor, auth.uid() is not null, coalesce(p_desktop, false), nullif(left(lower(trim(p_source)), 100), ''))
+  on conflict (day, visitor) do update set signed_in = public.visits.signed_in or excluded.signed_in;
+  if auth.uid() is not null then
+    insert into public.active_days (user_id, day) values (auth.uid(), today) on conflict do nothing;
+  end if;
+end
+$$;
+revoke execute on function public.track_visit(uuid, text, boolean) from public;
+grant execute on function public.track_visit(uuid, text, boolean) to anon, authenticated;
+
+-- Everything the admin Insights tab shows, in one call. Admins only.
+create or replace function public.admin_insights(p_days integer default 30) returns jsonb
+language plpgsql stable security definer set search_path = '' as $$
+declare
+  today date := (now() at time zone 'utc')::date;
+  first_day date := today - (least(greatest(p_days, 7), 120) - 1);
+begin
+  if not public.is_admin() then
+    raise exception 'admins only';
+  end if;
+  return jsonb_build_object(
+    'totals', jsonb_build_object(
+      'accounts', (select count(*) from auth.users),
+      'new_week', (select count(*) from auth.users where created_at >= now() - interval '7 days'),
+      'visitors_today', (select count(*) from public.visits where day = today),
+      'visitors_week', (select count(distinct visitor) from public.visits where day > today - 7),
+      'active_today', (select count(*) from public.active_days where day = today),
+      'active_week', (select count(distinct user_id) from public.active_days where day > today - 7),
+      'active_month', (select count(distinct user_id) from public.active_days where day > today - 30),
+      'plays_today', (select count(*) from public.plays where at >= extract(epoch from today::timestamp) * 1000),
+      'desktop_week', (select count(distinct visitor) from public.visits where day > today - 7 and desktop),
+      'open_feedback', (select count(*) from public.feedback where status in ('new', 'seen', 'planned'))
+    ),
+    'days', (
+      select jsonb_agg(jsonb_build_object(
+        'day', d::date,
+        'visitors', (select count(*) from public.visits v where v.day = d::date),
+        'signups', (select count(*) from auth.users u where (u.created_at at time zone 'utc')::date = d::date),
+        'active', (select count(*) from public.active_days a where a.day = d::date),
+        'plays', (select count(*) from public.plays p where p.at >= extract(epoch from d) * 1000 and p.at < extract(epoch from d + interval '1 day') * 1000)
+      ) order by d)
+      from generate_series(first_day::timestamp, today::timestamp, interval '1 day') d
+    ),
+    'sources', coalesce((
+      select jsonb_agg(jsonb_build_object('source', source, 'visitors', n) order by n desc)
+      from (
+        select coalesce(source, 'Direct or unknown') as source, count(*) as n
+        from public.visits where day >= first_day
+        group by 1 order by 2 desc limit 8
+      ) s
+    ), '[]'::jsonb),
+    'top_songs', coalesce((
+      select jsonb_agg(jsonb_build_object('title', t.track ->> 'title', 'artist', t.track ->> 'artist', 'plays', s.n, 'listeners', s.people) order by s.n desc)
+      from (
+        select track_id, count(*) as n, count(distinct user_id) as people
+        from public.plays where at >= extract(epoch from first_day::timestamp) * 1000
+        group by track_id order by 2 desc limit 8
+      ) s
+      left join lateral (select track from public.play_tracks pt where pt.track_id = s.track_id limit 1) t on true
+    ), '[]'::jsonb)
+  );
+end
+$$;
+revoke execute on function public.admin_insights(integer) from public, anon;
+grant execute on function public.admin_insights(integer) to authenticated;

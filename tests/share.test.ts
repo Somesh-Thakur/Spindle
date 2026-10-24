@@ -38,7 +38,8 @@ describe('share pages', () => {
   })
 
   it('replaces the default tags with the share’s', () => {
-    const html = shareHtml(INDEX, share(), 'https://spindle.test')
+    const html = shareHtml(INDEX.replace('</head>', '<link rel="canonical" href="https://spindle.test/" /></head>'), share(), 'https://spindle.test')
+    expect(html.match(/rel="canonical"/g)).toHaveLength(1)
     expect(html).toContain('<title>Late night | Spindle</title>')
     expect(html).not.toContain('content="old"')
     expect(html).toContain('og:url" content="https://spindle.test/s/abc123def0"')

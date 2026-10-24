@@ -15,7 +15,7 @@ beforeAll(async () => {
   // for pg_net that records the Discord posts instead of sending them.
   await db.exec(`
     create schema auth;
-    create table auth.users (id uuid primary key, email text);
+    create table auth.users (id uuid primary key, email text, created_at timestamptz not null default now());
     create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('test.uid', true), '')::uuid $$;
     create role authenticated; create role anon;
     grant usage on schema public, auth to authenticated, anon;
@@ -178,5 +178,37 @@ describe('feedback', () => {
     expect(await count('net.sent')).toBe(1)
     // Visitors can't read the webhook.
     await expect(as(ME, 'select * from private.settings')).rejects.toThrow(/permission/)
+  })
+})
+
+describe('insights', () => {
+  const visit = (uid: string | null, visitor: string, source: string | null = null) =>
+    as(uid, 'select public.track_visit($1::uuid, $2, false)', [visitor, source])
+  const V1 = 'aaaaaaaa-0000-0000-0000-000000000001'
+  const V2 = 'aaaaaaaa-0000-0000-0000-000000000002'
+
+  it('counts each browser once a day, and marks signed-in people active', async () => {
+    await visit(null, V1, 'Google.com')
+    await visit(null, V1, 'google.com')
+    await visit(null, V2)
+    await visit(ME, V2)
+    expect(await count(`public.visits where day = (now() at time zone 'utc')::date`)).toBe(2)
+    expect((await db.query<{ signed_in: boolean }>(`select signed_in from public.visits where visitor = '${V2}'`)).rows[0].signed_in).toBe(true)
+    expect(await count(`public.active_days where user_id = '${ME}'`)).toBe(1)
+  })
+
+  it('keeps the raw data private, and the summary to admins', async () => {
+    await expect(as(null, 'select * from public.visits')).rejects.toThrow(/permission/)
+    await expect(as(ME, 'select * from public.active_days')).rejects.toThrow(/permission/)
+    await expect(as(ME, 'select public.admin_insights(30)')).rejects.toThrow(/admins only/)
+    await expect(as(null, 'select public.admin_insights(30)')).rejects.toThrow(/permission/)
+  })
+
+  it('summarises visitors, accounts, activity and sources for admins', async () => {
+    const [{ i }] = await as<{ i: any }>(ADMIN, 'select public.admin_insights(30) as i') // eslint-disable-line @typescript-eslint/no-explicit-any
+    expect(i.totals).toMatchObject({ accounts: 3, visitors_today: 2, active_today: 1 })
+    expect(i.days).toHaveLength(30)
+    expect(i.days.at(-1)).toMatchObject({ visitors: 2, signups: 3, active: 1 })
+    expect(i.sources).toEqual(expect.arrayContaining([{ source: 'google.com', visitors: 1 }, { source: 'Direct or unknown', visitors: 1 }]))
   })
 })

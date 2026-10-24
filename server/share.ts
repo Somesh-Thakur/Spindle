@@ -102,6 +102,7 @@ export function shareHtml(index: string, s: Share, origin: string, userAgent = '
   return index
     .replace(/<title>[\s\S]*?<\/title>/, '')
     .replace(/\s*<meta (name="description"|property="og:[^"]+"|name="twitter:[^"]+")[^>]*>/g, '')
+    .replace(/\s*<link rel="canonical"[^>]*>/g, '')
     .replace('</head>', `    ${tags}\n  </head>`)
 }
 

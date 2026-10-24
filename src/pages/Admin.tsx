@@ -1,6 +1,7 @@
 import { Bug, Check, ChevronDown, Lightbulb, Loader2, MessageCircle, RefreshCw, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { InsightsPanel } from '../components/Insights'
 import { KineticTitle } from '../components/Kinetic'
 import { toast } from '../components/Toast'
 import {
@@ -34,7 +35,7 @@ const device = (ua: string | null) => {
 /** The developer's inbox: feedback to answer and crashes to fix. Admins only (public.admins). */
 export function AdminPage() {
   const admin = useIsAdmin()
-  const [tab, setTab] = useState<'feedback' | 'crashes'>('feedback')
+  const [tab, setTab] = useState<'insights' | 'feedback' | 'crashes'>('insights')
   const [open, setOpen] = useState(true)
   const [items, setItems] = useState<Feedback[] | null>(null)
   const [crashes, setCrashes] = useState<CrashGroup[] | null>(null)
@@ -52,7 +53,7 @@ export function AdminPage() {
     }
   }
   useEffect(() => {
-    if (admin) load()
+    if (admin && tab !== 'insights') load()
   }, [admin, tab, open])
 
   if (!admin)
@@ -71,11 +72,16 @@ export function AdminPage() {
     <div className="page admin-page">
       <div className="sec-head">
         <KineticTitle as="h1">Inbox</KineticTitle>
-        <button className="btn btn-ghost" onClick={load} disabled={loading}>
-          <RefreshCw size={15} className={loading ? 'spin' : ''} /> Refresh
-        </button>
+        {tab !== 'insights' && (
+          <button className="btn btn-ghost" onClick={load} disabled={loading}>
+            <RefreshCw size={15} className={loading ? 'spin' : ''} /> Refresh
+          </button>
+        )}
       </div>
       <div className="admin-tabs" role="tablist">
+        <button role="tab" aria-selected={tab === 'insights'} className={tab === 'insights' ? 'is-on' : ''} onClick={() => setTab('insights')}>
+          Insights
+        </button>
         <button role="tab" aria-selected={tab === 'feedback'} className={tab === 'feedback' ? 'is-on' : ''} onClick={() => setTab('feedback')}>
           Feedback
         </button>
@@ -89,7 +95,9 @@ export function AdminPage() {
         )}
       </div>
 
-      {tab === 'feedback' ? (
+      {tab === 'insights' ? (
+        <InsightsPanel />
+      ) : tab === 'feedback' ? (
         items === null ? (
           <div className="fb-empty">
             <Loader2 size={18} className="spin" />

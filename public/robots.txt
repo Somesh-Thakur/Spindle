@@ -1,0 +1,8 @@
+# Spindle: the front page and legal pages are for everyone; the rest needs an account.
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /desktop-auth
+Disallow: /remote
+
+Sitemap: https://spindle-bice.vercel.app/sitemap.xml

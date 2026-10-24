@@ -9,6 +9,7 @@ import { startAutoplay } from './lib/autoplay'
 import { startDesktop } from './lib/desktop'
 import { startRemoteHost } from './lib/remote'
 import { startErrorReporting } from './lib/errors'
+import { startInsights } from './lib/insights'
 import { startHistory } from './lib/history'
 import './lib/sync'
 import { usePlayer } from './store/player'
@@ -36,6 +37,9 @@ startDesktop()
 
 // The pop-out mini player's buttons come here.
 startRemoteHost(() => window.focus())
+
+// Count visits for the admin Insights tab (no cookies, no third party).
+startInsights()
 
 // Count listening time for Stats and playlist play counts.
 startHistory()
