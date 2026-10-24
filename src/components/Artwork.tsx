@@ -8,10 +8,12 @@ interface Props {
   alt?: string
   className?: string
   round?: boolean
+  /** Load right away, for art that starts off screen and slides in (sheets, dialogs). */
+  eager?: boolean
 }
 
 /** Artwork with a soft placeholder and a blur-up fade when it arrives. */
-export function Artwork({ src, size, alt = '', className = '', round }: Props) {
+export function Artwork({ src, size, alt = '', className = '', round, eager }: Props) {
   const [loaded, setLoaded] = useState(false)
   const [failed, setFailed] = useState(false)
   const [alt2, setAlt] = useState<string | null>(null)
@@ -22,7 +24,7 @@ export function Artwork({ src, size, alt = '', className = '', round }: Props) {
         <img
           src={url}
           alt={alt}
-          loading="lazy"
+          loading={eager ? 'eager' : 'lazy'}
           decoding="async"
           draggable={false}
           onLoad={() => setLoaded(true)}

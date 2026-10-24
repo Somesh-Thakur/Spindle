@@ -1,11 +1,13 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { ChevronLeft, ChevronRight, Disc3, Heart, ListEnd, ListMusic, ListStart, MoreHorizontal, Play, Plus, User, Share } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Disc3, Heart, ListEnd, ListMusic, ListStart, MoreHorizontal, Play, Plus, User, Share, ArrowDownToLine, CircleCheck } from 'lucide-react'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { fmtTime } from '../lib/format'
 import type { Track } from '../lib/types'
+import { canDownload, download, removeDownload, useDownloads } from '../lib/offline'
 import { openShare, trackShare } from '../lib/share'
+import { useIsPhone } from '../lib/useIsPhone'
 import { useCurrent, usePlayer } from '../store/player'
 import { Artwork } from './Artwork'
 import { Equalizer } from './Equalizer'
@@ -99,6 +101,9 @@ export function TrackMenu({ track, className = '' }: { track: Track; className?:
   const [view, setView] = useState<'main' | 'playlists'>('main')
   const [pos, setPos] = useState<CSSProperties>({ visibility: 'hidden' })
   const playlists = usePlayer((s) => s.playlists)
+  const phone = useIsPhone()
+  const saved = useDownloads((s) => !!s.saved[track.id])
+  const saving = useDownloads((s) => s.progress[track.id])
   const ref = useRef<HTMLDivElement>(null)
   const button = useRef<HTMLButtonElement>(null)
   const menu = useRef<HTMLDivElement>(null)
@@ -149,6 +154,54 @@ export function TrackMenu({ track, className = '' }: { track: Track; className?:
     nav(path)
   }
 
+  const items =
+    view === 'playlists' ? (
+      <PlaylistChooser track={track} playlists={playlists} onBack={() => setView('main')} onDone={() => setOpen(false)} />
+    ) : (
+      <>
+        <button role="menuitem" onClick={() => (playNext(track), setOpen(false), toast('Playing next'))}>
+          <ListStart size={16} /> Play next
+        </button>
+        <button role="menuitem" onClick={() => (addToQueue(track), setOpen(false), toast('Added to queue'))}>
+          <ListEnd size={16} /> Add to queue
+        </button>
+        <button role="menuitem" onClick={() => setView('playlists')} aria-haspopup="menu">
+          <ListMusic size={16} /> Add to playlist <ChevronRight size={14} className="menu-more" />
+        </button>
+        {canDownload(track) && (
+          <button
+            role="menuitem"
+            disabled={saving != null}
+            onClick={() => {
+              setOpen(false)
+              if (saved) return removeDownload(track.id).then(() => toast('Removed from downloads'))
+              toast('Downloading for offline…')
+              download(track).then(
+                () => toast(`Saved “${track.title}” for offline`),
+                () => toast('Couldn’t download this song. Try again.'),
+              )
+            }}
+          >
+            {saved ? <CircleCheck size={16} /> : <ArrowDownToLine size={16} />}
+            {saved ? 'Remove download' : saving != null ? `Downloading ${Math.round(saving * 100)}%` : 'Download'}
+          </button>
+        )}
+        <button role="menuitem" onClick={() => (setOpen(false), openShare(trackShare(track)))}>
+          <Share size={16} /> Share
+        </button>
+        {track.source === 'itunes' && track.albumId && (
+          <button role="menuitem" onClick={() => go(`/album/${track.albumId}`)}>
+            <Disc3 size={16} /> Go to album
+          </button>
+        )}
+        {track.source === 'itunes' && track.artistId && (
+          <button role="menuitem" onClick={() => go(`/artist/${track.artistId}`)}>
+            <User size={16} /> Go to artist
+          </button>
+        )}
+      </>
+    )
+
   return (
     <div className={`menu-wrap ${className}`} ref={ref}>
       <button
@@ -165,56 +218,57 @@ export function TrackMenu({ track, className = '' }: { track: Track; className?:
       >
         <MoreHorizontal size={18} />
       </button>
-      {/* Drawn at the top of the page: rows below this one are their own layers and would cover it. */}
+      {/* Drawn at the top of the page: rows below this one are their own layers and would cover it.
+          On phones it's an action sheet from the bottom, like iOS. */}
       {createPortal(
         <AnimatePresence>
-          {open && (
-            <motion.div
-              ref={menu}
-              className="menu menu-floating glass"
-              role="menu"
-              style={pos}
-              initial={{ opacity: 0, scale: 0.97, y: -4 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-              transition={{ duration: 0.14 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {view === 'playlists' ? (
-                <PlaylistChooser
-                  track={track}
-                  playlists={playlists}
-                  onBack={() => setView('main')}
-                  onDone={() => setOpen(false)}
-                />
-              ) : (
-                <>
-                  <button role="menuitem" onClick={() => (playNext(track), setOpen(false), toast('Playing next'))}>
-                    <ListStart size={16} /> Play next
+          {open &&
+            (phone ? (
+              <motion.div key="sheet" className="sheet-scrim" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                <motion.div
+                  ref={menu}
+                  className="sheet-menu glass"
+                  role="menu"
+                  initial={{ y: '100%' }}
+                  animate={{ y: 0 }}
+                  exit={{ y: '100%' }}
+                  transition={{ type: 'spring', stiffness: 420, damping: 40 }}
+                  drag="y"
+                  dragConstraints={{ top: 0, bottom: 0 }}
+                  dragElastic={{ top: 0, bottom: 0.7 }}
+                  onDragEnd={(_, i) => (i.offset.y > 90 || i.velocity.y > 600) && setOpen(false)}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <span className="sheet-grabber" aria-hidden="true" />
+                  <div className="sheet-head">
+                    <Artwork src={track.art} size={96} eager />
+                    <span>
+                      <b>{track.title}</b>
+                      <small>{track.artist}</small>
+                    </span>
+                  </div>
+                  <div className="sheet-items">{items}</div>
+                  <button className="sheet-cancel" onClick={() => setOpen(false)}>
+                    Cancel
                   </button>
-                  <button role="menuitem" onClick={() => (addToQueue(track), setOpen(false), toast('Added to queue'))}>
-                    <ListEnd size={16} /> Add to queue
-                  </button>
-                  <button role="menuitem" onClick={() => setView('playlists')} aria-haspopup="menu">
-                    <ListMusic size={16} /> Add to playlist <ChevronRight size={14} className="menu-more" />
-                  </button>
-                  <button role="menuitem" onClick={() => (setOpen(false), openShare(trackShare(track)))}>
-                    <Share size={16} /> Share
-                  </button>
-                  {track.source === 'itunes' && track.albumId && (
-                    <button role="menuitem" onClick={() => go(`/album/${track.albumId}`)}>
-                      <Disc3 size={16} /> Go to album
-                    </button>
-                  )}
-                  {track.source === 'itunes' && track.artistId && (
-                    <button role="menuitem" onClick={() => go(`/artist/${track.artistId}`)}>
-                      <User size={16} /> Go to artist
-                    </button>
-                  )}
-                </>
-              )}
-            </motion.div>
-          )}
+                </motion.div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="menu"
+                ref={menu}
+                className="menu menu-floating glass"
+                role="menu"
+                style={pos}
+                initial={{ opacity: 0, scale: 0.97, y: -4 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={{ duration: 0.14 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {items}
+              </motion.div>
+            ))}
         </AnimatePresence>,
         document.body,
       )}

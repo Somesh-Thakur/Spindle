@@ -15,6 +15,15 @@ let airGain: GainNode | null = null
 let pendingVocals = 1
 
 /**
+ * iPhone and iPad suspend Web Audio when the page goes to the background, and
+ * audio routed through it goes silent with them. There, the graph is only
+ * built when karaoke needs the vocal remover; the visuals fall back to a
+ * synthetic signal (see engine.ts).
+ */
+const IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+export const needsAudioGraph = (karaoke: boolean) => !IOS || karaoke || !!ctx
+
+/**
  * Mid/side vocal remover. Lead vocals usually sit dead centre (the "mid"
  * signal, L+R), while most instruments are spread to the sides (L−R).
  * Turning the mid down removes the voice; the mid's bass and top end are

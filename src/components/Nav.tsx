@@ -163,7 +163,8 @@ export function TabBar() {
         const on = isActive(pathname, to)
         return (
           <NavLink key={to} to={to} className={`tab ${on ? 'is-on' : ''}`} end={to === '/'}>
-            <Icon size={21} strokeWidth={on ? 2.3 : 1.8} />
+            {on && <motion.span layoutId="tab-pill" className="tab-pill" transition={{ type: 'spring', stiffness: 500, damping: 38 }} />}
+            <Icon size={22} strokeWidth={on ? 2.4 : 1.8} />
             <span>{label}</span>
           </NavLink>
         )

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { useShallow } from 'zustand/react/shallow'
 import { Ambient } from './components/Ambient'
+import { InstallPrompt, OfflinePill } from './components/AppChrome'
 import { AuthGate } from './components/AuthGate'
 import { AuraField } from './components/AuraField'
 import { Cursor } from './components/Cursor'
@@ -27,6 +28,7 @@ import {
   NotFound,
   RecentPage,
 } from './pages/Collections'
+import { DownloadsPage } from './pages/Downloads'
 import { Home } from './pages/Home'
 import { SettingsPage } from './pages/Settings'
 import { ImportPage } from './pages/Import'
@@ -128,6 +130,7 @@ function Shell() {
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/account" element={<SettingsPage />} />
               <Route path="/liked" element={<LikedPage />} />
+              <Route path="/downloads" element={<DownloadsPage />} />
               <Route path="/playlist/:id" element={<PlaylistPage />} />
               <Route path="/recent" element={<RecentPage />} />
               <Route path="/album/:id" element={<AlbumPage />} />
@@ -146,6 +149,8 @@ function Shell() {
       <VideoDock />
       <LyricsEditor />
       <ShareSheet />
+      <InstallPrompt />
+      <OfflinePill />
       <Toasts />
       {customCursor && <Cursor />}
       {intro && <Intro />}

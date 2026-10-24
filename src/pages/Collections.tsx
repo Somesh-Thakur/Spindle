@@ -15,7 +15,7 @@ import { albumShare, openShare } from '../lib/share'
 import { useAsync } from '../lib/useAsync'
 import { usePlayer } from '../store/player'
 
-function TrackList({
+export function TrackList({
   tracks,
   loading,
   numbered,

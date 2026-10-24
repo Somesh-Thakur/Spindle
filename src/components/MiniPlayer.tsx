@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { Eye, EyeOff, Heart, ListMusic, Mic2, Captions, SkipForward } from 'lucide-react'
+import { useIsPhone } from '../lib/useIsPhone'
 import { useCurrent, usePlayer } from '../store/player'
 import { Artwork } from './Artwork'
 import { PlayButton, Scrubber, TransportControls, VolumeControl } from './Controls'
@@ -11,7 +12,8 @@ export function MiniPlayer() {
   const isVideo = usePlayer((s) => s.mode === 'yt')
   const videoHidden = usePlayer((s) => s.videoHidden)
   const liked = usePlayer((s) => (track ? !!s.liked[track.id] : false))
-  const { setFull, toggleLike, next } = usePlayer.getState()
+  const { setFull, toggleLike, next, prev } = usePlayer.getState()
+  const phone = useIsPhone()
 
   return (
     <AnimatePresence>
@@ -25,7 +27,22 @@ export function MiniPlayer() {
           role="region"
           aria-label="Player"
         >
-          <button className="bar-now" onClick={() => setFull(true)} aria-label="Open player">
+          {/* Phones: swipe sideways to skip, swipe up to open, like Apple Music's mini player. */}
+          <motion.button
+            className="bar-now"
+            // onTap, not onClick: a swipe shouldn't also count as a tap.
+            onTap={() => setFull(true)}
+            aria-label="Open player"
+            drag={phone}
+            dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+            dragElastic={0.35}
+            dragSnapToOrigin
+            onDragEnd={(_, i) => {
+              const { x, y } = i.offset
+              if (Math.abs(x) > Math.abs(y) && Math.abs(x) > 50) (x < 0 ? next() : prev())
+              else if (y < -30 || i.velocity.y < -400) setFull(true)
+            }}
+          >
             {!fullOpen ? (
               <motion.div layoutId="np-art" className="bar-art" transition={{ duration: 0.4, ease: [0.2, 0.8, 0.2, 1] }}>
                 <Artwork src={track.art} size={48} />
@@ -37,7 +54,7 @@ export function MiniPlayer() {
               <span className="bar-title">{track.title}</span>
               <span className="bar-sub">{resolving ? 'Finding the full song…' : track.artist}</span>
             </span>
-          </button>
+          </motion.button>
           <button
             className={`ctl ctl-minor bar-like ${liked ? 'is-on' : ''}`}
             onClick={() => toggleLike(track)}

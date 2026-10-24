@@ -1,0 +1,387 @@
+/* =========================================================
+   Phone: Spindle as an app. Everything here is phone-only;
+   the desktop layout is untouched.
+   ========================================================= */
+
+/* Shared pieces that also appear on larger screens */
+.lib-downloads .lib-liked-art {
+  background: radial-gradient(120% 90% at 20% 10%, #3fd6a3 0%, #1f8a6b 45%, #0f3d4f 100%);
+}
+.dl-clear {
+  margin-top: 22px;
+}
+.dl-empty {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  max-width: 560px;
+}
+.dl-empty svg {
+  flex: none;
+  margin-top: 2px;
+  color: #3fd6a3;
+}
+.dl-empty p {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.offline-pill {
+  position: fixed;
+  z-index: 85;
+  top: calc(env(safe-area-inset-top) + 10px);
+  left: 50%;
+  translate: -50% 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.install-card {
+  position: fixed;
+  z-index: 60;
+  left: 12px;
+  right: 12px;
+  bottom: calc(env(safe-area-inset-bottom) + 158px);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px 12px 12px;
+  border-radius: 22px;
+}
+.install-card img {
+  flex: none;
+  border-radius: 12px;
+}
+.install-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-2);
+}
+.install-text > b {
+  font-size: 15px;
+  color: var(--text);
+}
+.install-text b {
+  color: var(--text);
+}
+.install-glyph {
+  display: inline-block;
+  vertical-align: -2px;
+  color: #4aa3ff;
+}
+.install-card .btn {
+  min-width: 0;
+  border-radius: 999px;
+}
+.install-close {
+  align-self: flex-start;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ---------- Action sheet (song menus on phones) ---------- */
+.sheet-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  display: flex;
+  align-items: flex-end;
+  background: rgba(0, 0, 0, 0.45);
+}
+.sheet-menu {
+  width: 100%;
+  max-height: 86vh;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 12px calc(12px + env(safe-area-inset-bottom));
+  border-radius: 26px 26px 0 0;
+  background: rgba(28, 26, 36, 0.92);
+  touch-action: none;
+}
+.sheet-grabber {
+  align-self: center;
+  width: 38px;
+  height: 5px;
+  margin: 2px 0 10px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.22);
+}
+.sheet-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 6px 14px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--hairline);
+}
+.sheet-head .art {
+  width: 52px;
+  height: 52px;
+  flex: none;
+  border-radius: 10px;
+}
+.sheet-head span {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sheet-head b,
+.sheet-head small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sheet-head b {
+  font-size: 16px;
+  font-weight: 650;
+}
+.sheet-head small {
+  font-size: 14px;
+  color: var(--text-2);
+}
+.sheet-items {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  touch-action: pan-y;
+}
+.sheet-items button {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 52px;
+  padding: 0 10px;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 500;
+  text-align: left;
+  color: var(--text);
+  transition: background 0.12s;
+}
+.sheet-items button svg {
+  width: 21px;
+  height: 21px;
+  flex: none;
+  color: var(--text-2);
+}
+.sheet-items button:active {
+  background: rgba(255, 255, 255, 0.08);
+}
+.sheet-items button:disabled {
+  opacity: 0.5;
+}
+.sheet-items .menu-more {
+  margin-left: auto;
+}
+.sheet-items .menu-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sheet-items .menu-note {
+  color: var(--text-3);
+}
+.sheet-cancel {
+  margin-top: 8px;
+  min-height: 52px;
+  border-radius: 16px;
+  font-size: 16px;
+  font-weight: 650;
+  background: rgba(255, 255, 255, 0.08);
+}
+.sheet-cancel:active {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+@media (max-width: 860px) {
+  /* ---------- Feel like an app, not a web page ---------- */
+  html,
+  body {
+    overscroll-behavior: none;
+  }
+  body {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+  button,
+  a,
+  [role='button'] {
+    touch-action: manipulation;
+  }
+  .main {
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .main::-webkit-scrollbar {
+    display: none;
+  }
+  button:active,
+  .lib-card:active,
+  .tile:active {
+    transition-duration: 0.05s;
+  }
+  .row:active,
+  .lib-card:active {
+    scale: 0.985;
+  }
+
+  /* Room for the status bar, notch and Dynamic Island once installed. */
+  .page {
+    padding-top: calc(env(safe-area-inset-top) + 18px);
+    padding-bottom: calc(env(safe-area-inset-bottom) + 112px);
+  }
+  .has-player .page {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 190px);
+  }
+
+  /* ---------- Tab bar: a floating glass capsule ---------- */
+  .tabbar {
+    left: 12px;
+    right: 12px;
+    bottom: max(10px, calc(env(safe-area-inset-bottom) + 4px));
+    height: 64px;
+    padding: 6px;
+    gap: 4px;
+    border-radius: 28px;
+    background: rgba(20, 18, 28, 0.74);
+    backdrop-filter: blur(28px) saturate(190%);
+    -webkit-backdrop-filter: blur(28px) saturate(190%);
+    box-shadow:
+      inset 0 0 0 0.5px rgba(255, 255, 255, 0.14),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 18px 40px -10px rgba(0, 0, 0, 0.7);
+  }
+  .tab {
+    position: relative;
+    border-radius: 22px;
+    gap: 3px;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: var(--text-3);
+    transition:
+      color 0.2s,
+      scale 0.15s;
+  }
+  .tab > :not(.tab-pill) {
+    position: relative;
+    z-index: 1;
+  }
+  .tab-pill {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.08);
+  }
+  .tab.is-on {
+    color: var(--text);
+  }
+  .tab.is-on svg {
+    color: var(--accent);
+  }
+  .tab:active {
+    scale: 0.92;
+  }
+
+  /* ---------- Mini player: a card that sits on the tab bar ---------- */
+  .bar {
+    left: 12px;
+    right: 12px;
+    bottom: calc(max(10px, calc(env(safe-area-inset-bottom) + 4px)) + 72px);
+    height: 64px;
+    padding: 0 8px 0 8px;
+    border-radius: 22px;
+    background: rgba(30, 27, 38, 0.82);
+    backdrop-filter: blur(28px) saturate(190%);
+    -webkit-backdrop-filter: blur(28px) saturate(190%);
+    box-shadow:
+      inset 0 0 0 0.5px rgba(255, 255, 255, 0.14),
+      0 16px 34px -12px rgba(0, 0, 0, 0.75);
+  }
+  .bar-now {
+    gap: 12px;
+    touch-action: none;
+  }
+  .bar-art,
+  .bar-art .art {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+  }
+  .bar-title {
+    font-size: 15px;
+    font-weight: 650;
+  }
+  .bar-sub {
+    font-size: 13px;
+  }
+  .bar-phone .ctl {
+    width: 44px;
+    height: 44px;
+  }
+  .bar-progress-phone {
+    left: 18px;
+    right: 18px;
+    bottom: 1px;
+  }
+  .bar-progress-phone .scrub-bar,
+  .bar-progress-phone .scrub-rail {
+    height: 2.5px !important;
+    border-radius: 2px;
+  }
+  .vdock {
+    bottom: calc(max(10px, calc(env(safe-area-inset-bottom) + 4px)) + 148px);
+  }
+
+  /* ---------- Full player ---------- */
+  .full-top {
+    padding-top: calc(env(safe-area-inset-top) + 6px);
+  }
+  .full-body {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 18px);
+  }
+  .full-title {
+    font-size: clamp(24px, 7vw, 30px);
+  }
+  .full-actions .ctl {
+    width: 44px;
+    height: 44px;
+  }
+
+  /* ---------- Search sits under the status bar ---------- */
+  .search-page.has-query .search-stage {
+    top: 0;
+    padding-top: calc(env(safe-area-inset-top) + 10px);
+  }
+
+  /* ---------- Sign-in and shared pages ---------- */
+  .gate {
+    padding-top: calc(env(safe-area-inset-top) + 24px);
+    padding-bottom: calc(env(safe-area-inset-bottom) + 32px);
+  }
+  .ps-top {
+    padding-top: calc(env(safe-area-inset-top) + 14px);
+  }
+  .share-sheet {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 18px);
+  }
+}

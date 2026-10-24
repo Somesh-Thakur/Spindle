@@ -1,5 +1,5 @@
 import { motion, Reorder, useDragControls } from 'framer-motion'
-import { Download, GripVertical, Heart, Pencil, Play, Plus, Search, Settings, Share, Shuffle, Trash2, X } from 'lucide-react'
+import { ArrowDownToLine, Download, GripVertical, Heart, Pencil, Play, Plus, Search, Settings, Share, Shuffle, Trash2, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Artwork } from '../components/Artwork'
@@ -13,6 +13,7 @@ import { SongTile } from '../components/Tiles'
 import { toast } from '../components/Toast'
 import { TrackMenu } from '../components/TrackRow'
 import { fmtTime } from '../lib/format'
+import { useDownloads } from '../lib/offline'
 import { openShare, playlistShare } from '../lib/share'
 import { displayName, useAccount } from '../lib/sync'
 import type { Track } from '../lib/types'
@@ -179,6 +180,7 @@ export function LibraryPage() {
   const playlists = usePlayer((s) => s.playlists)
   const recent = usePlayer((s) => s.recent)
   const likedList = Object.values(liked).reverse()
+  const downloads = useDownloads((s) => Object.keys(s.saved).length)
   const nav = useNavigate()
 
   const create = () => nav(`/playlist/${usePlayer.getState().createPlaylist()}?rename=1`)
@@ -206,6 +208,15 @@ export function LibraryPage() {
             </span>
             <span className="lib-name">Liked Songs</span>
             <span className="lib-sub">{songs(likedList.length)}</span>
+          </Link>
+        </Reveal>
+        <Reveal i={1}>
+          <Link to="/downloads" className="lib-card lib-liked lib-downloads" data-cursor="open">
+            <span className="lib-liked-art">
+              <ArrowDownToLine size={44} />
+            </span>
+            <span className="lib-name">Downloads</span>
+            <span className="lib-sub">{downloads ? songs(downloads) : 'Listen offline'}</span>
           </Link>
         </Reveal>
         {playlists.map((p, i) => (

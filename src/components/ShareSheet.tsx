@@ -35,7 +35,7 @@ function Preview({ item }: { item: ShareItem }) {
   return (
     <div className="share-preview">
       <div className="share-preview-art">
-        {item.kind === 'playlist' ? <PlaylistCover tracks={item.tracks} cover={item.cover} size={120} /> : <Artwork src={item.art ?? ''} size={160} />}
+        {item.kind === 'playlist' ? <PlaylistCover tracks={item.tracks} cover={item.cover} size={120} /> : <Artwork src={item.art ?? ''} size={160} eager />}
       </div>
       <div className="share-preview-text">
         <small>{KIND[item.kind]}</small>

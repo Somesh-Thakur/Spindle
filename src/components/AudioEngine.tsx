@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react'
 import { findInstrumentals, findVideos } from '../api/youtube'
-import { audio, ensureAudioGraph, setVocalLevel } from '../lib/audio'
+import { audio, ensureAudioGraph, needsAudioGraph, setVocalLevel } from '../lib/audio'
 import { extractPalette } from '../lib/color'
+import { offlineUrl } from '../lib/offline'
 import { currentTime, getMode, seekTo, setMode, totalTime, type Mode } from '../lib/engine'
 import { trackArt } from '../lib/format'
 import type { Track } from '../lib/types'
@@ -40,7 +41,7 @@ function playAudio(t: Track, autoplay: boolean, fullLength: boolean) {
 }
 
 function startAudio() {
-  ensureAudioGraph()
+  if (needsAudioGraph(get().karaoke)) ensureAudioGraph()
   audio.play().catch((err) => {
     if (err?.name === 'NotAllowedError') st({ isPlaying: false })
   })
@@ -82,6 +83,12 @@ async function setVariant(inst: boolean, start = currentTime()) {
   instCandidates = ids
   st({ instrumental: 'on' })
   playVideo(ids[0], get().isPlaying, start)
+}
+
+/** No internet and this song isn't saved on the device. */
+function offlineSkip() {
+  st({ resolving: false, buffering: false, isPlaying: false })
+  toast("You're offline. Songs you've downloaded still play.")
 }
 
 /** Fallback when no video exists or none of them will embed. */
@@ -165,9 +172,16 @@ export function AudioEngine() {
     st({ currentTime: 0, duration: track.duration, lyricOffset: 0 })
 
     if (track.source === 'audius') {
-      playAudio(track, get().isPlaying, true)
+      // Saved for offline: play the copy on this device.
+      offlineUrl(track.id).then((local) => {
+        if (token !== loadToken) return
+        if (local) playAudio({ ...track, streamUrl: local }, get().isPlaying, true)
+        else if (!navigator.onLine) offlineSkip()
+        else playAudio(track, get().isPlaying, true)
+      })
       return
     }
+    if (!navigator.onLine) return offlineSkip()
     st({ resolving: true, buffering: get().isPlaying, instrumental: 'off' })
     yt.get()?.pauseVideo?.()
     audio.pause()
@@ -295,7 +309,30 @@ export function AudioEngine() {
     navigator.mediaSession.setActionHandler('nexttrack', () => get().next())
     navigator.mediaSession.setActionHandler('previoustrack', () => get().prev())
     navigator.mediaSession.setActionHandler('seekto', (d) => d.seekTime != null && seek(d.seekTime))
+    navigator.mediaSession.setActionHandler('seekbackward', (d) => seek(currentTime() - (d.seekOffset ?? 10)))
+    navigator.mediaSession.setActionHandler('seekforward', (d) => seek(currentTime() + (d.seekOffset ?? 10)))
   }, [track?.id])
+
+  // Lock-screen scrubber and play state. Position is refreshed every few seconds;
+  // the OS moves the bar in between from the playback rate.
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return
+    navigator.mediaSession.playbackState = track ? (isPlaying ? 'playing' : 'paused') : 'none'
+    const update = () => {
+      const d = totalTime(get().duration)
+      const p = Math.min(currentTime(), d)
+      if (!track || !(d > 0) || !isFinite(p)) return
+      try {
+        navigator.mediaSession.setPositionState({ duration: d, position: Math.max(0, p), playbackRate: isPlaying ? 1 : 0 })
+      } catch {
+        /* not supported here */
+      }
+    }
+    update()
+    if (!isPlaying) return
+    const id = setInterval(update, 5000)
+    return () => clearInterval(id)
+  }, [isPlaying, track?.id, replayNonce])
 
   // Keyboard shortcuts.
   useEffect(() => {

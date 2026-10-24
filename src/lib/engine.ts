@@ -38,11 +38,11 @@ function synth() {
 }
 
 export function spectrum() {
-  return mode === 'yt' ? synth() : readBins()
+  return (mode !== 'yt' && readBins()) || synth()
 }
 
 export function bass() {
-  if (mode !== 'yt') return bassLevel()
+  if (mode !== 'yt' && readBins()) return bassLevel()
   const b = synth()
   return (b[2] + b[4] + b[6]) / (3 * 255)
 }
