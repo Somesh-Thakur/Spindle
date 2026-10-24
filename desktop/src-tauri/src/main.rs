@@ -162,6 +162,8 @@ fn show_song(client: &mut DiscordIpcClient, t: &NowPlaying) -> Result<(), discor
     client.set_activity(
         Activity::new()
             .activity_type(ActivityType::Listening)
+            // Always "Spindle", whatever the Discord application is called or cached as.
+            .name("Spindle")
             // "Listening to <song>" in the member list, like Spotify.
             .status_display_type(StatusDisplayType::Details)
             .details(&title)

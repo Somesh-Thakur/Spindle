@@ -1,5 +1,6 @@
 import { Grab, Hand } from 'lucide-react'
 import { useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 
 type Mode = '' | 'link' | 'play' | 'open' | 'text' | 'drag' | 'hand' | 'grab'
 
@@ -84,7 +85,9 @@ export function Cursor() {
     }
   }, [])
 
-  return (
+  // On the page itself, above everything: inside the app it would be offset by
+  // the desktop title bar and covered by popups.
+  return createPortal(
     <>
       <div ref={ring} className="cur-ring" aria-hidden="true">
         <svg className="cur-glyph cur-play" viewBox="0 0 24 24">
@@ -97,6 +100,7 @@ export function Cursor() {
         </svg>
       </div>
       <div ref={dot} className="cur-dot" aria-hidden="true" />
-    </>
+    </>,
+    document.body,
   )
 }

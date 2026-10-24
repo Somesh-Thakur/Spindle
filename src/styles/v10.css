@@ -670,3 +670,9 @@
   margin-top: 22px;
   justify-content: center;
 }
+
+/* The custom cursor sits above everything, title bar and popups included. */
+.cur-ring,
+.cur-dot {
+  z-index: 2147483647;
+}
