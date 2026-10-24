@@ -53,7 +53,7 @@ jobs:
         with:
           projectPath: desktop
           tagName: ${{ github.ref_type == 'tag' && github.ref_name || 'desktop-v__VERSION__' }}
-          releaseName: Spindle for desktop ${{ github.ref_type == 'tag' && github.ref_name || 'v__VERSION__' }}
+          releaseName: Spindle for desktop v__VERSION__
           releaseBody: |
             **Windows:** download `Spindle_..._x64-setup.exe` and run it. If Windows warns about an unknown publisher, click *More info → Run anyway*.
             **Mac:** download the `.dmg`, drag Spindle to Applications, then right-click it and choose *Open* the first time.
