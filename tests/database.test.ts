@@ -182,19 +182,36 @@ describe('feedback', () => {
 })
 
 describe('insights', () => {
-  const visit = (uid: string | null, visitor: string, source: string | null = null) =>
-    as(uid, 'select public.track_visit($1::uuid, $2, false)', [visitor, source])
-  const V1 = 'aaaaaaaa-0000-0000-0000-000000000001'
-  const V2 = 'aaaaaaaa-0000-0000-0000-000000000002'
+  /** A visit as it arrives through the API: Supabase passes the request headers along. */
+  const visit = async (uid: string | null, ip: string, agent: string, source: string | null = null, country = 'IN') => {
+    await db.exec(`set request.headers = '${JSON.stringify({ 'cf-connecting-ip': ip, 'user-agent': agent, 'cf-ipcountry': country })}'`)
+    try {
+      return await as(uid, 'select public.track_visit($1, false)', [source])
+    } finally {
+      await db.exec('reset request.headers')
+    }
+  }
 
-  it('counts each browser once a day, and marks signed-in people active', async () => {
-    await visit(null, V1, 'Google.com')
-    await visit(null, V1, 'google.com')
-    await visit(null, V2)
-    await visit(ME, V2)
+  it('counts each browser once a day without storing who it is', async () => {
+    await visit(null, '203.0.113.7', 'Chrome', 'Google.com')
+    await visit(null, '203.0.113.7', 'Chrome', 'google.com') // same browser again
+    await visit(null, '198.51.100.2', 'Firefox', null, 'US') // someone else
+    await visit(ME, '198.51.100.2', 'Firefox')
     expect(await count(`public.visits where day = (now() at time zone 'utc')::date`)).toBe(2)
-    expect((await db.query<{ signed_in: boolean }>(`select signed_in from public.visits where visitor = '${V2}'`)).rows[0].signed_in).toBe(true)
+    expect(await count(`public.visits where signed_in`)).toBe(1)
     expect(await count(`public.active_days where user_id = '${ME}'`)).toBe(1)
+    // Neither the address nor the browser is kept anywhere.
+    const stored = JSON.stringify((await db.query('select * from public.visits')).rows)
+    expect(stored).not.toContain('203.0.113.7')
+    expect(stored).not.toContain('Chrome')
+  })
+
+  it('changes the visit code every day, so days can’t be linked', async () => {
+    const [{ v: today }] = (await db.query<{ v: string }>(`select visitor::text v from public.visits where country = 'IN' limit 1`)).rows
+    await db.exec(`update private.settings set key = 'visit_salt:2000-01-01' where key like 'visit_salt:%'`) // pretend it's tomorrow
+    await visit(null, '203.0.113.7', 'Chrome')
+    expect(await count(`public.visits where visitor::text = '${today}'`)).toBe(1)
+    expect(await count(`private.settings where key like 'visit_salt:%'`)).toBe(1)
   })
 
   it('keeps the raw data private, and the summary to admins', async () => {
@@ -204,11 +221,12 @@ describe('insights', () => {
     await expect(as(null, 'select public.admin_insights(30)')).rejects.toThrow(/permission/)
   })
 
-  it('summarises visitors, accounts, activity and sources for admins', async () => {
+  it('summarises visitors, accounts, activity, countries and sources for admins', async () => {
     const [{ i }] = await as<{ i: any }>(ADMIN, 'select public.admin_insights(30) as i') // eslint-disable-line @typescript-eslint/no-explicit-any
-    expect(i.totals).toMatchObject({ accounts: 3, visitors_today: 2, active_today: 1 })
+    expect(i.totals).toMatchObject({ accounts: 3, active_today: 1 })
+    expect(i.totals.visitors_today).toBeGreaterThanOrEqual(2)
     expect(i.days).toHaveLength(30)
-    expect(i.days.at(-1)).toMatchObject({ visitors: 2, signups: 3, active: 1 })
-    expect(i.sources).toEqual(expect.arrayContaining([{ source: 'google.com', visitors: 1 }, { source: 'Direct or unknown', visitors: 1 }]))
+    expect(i.countries).toEqual(expect.arrayContaining([{ country: 'US', visitors: 1 }]))
+    expect(i.sources).toEqual(expect.arrayContaining([{ source: 'google.com', visitors: 1 }]))
   })
 })

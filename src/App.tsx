@@ -119,9 +119,12 @@ function Shell() {
       <Ambient />
       {liveBackground && <AuraField />}
       <AudioEngine />
+      <a className="skip-link" href="#main" onClick={(e) => (e.preventDefault(), mainRef.current?.focus())}>
+        Skip to content
+      </a>
       <Sidebar />
       <ScrollRoot.Provider value={mainRef}>
-      <main className="main" ref={mainRef}>
+      <main className="main" id="main" tabIndex={-1} ref={mainRef}>
         {/* popLayout mounts the next page at once, so shared elements (the search box) can glide between pages. */}
         <AnimatePresence mode="popLayout" initial={false}>
           <motion.div

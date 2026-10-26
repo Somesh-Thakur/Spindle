@@ -1,5 +1,6 @@
 // The pop-out mini player (remote.html). It shows what the main Spindle window
 // is playing and sends button presses back over a BroadcastChannel (lib/remote.ts).
+import '@fontsource-variable/geist/wght.css'
 import './styles/remote.css'
 import type { RemoteCommand, RemoteState } from './lib/remote'
 

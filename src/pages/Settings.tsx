@@ -15,6 +15,7 @@ import {
   Palette,
   RefreshCw,
   Search,
+  ShieldCheck,
   Trash2,
   UserRound,
   Volume2,
@@ -30,6 +31,8 @@ import { toast } from '../components/Toast'
 import { cacheSize, clearCache } from '../lib/cache'
 import { isDesktop } from '../lib/desktop'
 import { startSaver } from '../lib/saver'
+import { countingOff, setCounting } from '../lib/insights'
+import { useHistory } from '../lib/history'
 import { DISCORD_INVITE, feedbackHref, useIsAdmin } from '../lib/feedback'
 import { deleteShare, myShares, shareUrl, type Share } from '../lib/share'
 import { changePassword, deleteAccount, displayName, signOut, syncAgain, updateName, useAccount } from '../lib/sync'
@@ -45,6 +48,7 @@ const SECTIONS = [
   { id: 'lyrics', label: 'Lyrics', icon: MonitorPlay },
   { id: 'appearance', label: 'Appearance', icon: Palette },
   { id: 'storage', label: 'Storage', icon: Gauge },
+  { id: 'privacy', label: 'Privacy', icon: ShieldCheck },
   { id: 'shortcuts', label: 'Shortcuts', icon: Keyboard },
   { id: 'feedback', label: 'Feedback', icon: MessageSquareHeart },
   { id: 'about', label: 'About', icon: Info },
@@ -114,6 +118,7 @@ export function SettingsPage() {
           <LyricsSection />
           <AppearanceSection />
           <StorageSection />
+          <PrivacySection />
           <Section id="shortcuts" title="Keyboard shortcuts">
             <div className="set-keys">
               {SHORTCUTS.map(([k, what]) => (
@@ -600,6 +605,71 @@ function FeedbackSection() {
           </Link>
         </Row>
       )}
+    </Section>
+  )
+}
+
+function PrivacySection() {
+  const nav = navigator as Navigator & { globalPrivacyControl?: boolean }
+  const browserSaysNo = !!nav.globalPrivacyControl || nav.doNotTrack === '1'
+  const [counting, setOn] = useState(() => !countingOff())
+  const user = useAccount((s) => s.user)
+
+  /** Everything Spindle keeps for you, as one file. */
+  const download = () => {
+    const p = usePlayer.getState()
+    const h = useHistory.getState()
+    const data = {
+      exported: new Date().toISOString(),
+      account: user ? { email: user.email, name: displayName(user), created: user.created_at } : null,
+      liked: Object.values(p.liked),
+      playlists: p.playlists,
+      lyrics: allUserLyrics(),
+      listeningHistory: h.plays.map((x) => ({ ...x, title: h.tracks[x.id]?.title, artist: h.tracks[x.id]?.artist })),
+      settings: { country: p.country, autoplay: p.autoplay, screensaver: p.screensaver, liveBackground: p.liveBackground },
+    }
+    const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `spindle-data-${new Date().toISOString().slice(0, 10)}.json`
+    a.click()
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+  }
+
+  return (
+    <Section id="privacy" title="Privacy">
+      <Row
+        title="Count my visits"
+        sub={
+          browserSaysNo
+            ? 'Your browser asks sites not to track you, so your visits aren’t counted.'
+            : 'Helps the developer see how many people use Spindle. No cookies, nothing stored on your device, and it can’t identify you.'
+        }
+      >
+        <Switch
+          on={counting && !browserSaysNo}
+          onChange={(v) => {
+            setCounting(v)
+            setOn(v)
+          }}
+          label="Count my visits"
+        />
+      </Row>
+      <Row title="Download your data" sub="Your account details, liked songs, playlists, lyrics, listening history and settings, as one file.">
+        <button className="btn btn-ghost" onClick={download}>
+          Download
+        </button>
+      </Row>
+      <Row title="Privacy policy and terms" sub="What Spindle stores, why, and your rights. To delete everything, use Delete account under Account.">
+        <div className="set-actions">
+          <a className="btn btn-ghost" href="/privacy" target="_blank" rel="noreferrer">
+            Privacy
+          </a>
+          <a className="btn btn-ghost" href="/terms" target="_blank" rel="noreferrer">
+            Terms
+          </a>
+        </div>
+      </Row>
     </Section>
   )
 }

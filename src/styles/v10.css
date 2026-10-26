@@ -1316,3 +1316,24 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Keyboard users can jump past the sidebar. Hidden until it has focus. */
+.skip-link {
+  position: fixed;
+  z-index: 2147483500;
+  top: calc(var(--titlebar) + 8px);
+  left: 8px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  color: #fff;
+  font-weight: 600;
+  background: var(--accent);
+  transform: translateY(-200%);
+  transition: transform 0.15s;
+}
+.skip-link:focus {
+  transform: none;
+}
+.main:focus {
+  outline: 0;
+}

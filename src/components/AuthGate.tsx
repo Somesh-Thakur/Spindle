@@ -420,7 +420,8 @@ export function AuthGate() {
           </AnimatePresence>
         )}
         <p className="gate-legal">
-          By continuing you agree to the <a href="/terms">Terms</a> and <a href="/privacy">Privacy Policy</a>. Music streams from YouTube, iTunes and Audius.
+          By continuing you confirm you’re at least 13 (with a parent’s or guardian’s permission if you’re under 18) and agree to the <a href="/terms">Terms</a> and{' '}
+          <a href="/privacy">Privacy Policy</a>. Music plays through YouTube, iTunes and Audius.
         </p>
       </motion.section>
 

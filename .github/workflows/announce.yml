@@ -1,0 +1,32 @@
+# When a new "What's new" entry ships (src/lib/changelog.json), post it to the
+# Discord announcements channel once the site has deployed. Run it from the
+# Actions tab to post the latest entry again.
+name: Announce update
+
+on:
+  push:
+    branches: [main]
+    paths: [src/lib/changelog.json]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  announce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # Give Vercel time to put the new version live before people click through.
+      - run: sleep 90
+        if: github.event_name == 'push'
+      - run: node .github/scripts/announce.mjs web
+        env:
+          DISCORD_ANNOUNCE_WEBHOOK: ${{ secrets.DISCORD_ANNOUNCE_WEBHOOK }}
+          FORCE: ${{ github.event_name == 'workflow_dispatch' }}

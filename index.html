@@ -24,12 +24,6 @@
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Anybody:wdth,wght@50..150,300..900&family=Geist:wght@300..700&family=Mukta:wght@400;600;800&display=swap"
-      rel="stylesheet"
-    />
     <title>Spindle · Free music player with full songs, live lyrics and karaoke</title>
     <meta name="description" content="Spindle is a free music player: full songs, live lyrics, karaoke and story cards, with your playlists synced between your phone, your computer and the desktop app. Import from Spotify, Apple Music and YouTube Music." />
     <link rel="canonical" href="https://spindle-bice.vercel.app/" />
@@ -51,15 +45,61 @@
         "downloadUrl": "https://github.com/Somesh-Thakur/Spindle/releases/latest"
       }
     </script>
+    <script type="application/ld+json">
+      {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Is Spindle really free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. No ads, no subscription and no limits."}}, {"@type": "Question", "name": "Where does the music come from?", "acceptedAnswer": {"@type": "Answer", "text": "Full songs play through YouTube's official player, with Apple's 30-second previews and independent artists on Audius as fallbacks. Lyrics come from LRCLIB. Spindle doesn't host or sell any music."}}, {"@type": "Question", "name": "Can I use Spindle on my phone?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Open Spindle in Safari or Chrome and choose Add to Home Screen to use it like an app."}}, {"@type": "Question", "name": "How do I bring my Spotify playlists to Spindle?", "acceptedAnswer": {"@type": "Answer", "text": "Sign in, open Import, and paste a playlist link. For private playlists and Liked Songs, export them with a free tool like Exportify and drop the file in."}}]}
+    </script>
+    <!-- Signed-in people and the desktop app skip the plain-HTML front page below. -->
+    <script>
+      try {
+        if (localStorage.getItem('aura:auth') || window.__TAURI_INTERNALS__) document.documentElement.classList.add('has-session')
+      } catch (e) {}
+    </script>
+    <style>
+      html, body { margin: 0; background: #07060b; color: #f4f4f5; }
+      .pre { max-width: 760px; margin: 0 auto; padding: 56px 24px; font: 16px/1.6 system-ui, -apple-system, 'Segoe UI', sans-serif; }
+      .pre h1 { font-size: clamp(28px, 5vw, 44px); line-height: 1.1; margin: 20px 0 12px; }
+      .pre h2 { margin-top: 40px; font-size: 22px; }
+      .pre h3 { margin: 22px 0 4px; font-size: 17px; }
+      .pre p, .pre li { color: #b4b4bd; }
+      .pre li { margin: 8px 0; }
+      .pre strong { color: #f4f4f5; }
+      .pre a { color: #ff5672; }
+      .pre .pre-cta { display: inline-block; padding: 12px 22px; border-radius: 99px; color: #fff; font-weight: 600; text-decoration: none; background: #ff3b5c; }
+      .pre .pre-foot { margin-top: 48px; font-size: 14px; }
+      .has-session .pre { display: none; }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
-    <!-- For anything that doesn't run the app's code: what Spindle is, in plain HTML. -->
-    <noscript>
-      <h1>Spindle: a free music player</h1>
-      <p>Full songs, live lyrics, karaoke and story cards, with your library synced between your phone, your computer and the desktop app. Import playlists from Spotify, Apple Music and YouTube Music. Spindle needs JavaScript to play music.</p>
-      <p><a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/Somesh-Thakur/Spindle/releases/latest">Desktop app</a></p>
-    </noscript>
+    <div id="root">
+      <!-- The front page as plain HTML, for search engines and the first moment before the app starts. React replaces it. -->
+      <main class="pre">
+        <img class="pre-logo" src="/brand/spindle-icon-192.png" alt="" width="72" height="72" />
+        <h1>Spindle: a free music player with full songs, live lyrics and karaoke</h1>
+        <p class="pre-lede">Every record you love, on every screen. Play full songs for free, follow live lyrics, sing along in karaoke mode, and keep your library synced between your phone, your computer and the desktop app. No ads, no subscription.</p>
+        <p><a class="pre-cta" href="/">Open Spindle</a></p>
+        <h2>What you get</h2>
+        <ul>
+          <li><strong>Full songs, free.</strong> Almost any song, start to finish, matched to the right recording automatically.</li>
+          <li><strong>Live lyrics and karaoke.</strong> Lyrics that follow the song line by line where available, a word-by-word karaoke mode and instrumental versions.</li>
+          <li><strong>Your library everywhere.</strong> Liked songs, playlists and listening stats sync between your devices.</li>
+          <li><strong>Bring your playlists.</strong> Import from Spotify, Apple Music or YouTube Music by pasting a link.</li>
+          <li><strong>Share it beautifully.</strong> Links with rich previews and 1080×1920 story cards for Instagram.</li>
+          <li><strong>Your listening stats.</strong> Minutes listened, top songs and artists, and a stats card to share.</li>
+          <li><strong>Smart Shuffle and Autoplay.</strong> Discover songs you'll like and keep the music going.</li>
+          <li><strong>A desktop app for Windows and Mac.</strong> Discord "Listening to" status, media keys, a mini player that stays on top, and automatic updates. <a href="https://github.com/Somesh-Thakur/Spindle/releases/latest">Download Spindle for desktop</a>.</li>
+        </ul>
+        <h2>Good to know</h2>
+        <h3>Is Spindle really free?</h3>
+        <p>Yes. No ads, no subscription and no limits.</p>
+        <h3>Where does the music come from?</h3>
+        <p>Full songs play through YouTube's official player, with Apple's 30-second previews and independent artists on Audius as fallbacks. Lyrics come from LRCLIB. Spindle doesn't host or sell any music.</p>
+        <h3>Can I use it on my phone?</h3>
+        <p>Yes. Open Spindle in Safari or Chrome and choose "Add to Home Screen" to use it like an app.</p>
+        <h3>How do I bring my Spotify playlists?</h3>
+        <p>Sign in, open Import, and paste a playlist link. For private playlists and Liked Songs, export them with a free tool like Exportify and drop the file in.</p>
+        <p class="pre-foot"><a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/Somesh-Thakur/Spindle">GitHub</a> · Made by Somesh Sanjay Thakur</p>
+      </main>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

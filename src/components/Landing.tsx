@@ -5,7 +5,7 @@ import { Logo } from './Brand'
 
 const FEATURES = [
   { icon: Music2, title: 'Full songs, free', text: 'Almost any song, start to finish, matched to the right recording automatically. No ads and no subscription.' },
-  { icon: Mic2, title: 'Live lyrics and karaoke', text: 'Lyrics that follow the song line by line, a word-by-word karaoke mode, and a vocal remover for singing along.' },
+  { icon: Mic2, title: 'Live lyrics and karaoke', text: 'Lyrics that follow the song line by line where they’re available, a word-by-word karaoke mode, and instrumental versions for singing along.' },
   { icon: RefreshCw, title: 'Your library everywhere', text: 'Liked songs, playlists and stats sync live between your phone, your laptop and the desktop app.' },
   { icon: Download, title: 'Bring your playlists', text: 'Paste a Spotify, Apple Music or YouTube Music link and the whole playlist comes over, song by song.' },
   { icon: Share2, title: 'Share it beautifully', text: 'Links with rich previews in WhatsApp, Discord and iMessage, and 1080×1920 story cards for Instagram.' },

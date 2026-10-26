@@ -449,10 +449,13 @@ drop trigger if exists crash_alert on public.client_errors;
 create trigger crash_alert after insert on public.client_errors for each row execute function public.crash_alert();
 
 -- ---------- Insights ----------
--- Spindle's own visitor counting: no third party, no cookies. Each browser
--- keeps a random ID (no name, email or IP) and is counted once a day, along
--- with the site it came from. Signed-in visits also mark the account active
--- that day. Nobody can read these from the site; admins see totals in #/admin.
+-- Spindle's own visitor counting, with no cookies, no third party and nothing
+-- stored in the browser. Each visit is counted once a day under a code made
+-- from the visitor's network address and browser plus a secret that changes
+-- every day (and is then thrown away), so visits can't be traced to a person
+-- or followed from one day to the next. The address itself is never stored.
+-- Signed-in visits also mark the account active that day. Nobody can read
+-- these from the site; admins see totals in #/admin.
 create table if not exists public.visits (
   day date not null default (now() at time zone 'utc')::date,
   visitor uuid not null,
@@ -462,6 +465,7 @@ create table if not exists public.visits (
   first_at timestamptz not null default now(),
   primary key (day, visitor)
 );
+alter table public.visits add column if not exists country text check (length(country) <= 2);
 alter table public.visits enable row level security; -- no policies: write-only through track_visit
 revoke all on public.visits from anon, authenticated;
 
@@ -473,21 +477,46 @@ create table if not exists public.active_days (
 alter table public.active_days enable row level security;
 revoke all on public.active_days from anon, authenticated;
 
-create or replace function public.track_visit(p_visitor uuid, p_source text default null, p_desktop boolean default false) returns void
+-- Today's secret for visit codes; yesterday's is replaced, so codes can't be matched across days.
+create or replace function private.visit_salt() returns text
+language plpgsql security definer set search_path = '' as $$
+declare
+  today text := ((now() at time zone 'utc')::date)::text;
+  salt text;
+begin
+  select value into salt from private.settings where key = 'visit_salt:' || today;
+  if salt is null then
+    delete from private.settings where key like 'visit_salt:%';
+    salt := replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '');
+    insert into private.settings values ('visit_salt:' || today, salt) on conflict (key) do nothing;
+    select value into salt from private.settings where key = 'visit_salt:' || today;
+  end if;
+  return salt;
+end
+$$;
+revoke execute on function private.visit_salt() from public, anon, authenticated;
+
+drop function if exists public.track_visit(uuid, text, boolean);
+create or replace function public.track_visit(p_source text default null, p_desktop boolean default false) returns void
 language plpgsql security definer set search_path = '' as $$
 declare
   today date := (now() at time zone 'utc')::date;
+  headers json := coalesce(nullif(current_setting('request.headers', true), ''), '{}')::json;
+  ip text := coalesce(headers ->> 'cf-connecting-ip', split_part(headers ->> 'x-forwarded-for', ',', 1), '');
+  agent text := coalesce(headers ->> 'user-agent', '');
+  code uuid := md5(private.visit_salt() || '|' || ip || '|' || agent)::uuid;
+  place text := upper(left(nullif(headers ->> 'cf-ipcountry', ''), 2));
 begin
-  insert into public.visits (day, visitor, signed_in, desktop, source)
-  values (today, p_visitor, auth.uid() is not null, coalesce(p_desktop, false), nullif(left(lower(trim(p_source)), 100), ''))
+  insert into public.visits (day, visitor, signed_in, desktop, source, country)
+  values (today, code, auth.uid() is not null, coalesce(p_desktop, false), nullif(left(lower(trim(p_source)), 100), ''), nullif(place, 'XX'))
   on conflict (day, visitor) do update set signed_in = public.visits.signed_in or excluded.signed_in;
   if auth.uid() is not null then
     insert into public.active_days (user_id, day) values (auth.uid(), today) on conflict do nothing;
   end if;
 end
 $$;
-revoke execute on function public.track_visit(uuid, text, boolean) from public;
-grant execute on function public.track_visit(uuid, text, boolean) to anon, authenticated;
+revoke execute on function public.track_visit(text, boolean) from public;
+grant execute on function public.track_visit(text, boolean) to anon, authenticated;
 
 -- Everything the admin Insights tab shows, in one call. Admins only.
 create or replace function public.admin_insights(p_days integer default 30) returns jsonb
@@ -522,6 +551,14 @@ begin
       ) order by d)
       from generate_series(first_day::timestamp, today::timestamp, interval '1 day') d
     ),
+    'countries', coalesce((
+      select jsonb_agg(jsonb_build_object('country', country, 'visitors', n) order by n desc)
+      from (
+        select country, count(*) as n
+        from public.visits where day >= first_day and country is not null
+        group by 1 order by 2 desc limit 8
+      ) c
+    ), '[]'::jsonb),
     'sources', coalesce((
       select jsonb_agg(jsonb_build_object('source', source, 'visitors', n) order by n desc)
       from (

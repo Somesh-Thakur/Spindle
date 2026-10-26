@@ -4,6 +4,8 @@ import { loadInsights, type Insights } from '../lib/insights'
 import { toast } from './Toast'
 
 const fmt = (n: number) => n.toLocaleString()
+const regions = typeof Intl.DisplayNames === 'function' ? new Intl.DisplayNames(undefined, { type: 'region' }) : null
+const countryName = (code: string) => regions?.of(code) ?? code
 const dayLabel = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString(undefined, { day: 'numeric', month: 'short', timeZone: 'UTC' })
 
 /** Admin → Insights: visitors, accounts, activity and plays, from Spindle's own counts. */
@@ -113,6 +115,21 @@ export function InsightsPanel({ load = loadInsights }: { load?: (days: number) =
           )}
         </section>
         <section className="ins-card">
+          <h3>Countries</h3>
+          {data.countries?.length ? (
+            <ol className="ins-list">
+              {data.countries.map((c) => (
+                <li key={c.country}>
+                  <span>{countryName(c.country)}</span>
+                  <b>{fmt(c.visitors)}</b>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="ins-empty">No visits counted yet.</p>
+          )}
+        </section>
+        <section className="ins-card">
           <h3>Most played</h3>
           {data.top_songs.length ? (
             <ol className="ins-list">
@@ -131,7 +148,7 @@ export function InsightsPanel({ load = loadInsights }: { load?: (days: number) =
           )}
         </section>
       </div>
-      <p className="ins-foot">Counted by Spindle itself: no cookies and no third parties. Visitors are browsers, counted once a day; days are in UTC.</p>
+      <p className="ins-foot">Counted by Spindle itself: no cookies, no third parties, nothing stored in visitors’ browsers. Visitors are browsers, counted once a day; days are in UTC.</p>
     </div>
   )
 }

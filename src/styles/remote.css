@@ -13,7 +13,7 @@ body {
   overflow: hidden;
   background: #0b0a10;
   color: #f4f4f5;
-  font: 13px/1.35 Geist, 'Segoe UI', system-ui, sans-serif;
+  font: 13px/1.35 'Geist Variable', Geist, 'Segoe UI', system-ui, sans-serif;
   user-select: none;
   -webkit-user-select: none;
 }

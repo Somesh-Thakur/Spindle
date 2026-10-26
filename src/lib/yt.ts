@@ -34,6 +34,8 @@ export function ytPlayer(listener: Listener): Promise<any> {
     (YT) =>
       new Promise((resolve) => {
         player = new YT.Player('yt-player', {
+          // Privacy-enhanced mode: YouTube doesn't set tracking cookies for viewers.
+          host: 'https://www.youtube-nocookie.com',
           width: '100%',
           height: '100%',
           playerVars: { autoplay: 1, controls: 0, disablekb: 1, modestbranding: 1, playsinline: 1, rel: 0, iv_load_policy: 3, fs: 0 },
