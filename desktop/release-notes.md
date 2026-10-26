@@ -1,7 +1,7 @@
 **What's new**
-- 📌 Mini player: pop out a small player that stays on top of your other windows (the new button next to the volume, or the tray menu).
-- 🌙 Screensaver: a dim clock and what's playing after a few idle minutes, or press Z. Uses almost no battery.
-- 🖥️ F11 goes fullscreen.
+- 🎬 Songs from YouTube now always show their video in a small card, as YouTube requires.
+- ⏸️ YouTube songs pause when Spindle is minimised or in the tray, and resume right where they left off when you open it again. Play from the tray, a media key or the mini player brings Spindle back and keeps going. Songs from Audius keep playing in the background.
+- 🌙 The screensaver keeps the small video showing while a YouTube song plays.
 
 Already have Spindle? It updates itself: click **Update now** when the card appears.
 

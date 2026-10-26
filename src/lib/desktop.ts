@@ -3,6 +3,7 @@
 // player, and open outside links in the real browser.
 import { create } from 'zustand'
 import { toast } from '../components/Toast'
+import { playVisibly, useBackground } from './background'
 import { artUrl } from './format'
 import { usePlayer } from '../store/player'
 
@@ -109,7 +110,10 @@ export function startDesktop() {
   const p = () => usePlayer.getState()
   Object.assign(window, {
     spindleDesktop: {
-      toggle: () => p().toggle(),
+      // Playing a YouTube song from the tray or a media key brings the window back first.
+      toggle: () => playVisibly(() => call('show_main'), () => p().toggle()),
+      // The app says when its window is hidden, minimised or back (desktop/src-tauri/src/main.rs).
+      setBackground: (hidden: boolean) => useBackground.setState({ window: hidden }),
       pause: () => p().setPlaying(false),
       next: () => p().next(),
       prev: () => p().prev(),

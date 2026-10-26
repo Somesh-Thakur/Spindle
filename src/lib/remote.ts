@@ -2,6 +2,7 @@
 // always-on-top window in the desktop app or a Picture-in-Picture window in the
 // browser. It doesn't play anything itself: this side tells it what's playing
 // and carries out its buttons, over a BroadcastChannel.
+import { inBackground, playVisibly, useBackground } from './background'
 import { currentTime, seekTo } from './engine'
 import { artUrl } from './format'
 import { usePlayer } from '../store/player'
@@ -18,6 +19,8 @@ export interface RemoteState {
   duration: number
   /** When `time` was read, so the pop-out can move the progress bar on its own. */
   at: number
+  /** Why it can't play right now, if it can't. */
+  hint?: string
 }
 
 export type RemoteCommand = 'hello' | 'toggle' | 'next' | 'prev' | 'like' | 'focus' | { seek: number }
@@ -39,18 +42,21 @@ export function startRemoteHost(onFocus: () => void) {
       time: currentTime(),
       duration: s.duration || t.duration || 0,
       at: Date.now(),
+      // YouTube songs only play while Spindle is on screen.
+      hint: s.mode === 'yt' && !s.isPlaying && inBackground() ? 'Open Spindle to play this song' : undefined,
     }
   }
 
   let last = ''
   const send = (force = false) => {
     const st = state()
-    const key = st ? `${st.title}|${st.artist}|${st.playing}|${st.liked}|${Math.round(st.duration)}` : ''
+    const key = st ? `${st.title}|${st.artist}|${st.playing}|${st.liked}|${Math.round(st.duration)}|${st.hint ?? ''}` : ''
     if (!force && key === last) return
     last = key
     ch.postMessage({ state: st })
   }
   usePlayer.subscribe(() => send())
+  useBackground.subscribe(() => send())
   // Resync the position now and then, and right after seeking (key unchanged, so forced).
   setInterval(() => send(true), 5000)
 
@@ -59,7 +65,7 @@ export function startRemoteHost(onFocus: () => void) {
     const s = usePlayer.getState()
     if (!cmd) return
     if (cmd === 'hello') return send(true)
-    if (cmd === 'toggle') s.toggle()
+    if (cmd === 'toggle') void playVisibly(onFocus, () => usePlayer.getState().toggle())
     else if (cmd === 'next') s.next()
     else if (cmd === 'prev') s.prev()
     else if (cmd === 'focus') onFocus()

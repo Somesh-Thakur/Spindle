@@ -1,4 +1,4 @@
-import { EyeOff, Maximize2 } from 'lucide-react'
+import { Maximize2 } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 import { usePlayer } from '../store/player'
 import { useVideoInSlot } from './FullPlayer'
@@ -7,13 +7,13 @@ import { useVideoInSlot } from './FullPlayer'
  * Hosts the single YouTube iframe. It never moves in the DOM (moving an iframe
  * reloads it); instead it's fixed-positioned over whichever slot should show
  * the video: the big slot in the full player, or the picture-in-picture card.
- * YouTube requires the player to stay visible at 200×200 or larger.
+ * YouTube requires the player to stay visible at 200×200 or larger, so it
+ * can't be hidden while a YouTube song plays (YouTube API Services policy III.I.9).
  */
 export function VideoDock() {
   const ref = useRef<HTMLDivElement>(null)
   const mode = usePlayer((s) => s.mode)
   const started = usePlayer((s) => s.videoStarted)
-  const hidden = usePlayer((s) => s.videoHidden)
   const fullOpen = usePlayer((s) => s.fullOpen)
   const setFull = usePlayer((s) => s.setFull)
   const slotVisible = useVideoInSlot()
@@ -44,7 +44,7 @@ export function VideoDock() {
   return (
     <div
       ref={ref}
-      className={`vdock ${mode === 'yt' && (started || inSlot) ? 'is-on' : ''} ${inSlot ? 'in-slot' : 'is-pip'} ${fullOpen ? 'over-full' : ''} ${hidden && !inSlot ? 'is-hidden' : ''}`}
+      className={`vdock ${mode === 'yt' && (started || inSlot) ? 'is-on' : ''} ${inSlot ? 'in-slot' : 'is-pip'} ${fullOpen ? 'over-full' : ''}`}
       aria-hidden={mode !== 'yt'}
     >
       <div className="vdock-frame">
@@ -52,9 +52,6 @@ export function VideoDock() {
       </div>
       {!inSlot && (
         <div className="vdock-tools">
-          <button onClick={() => usePlayer.setState({ videoHidden: true })} aria-label="Hide video">
-            <EyeOff size={14} />
-          </button>
           <button onClick={() => (usePlayer.setState({ videoView: true }), setFull(true))} aria-label="Show video in player">
             <Maximize2 size={14} />
           </button>

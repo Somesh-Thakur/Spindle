@@ -276,6 +276,10 @@ fn player(app: &AppHandle, action: &str) {
 /// While hidden or minimised, the page needs very little memory or CPU: tell WebView2,
 /// which pauses drawing and trims memory.
 fn set_background(window: &WebviewWindow, background: bool) {
+    // The page pauses YouTube songs while hidden, as YouTube's rules require (src/lib/background.ts).
+    let _ = window.eval(format!(
+        "window.spindleDesktop && window.spindleDesktop.setBackground && window.spindleDesktop.setBackground({background})"
+    ));
     #[cfg(windows)]
     let _ = window.with_webview(move |webview| unsafe {
         use webview2_com::Microsoft::Web::WebView2::Win32::{
@@ -424,7 +428,9 @@ fn main() {
             }
             WindowEvent::Resized(_) => {
                 if let Some(w) = window.app_handle().get_webview_window("main") {
-                    set_background(&w, w.is_minimized().unwrap_or(false));
+                    // Hiding to the tray fires this too, so count hidden as well as minimised.
+                    let away = w.is_minimized().unwrap_or(false) || !w.is_visible().unwrap_or(true);
+                    set_background(&w, away);
                 }
             }
             _ => {}

@@ -93,7 +93,7 @@ function Shell() {
   const location = useLocation()
   const mainRef = useRef<HTMLElement>(null)
   const hasTrack = !!useCurrent()
-  const hasVideo = usePlayer((s) => s.mode === 'yt' && s.videoStarted && !s.videoHidden)
+  const hasVideo = usePlayer((s) => s.mode === 'yt' && s.videoStarted)
   const { customCursor, intro, liveBackground } = usePlayer(useShallow((s) => ({ customCursor: s.customCursor, intro: s.intro, liveBackground: s.liveBackground })))
 
   useEffect(() => {

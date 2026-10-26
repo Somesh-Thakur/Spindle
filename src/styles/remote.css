@@ -191,3 +191,6 @@ button {
 .mini-bar:hover i {
   height: 5px;
 }
+.mini-text span.is-hint {
+  color: #ffb3c0;
+}

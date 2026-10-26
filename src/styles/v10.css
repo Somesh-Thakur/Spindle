@@ -695,6 +695,18 @@
 .is-saver .update-card {
   visibility: hidden;
 }
+/* Except a YouTube song's video, which YouTube requires to stay on screen: the
+   app layer rises above the screensaver, with only the video card visible. */
+.is-saver #root {
+  position: relative;
+  z-index: 2147483601;
+}
+.is-desktop.is-saver #root {
+  position: fixed;
+}
+.is-saver .vdock.is-on {
+  visibility: visible;
+}
 .is-saver,
 .is-saver body {
   cursor: none;

@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, useDragControls } from 'framer-motion'
-import { ChevronDown, Disc3, Eye, EyeOff, Heart, ListMusic, Mic2, Captions, Video, Share } from 'lucide-react'
+import { ChevronDown, Disc3, Heart, ListMusic, Mic2, Captions, Video, Share } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { trackArt, year } from '../lib/format'
 import { useIsPhone } from '../lib/useIsPhone'
@@ -22,10 +22,9 @@ export function FullPlayer() {
 export function useVideoInSlot() {
   const mode = usePlayer((s) => s.mode)
   const videoView = usePlayer((s) => s.videoView)
-  const hidden = usePlayer((s) => s.videoHidden)
   const karaoke = usePlayer((s) => s.karaoke)
   const phone = useIsPhone()
-  return mode === 'yt' && !hidden && !karaoke && (videoView || phone)
+  return mode === 'yt' && !karaoke && (videoView || phone)
 }
 
 const ease = [0.2, 0.8, 0.2, 1] as const
@@ -36,7 +35,6 @@ function Sheet() {
   const mode = usePlayer((s) => s.mode)
   const panel = usePlayer((s) => s.panel)
   const karaoke = usePlayer((s) => s.karaoke)
-  const videoHidden = usePlayer((s) => s.videoHidden)
   const liked = usePlayer((s) => !!s.liked[track.id])
   const { setFull, toggleLike } = usePlayer.getState()
   const showVideo = useVideoInSlot()
@@ -88,12 +86,12 @@ function Sheet() {
         <button className="ctl full-close" onClick={() => setFull(false)} aria-label="Close player">
           <ChevronDown size={24} />
         </button>
-        {mode === 'yt' && !phone && !videoHidden ? (
+        {mode === 'yt' && !phone ? (
           <div className="seg" role="tablist" aria-label="View">
             <button role="tab" aria-selected={!showVideo} className={!showVideo ? 'is-on' : ''} onClick={() => usePlayer.setState({ videoView: false })}>
               <Disc3 size={15} /> Record
             </button>
-            <button role="tab" aria-selected={showVideo} className={showVideo ? 'is-on' : ''} onClick={() => usePlayer.setState({ videoView: true, videoHidden: false })}>
+            <button role="tab" aria-selected={showVideo} className={showVideo ? 'is-on' : ''} onClick={() => usePlayer.setState({ videoView: true })}>
               <Video size={15} /> Video
             </button>
           </div>
@@ -101,16 +99,6 @@ function Sheet() {
           <span className="grabber" aria-hidden="true" />
         )}
         <div className="full-tabs">
-          {mode === 'yt' && (
-            <button
-              className="ctl ctl-minor"
-              onClick={() => usePlayer.setState({ videoHidden: !videoHidden })}
-              aria-label={videoHidden ? 'Show video' : 'Hide video'}
-              aria-pressed={!videoHidden}
-            >
-              {videoHidden ? <EyeOff size={18} /> : <Eye size={18} />}
-            </button>
-          )}
           <button className="k-enter" onClick={() => usePlayer.setState({ karaoke: true })} aria-label="Karaoke mode">
             <Mic2 size={16} /> <span>Karaoke</span>
           </button>

@@ -8,6 +8,7 @@ import { ErrorBoundary } from './components/ErrorBoundary'
 import { startAutoplay } from './lib/autoplay'
 import { startDesktop } from './lib/desktop'
 import { startRemoteHost } from './lib/remote'
+import { startBackgroundRule } from './lib/background'
 import { startErrorReporting } from './lib/errors'
 import { startInsights } from './lib/insights'
 import { startHistory } from './lib/history'
@@ -41,8 +42,16 @@ startErrorReporting()
 // Discord status, tray and media keys in the desktop app.
 startDesktop()
 
+// YouTube songs pause while Spindle is out of sight (YouTube's rules).
+startBackgroundRule()
+
 // The pop-out mini player's buttons come here.
-startRemoteHost(() => window.focus())
+// "Open Spindle" and playing a YouTube song from it bring Spindle back to the front.
+startRemoteHost(() => {
+  const tauri = (window as { __TAURI_INTERNALS__?: { invoke: (cmd: string) => Promise<unknown> } }).__TAURI_INTERNALS__
+  if (tauri) return tauri.invoke('show_main').catch(() => {})
+  window.focus()
+})
 
 // Count visits for the admin Insights tab (no cookies, no third party).
 startInsights()

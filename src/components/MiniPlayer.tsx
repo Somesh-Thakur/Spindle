@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { Eye, EyeOff, Heart, ListMusic, Mic2, Captions, PictureInPicture2, SkipForward } from 'lucide-react'
+import { Heart, ListMusic, Mic2, Captions, PictureInPicture2, SkipForward } from 'lucide-react'
 import { canPopOut, popOut } from '../lib/popout'
 import { useIsPhone } from '../lib/useIsPhone'
 import { useCurrent, usePlayer } from '../store/player'
@@ -10,8 +10,6 @@ export function MiniPlayer() {
   const track = useCurrent()
   const fullOpen = usePlayer((s) => s.fullOpen)
   const resolving = usePlayer((s) => s.resolving)
-  const isVideo = usePlayer((s) => s.mode === 'yt')
-  const videoHidden = usePlayer((s) => s.videoHidden)
   const liked = usePlayer((s) => (track ? !!s.liked[track.id] : false))
   const { setFull, toggleLike, next, prev } = usePlayer.getState()
   const phone = useIsPhone()
@@ -71,16 +69,6 @@ export function MiniPlayer() {
           </div>
 
           <div className="bar-right">
-            {isVideo && (
-              <button
-                className="ctl ctl-minor"
-                onClick={() => usePlayer.setState({ videoHidden: !videoHidden })}
-                aria-label={videoHidden ? 'Show video' : 'Hide video'}
-                aria-pressed={!videoHidden}
-              >
-                {videoHidden ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
-            )}
             <button className="ctl ctl-minor" onClick={() => (usePlayer.setState({ karaoke: true }), setFull(true))} aria-label="Karaoke mode">
               <Mic2 size={16} />
             </button>

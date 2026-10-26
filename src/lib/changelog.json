@@ -1,5 +1,24 @@
 [
   {
+    "version": "1.4",
+    "date": "2026-10-26",
+    "title": "Playing by YouTube’s rules",
+    "items": [
+      {
+        "emoji": "🎬",
+        "text": "Songs that play from YouTube now always show their video, as a small card you can enlarge. YouTube requires its video to stay on screen while it plays."
+      },
+      {
+        "emoji": "⏸️",
+        "text": "YouTube songs pause when Spindle is in the background or minimised, and pick up right where they left off when you come back. Songs from Audius keep playing."
+      },
+      {
+        "emoji": "🌙",
+        "text": "The screensaver keeps the small video showing while a YouTube song plays."
+      }
+    ]
+  },
+  {
     "version": "1.3",
     "date": "2026-10-26",
     "title": "Your privacy, upgraded",

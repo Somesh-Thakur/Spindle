@@ -27,8 +27,8 @@ export function Screensaver() {
     }
     const maybeStart = () => {
       const s = usePlayer.getState()
-      // Not while someone's watching the music video, or with the window in the background.
-      if (document.hidden || (s.isPlaying && s.mode === 'yt' && s.videoStarted && !s.videoHidden)) return arm()
+      // Not while someone's watching the video full size, or with the window in the background.
+      if (document.hidden || (s.mode === 'yt' && s.fullOpen && s.videoView)) return arm()
       useSaver.setState({ on: true })
     }
     const onKey = (e: KeyboardEvent) => {
