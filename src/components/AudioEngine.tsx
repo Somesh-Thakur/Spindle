@@ -112,7 +112,14 @@ const ytListener = {
   onState: (state: number) => {
     if (getMode() !== 'yt') return
     if (state === YT_STATE.ENDED) get().next(true)
-    else if (state === YT_STATE.PLAYING) st({ buffering: false, isPlaying: true, videoStarted: true, duration: totalTime(get().duration) })
+    else if (state === YT_STATE.PLAYING) {
+      st({ buffering: false, isPlaying: true, videoStarted: true, duration: totalTime(get().duration) })
+      // Remember the video that worked; it syncs, so every device starts this song without searching.
+      const t = get().current()
+      if (t && !t.videoId && variant === 'original' && originalId && get().ytMatches[t.id] !== originalId) {
+        st({ ytMatches: { ...get().ytMatches, [t.id]: originalId } })
+      }
+    }
     else if (state === YT_STATE.BUFFERING) st({ buffering: true })
     else if (state === YT_STATE.PAUSED) {
       // Only a pause of the song that's actually playing means "the listener paused".
@@ -187,8 +194,9 @@ export function AudioEngine() {
     audio.pause()
     searchDepth = 0
     variant = 'original'
-    // Songs found on YouTube Music already know their video.
-    ;(track.videoId ? Promise.resolve([track.videoId]) : findVideos(track)).then((ids) => {
+    // Songs found on YouTube Music already know their video, and songs played before remember theirs.
+    const known = track.videoId ?? get().ytMatches[track.id]
+    ;(known ? Promise.resolve([known]) : findVideos(track)).then((ids) => {
       if (token !== loadToken) return
       st({ resolving: false })
       candidates = ids
@@ -197,6 +205,13 @@ export function AudioEngine() {
       else if (wantsInstrumental()) setVariant(true, 0)
       else playVideo(ids[0], get().isPlaying)
     })
+    // With a remembered match, look up the alternatives quietly in case that video won't play.
+    if (known && !track.videoId) {
+      findVideos(track).then((more) => {
+        if (token !== loadToken) return
+        for (const id of more) if (!candidates.includes(id)) candidates.push(id)
+      })
+    }
   }, [track])
 
   // Karaoke vocals: live processing for direct audio, instrumental swap for YouTube.

@@ -86,6 +86,8 @@ interface PlayerState {
   queueSession: number
   /** Songs in the queue that Autoplay or Smart Shuffle added (not chosen by the listener). */
   addedIds: string[]
+  /** The YouTube video each song played from, by track id. Synced, so every device starts it without searching. */
+  ytMatches: Record<string, string>
 
   current: () => Track | undefined
   upNext: () => Track[]
@@ -173,6 +175,7 @@ export const usePlayer = create<PlayerState>()(
       queueSource: '',
       queueSession: 0,
       addedIds: [],
+      ytMatches: {},
 
       current: () => {
         const { queue, order, pos } = get()
@@ -307,6 +310,7 @@ export const usePlayer = create<PlayerState>()(
         playlistView: s.playlistView,
         autoplay: s.autoplay,
         addedIds: s.addedIds,
+        ytMatches: s.ytMatches,
         queueSource: s.queueSource,
         queue: s.queue,
         order: s.order,

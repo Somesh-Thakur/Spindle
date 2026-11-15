@@ -19,6 +19,7 @@ import { openShare, playlistShare } from '../lib/share'
 import { smartShuffle } from '../lib/smartShuffle'
 import { displayName, useAccount } from '../lib/sync'
 import type { Track } from '../lib/types'
+import { prefetch } from '../lib/prefetch'
 import { useCurrent, usePlayer } from '../store/player'
 
 const minutes = (tracks: Track[]) => Math.round(tracks.reduce((s, t) => s + t.duration, 0) / 60)
@@ -100,6 +101,11 @@ export function PlaylistPage() {
   const [smartBusy, setSmartBusy] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const nav = useNavigate()
+
+  // Get the first songs ready, so pressing play or a song starts right away.
+  useEffect(() => {
+    if (p?.tracks.length) prefetch(p.tracks.slice(0, 6))
+  }, [id])
 
   useEffect(() => {
     if (!editing) return

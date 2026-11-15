@@ -77,6 +77,8 @@ function project(): Projection {
     lyrics: allUserLyrics(),
     prefs: Object.fromEntries(PREFS.map((k) => [k, s[k]])),
     session: session ? { now: session } : {},
+    // Which YouTube video each song plays from, so other devices skip the search.
+    matches: s.ytMatches,
     // Listening history syncs separately (playSync.ts).
   }
 }
@@ -190,6 +192,8 @@ function apply(doc: Doc) {
   let likedChanged = false
   let playlistsChanged = false
   let lyricsChanged = false
+  const matches = { ...s.ytMatches }
+  let matchesChanged = false
   let session: Session | null = null
   const newPlays: Play[] = []
   const newTracks: Record<string, Track> = {}
@@ -219,6 +223,10 @@ function apply(doc: Doc) {
         newPlays.push(e.v as Play)
       } else if (sec === 'ptracks' && !e.del && e.v) {
         newTracks[k] = e.v as Track
+      } else if (sec === 'matches') {
+        if (e.del) delete matches[k]
+        else if (typeof e.v === 'string') matches[k] = e.v
+        matchesChanged = true
       } else if (sec === 'prefs' && !e.del && (PREFS as readonly string[]).includes(k)) {
         ;(prefs as Record<string, unknown>)[k] = e.v
       } else continue
@@ -234,6 +242,7 @@ function apply(doc: Doc) {
   }
   if (playlistsChanged) patch.playlists = [...playlists.values()].sort((a, b) => a.createdAt - b.createdAt)
   if (lyricsChanged) patch.lyricsNonce = s.lyricsNonce + 1
+  if (matchesChanged) patch.ytMatches = matches
   if (session) {
     Object.assign(patch, { queue: session.queue, order: session.order, pos: session.pos, isPlaying: false, currentTime: 0 })
     // Hash it the way this device will project it, so adopting it isn't seen as a new change.
@@ -329,7 +338,7 @@ function start(user: User) {
   let last = ''
 
   unsubStore = usePlayer.subscribe((s) => {
-    const sig = [s.liked, s.playlists, s.lyricsNonce, s.queue, s.order, s.pos, ...PREFS.map((k) => s[k])]
+    const sig = [s.liked, s.playlists, s.lyricsNonce, s.queue, s.order, s.pos, s.ytMatches, ...PREFS.map((k) => s[k])]
     const ref = sig.map((x) => (typeof x === 'object' ? identity(x) : String(x))).join('|')
     if (ref === last) return
     last = ref

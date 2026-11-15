@@ -1533,3 +1533,20 @@
     --size: min(52vw, 34vh);
   }
 }
+
+/* ---------- iPhone home-screen app: fill the whole screen (lib/iosGap.ts) ---------- */
+.ios-app,
+.ios-app body,
+.ios-app #root {
+  height: 100vh;
+}
+/* Bottom bars move down into the strip iOS leaves empty. `translate` stacks with their animations. */
+.ios-app .tabbar,
+.ios-app .bar,
+.ios-app .vdock.is-pip,
+.ios-app .toasts {
+  translate: 0 var(--ios-gap, 0px);
+}
+.ios-app .full {
+  bottom: calc(-1 * var(--ios-gap, 0px));
+}

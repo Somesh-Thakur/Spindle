@@ -31,11 +31,20 @@ export async function cached<T>(key: string, ttlMs: number, load: () => Promise<
 
 const pending = new Map<string, Promise<unknown>>()
 
+/** Storage is full: drop the oldest half of the cache, keeping recent lookups. */
 function pruneCache() {
   try {
-    Object.keys(localStorage)
+    const entries = Object.keys(localStorage)
       .filter((k) => k.startsWith(PREFIX))
-      .forEach((k) => localStorage.removeItem(k))
+      .map((k) => {
+        try {
+          return { k, t: JSON.parse(localStorage.getItem(k) ?? '{}').t ?? 0 }
+        } catch {
+          return { k, t: 0 }
+        }
+      })
+      .sort((a, b) => a.t - b.t)
+    entries.slice(0, Math.ceil(entries.length / 2)).forEach(({ k }) => localStorage.removeItem(k))
   } catch {
     /* ignore */
   }

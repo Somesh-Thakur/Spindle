@@ -9,6 +9,8 @@ import { startAutoplay } from './lib/autoplay'
 import { startDesktop } from './lib/desktop'
 import { startRemoteHost } from './lib/remote'
 import { startErrorReporting } from './lib/errors'
+import { startIosGapFix } from './lib/iosGap'
+import { startPrefetch } from './lib/prefetch'
 import { startInsights } from './lib/insights'
 import { startHistory } from './lib/history'
 import './lib/sync'
@@ -35,6 +37,9 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}))
 }
 
+// iPhone home-screen app: no empty strip under the bottom bars.
+startIosGapFix()
+
 // Record crashes so they can be fixed (src/lib/errors.ts).
 startErrorReporting()
 
@@ -56,6 +61,9 @@ try {
 } catch {
   /* private mode */
 }
+
+// Find the next songs in the queue ahead of time.
+startPrefetch()
 
 // Count listening time for Stats and playlist play counts.
 startHistory()
