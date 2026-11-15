@@ -155,39 +155,78 @@ export function findVideos(t: Track, from = 0): Promise<string[]> {
 }
 
 /**
- * Karaoke or instrumental uploads of a track, best first. Scored like
- * findVideos, but the upload must say it's karaoke or instrumental.
+ * Waits for several searches, but not for the slowest: once one has answered,
+ * the others get `grace` ms more. Failed searches count as empty.
+ */
+async function gather<T>(searches: Promise<T[]>[], grace = 1500): Promise<T[]> {
+  const results: T[][] = searches.map(() => [])
+  let started = false
+  await new Promise<void>((done) => {
+    let left = searches.length
+    const finish = () => --left === 0 && done()
+    searches.forEach((p, i) =>
+      p
+        .then((r) => {
+          results[i] = r
+          if (r.length && !started) {
+            started = true
+            setTimeout(done, grace)
+          }
+        })
+        .catch(() => {})
+        .finally(finish),
+    )
+  })
+  return results.flat()
+}
+
+const KARAOKE = /\b(karaoke|instrumental|minus one|backing track|without vocals?|no vocals?|off vocal|music only|vocals? removed)\b/i
+
+const instMisses = new Map<string, number>()
+
+/**
+ * Karaoke or instrumental uploads of a track, best first. Several searches run
+ * at once (with and without the artist, karaoke and instrumental, both search
+ * services); the upload must say it's karaoke or instrumental.
  */
 export function findInstrumentals(t: Track): Promise<string[]> {
-  return cached(`yti:${t.id}`, 30 * DAY, async () => {
-    const artist = t.artist.split(/,|&/)[0]
-    const pools = await Promise.all([
-      viaPiped(`${t.title} ${artist} karaoke`, 'videos').catch(() => [] as Hit[]),
-      viaPiped(`${t.title} ${artist} instrumental`, 'music_songs').catch(() => [] as Hit[]),
+  const key = `yti:${t.id}`
+  if ((instMisses.get(key) ?? 0) > Date.now()) return Promise.resolve([])
+  return cached(key, 30 * DAY, async () => {
+    const title = t.title.replace(/\s*[([].*?[)\]]/g, '').trim() || t.title
+    const artist = t.artist.split(/,|&/)[0].trim()
+    const hits = await gather([
+      viaPiped(`${title} ${artist} karaoke`, 'videos'),
+      viaPiped(`${title} ${artist} instrumental`, 'music_songs'),
+      viaPiped(`${title} karaoke`, 'videos'),
+      viaPiped(`${title} ${artist} instrumental`, 'videos'),
+      viaInvidious(`${title} ${artist} karaoke`),
     ])
-    let hits = pools.flat()
-    if (!hits.length) hits = await viaInvidious(`${t.title} ${artist} karaoke`)
-    const want = /\b(karaoke|instrumental|minus one|backing track)\b/i
-    const tt = norm(t.title)
-    const words = tt.split(' ').filter((w) => w.length > 1)
+    const words = norm(title)
+      .split(' ')
+      .filter((w) => w.length > 1)
     const ranked = hits
-      .filter((h) => want.test(h.title))
+      .filter((h) => KARAOKE.test(h.title))
       .map((h) => {
         const ht = norm(h.title)
         let sc = (words.filter((w) => ht.includes(w)).length / Math.max(1, words.length)) * 6
-        if (/\b(cover|live|remix|slowed|8d|nightcore)\b/i.test(h.title)) sc -= 4
+        if (norm(artist) && ht.includes(norm(artist))) sc += 1
+        if (/\b(cover|live|remix|slowed|8d|nightcore|reverb|sped up)\b/i.test(h.title)) sc -= 4
         // Same length usually means the same arrangement, so lyric timings still line up.
         if (h.duration && t.duration > 40) {
           const d = Math.abs(h.duration - t.duration)
-          sc += d < 3 ? 4 : d < 20 ? 1 : -2
+          sc += d < 3 ? 4 : d < 20 ? 1 : d < 60 ? -1 : -4
         }
         return { h, sc }
       })
       .filter((x) => x.sc >= 4)
       .sort((a, b) => b.sc - a.sc)
     if (!ranked.length) throw new Error('none')
-    return [...new Set(ranked.map((x) => x.h.id))].slice(0, 3)
-  }).catch(() => [])
+    return [...new Set(ranked.map((x) => x.h.id))].slice(0, 4)
+  }).catch(() => {
+    instMisses.set(key, Date.now() + 10 * 60_000)
+    return []
+  })
 }
 
 /** Piped proxies Google artwork; rebuild the direct URL as a size template. */

@@ -81,7 +81,7 @@ export function MiniPlayer() {
                 {videoHidden ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             )}
-            <button className="ctl ctl-minor" onClick={() => (usePlayer.setState({ karaoke: true }), setFull(true))} aria-label="Karaoke mode">
+            <button className="ctl ctl-minor" onClick={() => (usePlayer.setState({ karaoke: true, vocals: 0 }), setFull(true))} aria-label="Karaoke mode">
               <Mic2 size={16} />
             </button>
             <button className="ctl ctl-minor" onClick={() => (usePlayer.setState({ panel: 'lyrics' }), setFull(true))} aria-label="Lyrics">

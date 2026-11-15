@@ -111,7 +111,7 @@ function Sheet() {
               {videoHidden ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           )}
-          <button className="k-enter" onClick={() => usePlayer.setState({ karaoke: true })} aria-label="Karaoke mode">
+          <button className="k-enter" onClick={() => usePlayer.setState({ karaoke: true, vocals: 0 })} aria-label="Karaoke mode">
             <Mic2 size={16} /> <span>Karaoke</span>
           </button>
           <button className={`ctl ctl-minor ${panel === 'lyrics' ? 'is-on' : ''}`} onClick={() => togglePanel('lyrics')} aria-pressed={panel === 'lyrics'} aria-label="Lyrics">

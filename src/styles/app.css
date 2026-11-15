@@ -34,9 +34,9 @@
   --pip-w: 356px;
   --pip-h: 200px;
 
-  /* Mukta covers Devanagari, which Anybody and Geist don't. */
-  --font: 'Geist Variable', 'Geist', 'Mukta', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  --display: 'Anybody Variable', 'Anybody', 'Mukta', 'Geist Variable', system-ui, sans-serif;
+  /* Mukta covers Devanagari and Mukta Mahee Gurmukhi, which Anybody and Geist don't. */
+  --font: 'Geist Variable', 'Geist', 'Mukta', 'Mukta Mahee', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --display: 'Anybody Variable', 'Anybody', 'Mukta', 'Mukta Mahee', 'Geist Variable', system-ui, sans-serif;
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   color-scheme: dark;
 }

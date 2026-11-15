@@ -74,8 +74,9 @@ async function setVariant(inst: boolean, start = currentTime()) {
   const ids = await findInstrumentals(t)
   if (token !== loadToken) return
   if (!ids.length) {
-    st({ instrumental: 'missing', vocals: 1 })
-    toast('No instrumental version found for this song. Playing it with vocals.')
+    // Vocals stay off as the setting, so the next song tries again on its own.
+    st({ instrumental: 'missing' })
+    toast('No karaoke version of this song, so it plays with vocals. The next one tries again.')
     if (getMode() !== 'yt' && originalId) playVideo(originalId, get().isPlaying, start)
     return
   }
@@ -134,8 +135,8 @@ const ytListener = {
       instCandidates.shift()
       if (instCandidates[0]) return playVideo(instCandidates[0], true, resumeAt)
       variant = 'original'
-      st({ instrumental: 'missing', vocals: 1 })
-      toast("The instrumental version won't play here. Back to the original.")
+      st({ instrumental: 'missing' })
+      toast("The karaoke version won't play here, so this one plays with vocals.")
       if (originalId) playVideo(originalId, true, resumeAt)
       return
     }
@@ -224,7 +225,9 @@ export function AudioEngine() {
     else setVocalLevel(1)
     if (mode !== 'yt' || resolving) return
     const want = wantsInstrumental()
-    if (want !== (variant === 'instrumental') && get().instrumental !== 'loading') setVariant(want)
+    const inst = get().instrumental
+    // 'missing' is for this song only: a new song resets it to 'off' and tries again.
+    if (want !== (variant === 'instrumental') && inst !== 'loading' && !(want && inst === 'missing')) setVariant(want)
   }, [karaoke, vocals, mode, resolving])
 
   useEffect(() => {

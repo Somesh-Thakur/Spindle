@@ -1,5 +1,24 @@
 [
   {
+    "version": "1.6",
+    "date": "2026-11-15",
+    "title": "Karaoke that just works",
+    "items": [
+      {
+        "emoji": "🎤",
+        "text": "Karaoke starts with vocals off and finds a karaoke version for far more songs. If one song has none, the next still tries."
+      },
+      {
+        "emoji": "⚡",
+        "text": "Songs start faster, and the next few in your queue (and their karaoke versions) are ready before you get to them."
+      },
+      {
+        "emoji": "🔤",
+        "text": "Punjabi lyrics show properly, and Hinglish now covers Punjabi, Bengali, Gujarati, Odia, Tamil, Telugu, Kannada and Malayalam too."
+      }
+    ]
+  },
+  {
     "version": "1.5",
     "date": "2026-11-15",
     "title": "Simpler on phones",
