@@ -765,6 +765,10 @@
   display: none;
 }
 .vdock.is-hidden {
+  /* Small while hidden, so YouTube sends and decodes a tiny picture: less
+     memory, CPU and data. The sound is the same. */
+  width: 200px !important;
+  height: 200px !important;
   opacity: 0 !important;
   pointer-events: none !important;
   left: 0;
