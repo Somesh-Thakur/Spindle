@@ -1,3 +1,4 @@
+import { FamilyPanel } from '../components/FamilyPanel'
 import { Bug, Check, ChevronDown, Lightbulb, Loader2, MessageCircle, RefreshCw, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -35,7 +36,7 @@ const device = (ua: string | null) => {
 /** The developer's inbox: feedback to answer and crashes to fix. Admins only (public.admins). */
 export function AdminPage() {
   const admin = useIsAdmin()
-  const [tab, setTab] = useState<'insights' | 'feedback' | 'crashes'>('insights')
+  const [tab, setTab] = useState<'insights' | 'feedback' | 'crashes' | 'family'>('insights')
   const [open, setOpen] = useState(true)
   const [items, setItems] = useState<Feedback[] | null>(null)
   const [crashes, setCrashes] = useState<CrashGroup[] | null>(null)
@@ -53,7 +54,7 @@ export function AdminPage() {
     }
   }
   useEffect(() => {
-    if (admin && tab !== 'insights') load()
+    if (admin && (tab === 'feedback' || tab === 'crashes')) load()
   }, [admin, tab, open])
 
   if (!admin)
@@ -72,7 +73,7 @@ export function AdminPage() {
     <div className="page admin-page">
       <div className="sec-head">
         <KineticTitle as="h1">Inbox</KineticTitle>
-        {tab !== 'insights' && (
+        {(tab === 'feedback' || tab === 'crashes') && (
           <button className="btn btn-ghost" onClick={load} disabled={loading}>
             <RefreshCw size={15} className={loading ? 'spin' : ''} /> Refresh
           </button>
@@ -88,6 +89,9 @@ export function AdminPage() {
         <button role="tab" aria-selected={tab === 'crashes'} className={tab === 'crashes' ? 'is-on' : ''} onClick={() => setTab('crashes')}>
           Crashes
         </button>
+        <button role="tab" aria-selected={tab === 'family'} className={tab === 'family' ? 'is-on' : ''} onClick={() => setTab('family')}>
+          Family
+        </button>
         {tab === 'feedback' && (
           <label className="admin-filter">
             <input type="checkbox" checked={open} onChange={(e) => setOpen(e.target.checked)} /> Open only
@@ -97,6 +101,8 @@ export function AdminPage() {
 
       {tab === 'insights' ? (
         <InsightsPanel />
+      ) : tab === 'family' ? (
+        <FamilyPanel />
       ) : tab === 'feedback' ? (
         items === null ? (
           <div className="fb-empty">

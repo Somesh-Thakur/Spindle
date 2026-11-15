@@ -16,6 +16,7 @@ import {
   type Provider,
 } from '../lib/sync'
 import { usePlayer } from '../store/player'
+import { loginEmail } from '../lib/family'
 import { AuraField } from './AuraField'
 import { Logo } from './Brand'
 
@@ -141,19 +142,37 @@ export function AuthGate() {
 }
 
 /**
- * Spindle is a private player now: one owner, no sign-ups (they're also switched
- * off in Supabase, so nobody else can get in), no public front page. Set this to
+ * Spindle is a private player now: the owner plus family accounts the owner adds
+ * (#/admin → Family), no sign-ups (they're also switched off in Supabase, so
+ * nobody else can get in), no public front page. Set this to
  * false to bring back the public sign-up page and front page.
  */
 const PRIVATE = true
 
-/** Sign-in for the owner only: GitHub, nothing else. */
+/** Sign-in: GitHub for the owner, an ID and password for family (added in #/admin → Family). */
 function PrivateGate() {
   const status = useAccount((s) => s.status)
   const liveBackground = usePlayer((s) => s.liveBackground)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(redirectError)
   const [note, setNote] = useState('')
+  const [id, setId] = useState('')
+  const [password, setPassword] = useState('')
+  const [show, setShow] = useState(false)
+
+  const withId = async (e: FormEvent) => {
+    e.preventDefault()
+    setBusy(true)
+    setError('')
+    try {
+      await signIn(loginEmail(id), password)
+    } catch (err) {
+      const m = friendly(err)
+      setError(m.startsWith('That email and password') ? 'That ID and password don’t match.' : m)
+    } finally {
+      setBusy(false)
+    }
+  }
 
   const go = async () => {
     setBusy(true)
@@ -186,10 +205,34 @@ function PrivateGate() {
             <Loader2 className="spin" size={24} />
           </div>
         ) : (
-          <button className="gate-provider" disabled={busy} onClick={go}>
-            {busy ? <Loader2 className="spin" size={18} /> : <GitHubMark />}
-            Continue with GitHub
-          </button>
+          <>
+            <button className="gate-provider" disabled={busy} onClick={go}>
+              {busy ? <Loader2 className="spin" size={18} /> : <GitHubMark />}
+              Continue with GitHub
+            </button>
+            <div className="gate-or">
+              <span>or with your ID</span>
+            </div>
+            <form className="gate-form" onSubmit={withId}>
+              <label className="acct-field">
+                <span>ID</span>
+                <input value={id} onChange={(e) => setId(e.target.value)} required autoComplete="username" autoCapitalize="none" spellCheck={false} />
+              </label>
+              <label className="acct-field">
+                <span>Password</span>
+                <span className="gate-pass">
+                  <input type={show ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" />
+                  <button type="button" className="gate-eye" onClick={() => setShow((v) => !v)} aria-label={show ? 'Hide password' : 'Show password'}>
+                    {show ? <EyeOff size={17} /> : <Eye size={17} />}
+                  </button>
+                </span>
+              </label>
+              <button className="btn btn-primary acct-submit" disabled={busy}>
+                {busy && <Loader2 className="spin" size={16} />}
+                Sign in
+              </button>
+            </form>
+          </>
         )}
         {error && <p className="import-error">{error}</p>}
         {note && !error && <p className="gate-note">{note}</p>}

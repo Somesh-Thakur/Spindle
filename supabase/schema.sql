@@ -581,3 +581,63 @@ end
 $$;
 revoke execute on function public.admin_insights(integer) from public, anon;
 grant execute on function public.admin_insights(integer) to authenticated;
+
+-- ---------- Family accounts ----------
+-- Sign-ups are off. The owner adds people (an ID and a password the owner
+-- chooses) from #/admin → Family. Their sign-in email is <id>@spindle.family,
+-- a made-up address that never receives mail; they sign in with just the ID.
+-- Each family member has their own library, likes and history, and no admin access.
+create or replace function public.family_members()
+returns table (id uuid, login text, created_at timestamptz, last_sign_in_at timestamptz)
+language plpgsql security definer set search_path = '' as $$
+begin
+  if not public.is_admin() then raise exception 'Only the owner can see family accounts.'; end if;
+  return query
+    select u.id, split_part(u.email::text, '@', 1), u.created_at, u.last_sign_in_at
+    from auth.users u where u.email like '%@spindle.family' order by u.created_at;
+end $$;
+
+create or replace function public.family_add(p_login text, p_password text) returns uuid
+language plpgsql security definer set search_path = '' as $$
+declare
+  v_login text := lower(trim(p_login));
+  v_email text := v_login || '@spindle.family';
+  v_id uuid := gen_random_uuid();
+begin
+  if not public.is_admin() then raise exception 'Only the owner can add family accounts.'; end if;
+  if v_login !~ '^[a-z0-9._-]{2,30}$' then raise exception 'Use 2 to 30 letters, numbers, dots, dashes or underscores for the ID.'; end if;
+  if length(p_password) < 8 then raise exception 'Use a password with at least 8 characters.'; end if;
+  if exists (select 1 from auth.users where email = v_email) then raise exception 'That ID is already taken.'; end if;
+  insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+    raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
+    confirmation_token, recovery_token, email_change_token_new, email_change, email_change_token_current, reauthentication_token)
+  values ('00000000-0000-0000-0000-000000000000', v_id, 'authenticated', 'authenticated', v_email,
+    extensions.crypt(p_password, extensions.gen_salt('bf')), now(),
+    '{"provider":"email","providers":["email"]}', jsonb_build_object('name', v_login), now(), now(),
+    '', '', '', '', '', '');
+  insert into auth.identities (id, user_id, provider_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
+  values (gen_random_uuid(), v_id, v_id::text,
+    jsonb_build_object('sub', v_id::text, 'email', v_email, 'email_verified', true), 'email', now(), now(), now());
+  return v_id;
+end $$;
+
+create or replace function public.family_set_password(p_id uuid, p_password text) returns void
+language plpgsql security definer set search_path = '' as $$
+begin
+  if not public.is_admin() then raise exception 'Only the owner can change family passwords.'; end if;
+  if length(p_password) < 8 then raise exception 'Use a password with at least 8 characters.'; end if;
+  update auth.users set encrypted_password = extensions.crypt(p_password, extensions.gen_salt('bf')), updated_at = now()
+    where id = p_id and email like '%@spindle.family';
+  if not found then raise exception 'No family account with that ID.'; end if;
+end $$;
+
+-- Removes a family account and, through on delete cascade, everything it saved.
+create or replace function public.family_remove(p_id uuid) returns void
+language plpgsql security definer set search_path = '' as $$
+begin
+  if not public.is_admin() then raise exception 'Only the owner can remove family accounts.'; end if;
+  delete from auth.users where id = p_id and email like '%@spindle.family';
+end $$;
+
+revoke execute on function public.family_members(), public.family_add(text, text), public.family_set_password(uuid, text), public.family_remove(uuid) from public, anon;
+grant execute on function public.family_members(), public.family_add(text, text), public.family_set_password(uuid, text), public.family_remove(uuid) to authenticated;

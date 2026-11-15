@@ -1453,3 +1453,38 @@
 .ios-app .full {
   bottom: calc(-1 * var(--ios-gap, 0px));
 }
+
+/* ---------- Family accounts (admin) ---------- */
+.family-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+  max-width: 720px;
+  margin: 8px 0 12px;
+}
+.family-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.family-row > div {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+.family-row span {
+  color: var(--muted, rgba(255, 255, 255, 0.55));
+  font-size: 13px;
+}
+@media (max-width: 860px) {
+  .family-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+/* The private sign-in card holds the ID form too. */
+.gate-private-card .gate-form {
+  width: 100%;
+  text-align: left;
+}
