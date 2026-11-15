@@ -38,8 +38,7 @@ function render() {
   const s = state
   document.body.classList.toggle('is-empty', !s)
   $('title').textContent = s?.title ?? 'Nothing playing'
-  $('artist').textContent = s?.hint ?? s?.artist ?? 'Play something in Spindle'
-  $('artist').classList.toggle('is-hint', !!s?.hint)
+  $('artist').textContent = s?.artist ?? 'Play something in Spindle'
   const art = $<HTMLImageElement>('art')
   if (s?.art && art.src !== s.art) art.src = s.art
   art.hidden = !s?.art

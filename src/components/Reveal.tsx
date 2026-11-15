@@ -1,9 +1,16 @@
 import { motion } from 'framer-motion'
 import type { ReactNode } from 'react'
 import { useScrollRoot } from '../lib/scroll'
+import { useIsPhone } from '../lib/useIsPhone'
 
-/** Wipes its child in from below the first time it scrolls into view. */
-export function Reveal({ children, i = 0, className = '' }: { children: ReactNode; i?: number; className?: string }) {
+type Props = { children: ReactNode; i?: number; className?: string }
+
+/** Wipes its child in from below the first time it scrolls into view; on phones it's simply there. */
+export function Reveal(props: Props) {
+  return useIsPhone() ? <div className={props.className}>{props.children}</div> : <Wipe {...props} />
+}
+
+function Wipe({ children, i = 0, className = '' }: Props) {
   const root = useScrollRoot()
   return (
     <motion.div

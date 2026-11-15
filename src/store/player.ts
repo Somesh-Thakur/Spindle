@@ -150,7 +150,8 @@ export const usePlayer = create<PlayerState>()(
       videoStarted: false,
       videoView: false,
       panel: 'none',
-      videoHidden: false,
+      // The YouTube video stays tucked away until you open it with the eye button.
+      videoHidden: true,
       karaoke: false,
       instrumental: 'off',
       vocals: 1,

@@ -2,9 +2,21 @@ import { motion, useMotionTemplate, useScroll, useTransform } from 'framer-motio
 import { useRef, type ReactNode } from 'react'
 import { useBeat } from '../lib/beat'
 import { useScrollRoot } from '../lib/scroll'
+import { useIsPhone } from '../lib/useIsPhone'
 
-/** Section title whose letters widen from condensed to extended as it scrolls into view. */
-export function KineticTitle({ children, as = 'h2', className = '' }: { children: ReactNode; as?: 'h1' | 'h2'; className?: string }) {
+type TitleProps = { children: ReactNode; as?: 'h1' | 'h2'; className?: string }
+
+/** Section title whose letters widen as it scrolls into view; on phones it just sits still. */
+export function KineticTitle(props: TitleProps) {
+  return useIsPhone() ? <StillTitle {...props} /> : <MovingTitle {...props} />
+}
+
+function StillTitle({ children, as = 'h2', className = '' }: TitleProps) {
+  const Tag = as
+  return <Tag className={`kinetic is-still ${className}`}>{children}</Tag>
+}
+
+function MovingTitle({ children, as = 'h2', className = '' }: TitleProps) {
   const root = useScrollRoot()
   const ref = useRef<HTMLHeadingElement>(null)
   const { scrollYProgress } = useScroll({ container: root, target: ref, offset: ['start end', 'center 45%'] })

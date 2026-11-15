@@ -107,7 +107,8 @@ img {
 .app {
   height: 100%;
   display: grid;
-  grid-template-columns: var(--side-w) 1fr;
+  /* minmax(0, ...) so wide rows scroll inside the page instead of widening it. */
+  grid-template-columns: var(--side-w) minmax(0, 1fr);
 }
 .main {
   position: relative;
@@ -1933,7 +1934,7 @@ img {
     --pip-h: max(200px, calc((100vw - 24px) * 9 / 16));
   }
   .app {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .main {
     grid-column: 1;
