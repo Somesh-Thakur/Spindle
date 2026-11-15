@@ -19,7 +19,7 @@ const PRESETS: [string, string][] = [
   ['#101014', '#5a5a66'],
 ]
 
-const MAX_LINES = 4
+const MAX_LINES = 8
 
 /** Lyric lines to tap; picks up to four lines in a row, like Spotify's lyric cards. */
 function LyricPicker({ track, onLines }: { track: Track; onLines: (lines: string[]) => void }) {

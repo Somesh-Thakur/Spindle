@@ -35,7 +35,7 @@ export interface Share {
 }
 
 /** Playlists can be long; the link carries the first 500 songs. */
-const MAX_TRACKS = 500
+const MAX_TRACKS = 3000
 
 export const shareUrl = (code: string) => `${location.origin}/s/${code}`
 

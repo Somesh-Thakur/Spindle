@@ -148,8 +148,8 @@ export function search(term: string, country: string): Promise<SearchResults> {
   const q = encodeURIComponent(term.trim())
   return cached(`s:${country}:${term.trim().toLowerCase()}`, DAY, async () => {
     const [songs, albums] = await Promise.all([
-      get(`/search?term=${q}&entity=song&limit=30&country=${country}`),
-      get(`/search?term=${q}&entity=album&limit=16&country=${country}`),
+      get(`/search?term=${q}&entity=song&limit=60&country=${country}`),
+      get(`/search?term=${q}&entity=album&limit=30&country=${country}`),
     ])
     const tracks = compact<Track>(songs.results.map(toTrack))
     // Derive artists from song hits so a search costs two requests, not three.
@@ -177,8 +177,8 @@ export function album(id: string, country: string) {
 export function artist(id: string, country: string) {
   return cached(`art:${country}:${id}`, DAY, async () => {
     const [songs, albums] = await Promise.all([
-      get(`/lookup?id=${id}&entity=song&limit=25&country=${country}`),
-      get(`/lookup?id=${id}&entity=album&limit=40&country=${country}`),
+      get(`/lookup?id=${id}&entity=song&limit=60&country=${country}`),
+      get(`/lookup?id=${id}&entity=album&limit=100&country=${country}`),
     ])
     const a = songs.results[0]
     const tracks = compact<Track>(songs.results.slice(1).map(toTrack))

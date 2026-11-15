@@ -46,6 +46,8 @@ export function Scrubber({ compact }: { compact?: boolean }) {
   const barRef = useRef<HTMLDivElement>(null)
   const fillRef = useRef<HTMLDivElement>(null)
   const [drag, setDrag] = useState<number | null>(null)
+  // Read by the pointer handlers directly: a quick tap can lift before React re-renders.
+  const dragging = useRef(false)
   const [, force] = useState(0)
   const duration = usePlayer((s) => s.duration)
   const fullLength = usePlayer((s) => s.fullLength)
@@ -89,19 +91,25 @@ export function Scrubber({ compact }: { compact?: boolean }) {
         aria-valuetext={fmtTime(shown)}
         onPointerDown={(e) => {
           e.currentTarget.setPointerCapture(e.pointerId)
+          dragging.current = true
           const r = ratioAt(e)
           setDrag(r)
           paint(r)
         }}
         onPointerMove={(e) => {
-          if (drag == null) return
+          if (!dragging.current) return
           const r = ratioAt(e)
           setDrag(r)
           paint(r)
         }}
         onPointerUp={(e) => {
-          if (drag == null) return
+          if (!dragging.current) return
+          dragging.current = false
           seek(ratioAt(e) * d)
+          setDrag(null)
+        }}
+        onPointerCancel={() => {
+          dragging.current = false
           setDrag(null)
         }}
         onKeyDown={(e) => {

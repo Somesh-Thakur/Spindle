@@ -13,8 +13,8 @@ export interface Play {
   secs: number
 }
 
-/** Keeps a couple of years of everyday listening in well under a megabyte. */
-const MAX_PLAYS = 15000
+/** Years of everyday listening on each device (about 2.5 MB); the full history stays in the cloud. */
+const MAX_PLAYS = 60000
 
 interface HistoryState {
   plays: Play[]

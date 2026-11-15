@@ -339,7 +339,9 @@ export async function drawStory(canvas: HTMLCanvasElement, card: StoryCard) {
 
   if (card.style === 'lyrics' && card.lines.length) {
     // Measure the lyric lines first so the card fits them.
-    const lyricSize = card.lines.join(' ').length > 160 ? 56 : 66
+    // Longer picks get smaller type, so up to 8 lines still fit the story.
+    const chars = card.lines.join(' ').length
+    const lyricSize = chars > 400 ? 40 : chars > 260 ? 46 : chars > 160 ? 56 : 66
     ctx.font = `700 ${lyricSize}px ${SANS}`
     const wrapped = card.lines.flatMap((l) => wrap(ctx, l, 800, 3))
     const cardH = 56 + 120 + 48 + wrapped.length * lyricSize * 1.22 + card.lines.length * 14 + 50
