@@ -10,15 +10,24 @@
   padding: 0 8px 16px;
 }
 .logo {
+  position: relative;
+  display: inline-block;
   flex: none;
+}
+.logo > svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   overflow: visible;
 }
+/* The disc's centre is at (15, 17) of 32. */
 .logo-disc {
-  transform-box: view-box;
-  transform-origin: 15px 17px;
+  transform-origin: 46.875% 53.125%;
 }
 .logo.is-spinning .logo-disc {
   animation: spin 1.8s linear infinite;
+  will-change: transform;
 }
 .wordmark {
   display: inline-flex;
@@ -50,6 +59,14 @@
 }
 .wordmark.is-playing .wm-dot {
   animation: spin 1.8s linear infinite;
+  will-change: transform;
+}
+/* In another window: the decorative spinning and scrolling rest. */
+.is-away .logo-disc,
+.is-away .wm-dot,
+.is-away .eq i,
+.is-away .marquee-track {
+  animation-play-state: paused !important;
 }
 
 /* ---------- Cursor ---------- */

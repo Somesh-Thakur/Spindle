@@ -40,6 +40,12 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
 // iPhone home-screen app: no empty strip under the bottom bars.
 startIosGapFix()
 
+// While you're in another window, decorative animations rest (v5.css .is-away).
+// Checked a moment later: clicking into the YouTube player also blurs the page.
+const markAway = () => setTimeout(() => document.documentElement.classList.toggle('is-away', !document.hasFocus()), 50)
+addEventListener('blur', markAway)
+addEventListener('focus', markAway)
+
 // Record crashes so they can be fixed (src/lib/errors.ts).
 startErrorReporting()
 
