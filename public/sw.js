@@ -6,7 +6,7 @@
 // - Fonts and artwork are cache-first: covers you've seen show up offline.
 // - Search, sign-in and music APIs always go to the network; downloads for
 //   offline listening are stored by the app itself (src/lib/offline.ts).
-const VERSION = 'v1'
+const VERSION = 'v2'
 const SHELL = `spindle-shell-${VERSION}`
 const ASSETS = `spindle-assets-${VERSION}`
 const ART = `spindle-art-${VERSION}`
@@ -65,15 +65,18 @@ async function cacheFirst(request, cacheName, limit) {
   return res
 }
 
+// Fresh from the network when it answers quickly; on a slow connection the
+// saved copy opens instead (the fresh one is still saved for next time).
 async function networkFirstPage(request) {
   const cache = await caches.open(SHELL)
-  try {
-    const res = await fetch(request)
+  const fresh = fetch(request).then((res) => {
     if (res.ok) cache.put('/', res.clone())
     return res
-  } catch {
-    return (await cache.match('/')) || Response.error()
-  }
+  })
+  const saved = await cache.match('/')
+  if (!saved) return fresh.catch(() => Response.error())
+  const slow = new Promise((r) => setTimeout(() => r(saved), 1500))
+  return Promise.race([fresh.catch(() => saved), slow])
 }
 
 self.addEventListener('fetch', (event) => {

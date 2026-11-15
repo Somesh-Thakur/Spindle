@@ -75,8 +75,6 @@ interface PlayerState {
   customCursor: boolean
   intro: boolean
   liveBackground: boolean
-  /** Minutes without input before the screensaver comes on; 0 is off. */
-  screensaver: number
   /** How playlist songs are laid out. */
   playlistView: 'list' | 'grid' | 'compact'
   /** Keep playing similar songs when the queue runs out. */
@@ -169,7 +167,6 @@ export const usePlayer = create<PlayerState>()(
       customCursor: true,
       intro: true,
       liveBackground: true,
-      screensaver: 5,
       playlistView: 'list',
       autoplay: true,
       queueSource: '',
@@ -306,7 +303,6 @@ export const usePlayer = create<PlayerState>()(
         customCursor: s.customCursor,
         intro: s.intro,
         liveBackground: s.liveBackground,
-        screensaver: s.screensaver,
         playlistView: s.playlistView,
         autoplay: s.autoplay,
         addedIds: s.addedIds,

@@ -15,7 +15,6 @@ import { Sidebar, TabBar } from './components/Nav'
 import { Toasts } from './components/Toast'
 import { VideoDock } from './components/VideoDock'
 import { WhatsNew } from './components/WhatsNew'
-import { Screensaver } from './components/Screensaver'
 import { Welcome } from './components/Welcome'
 import { Home } from './pages/Home'
 import {
@@ -181,7 +180,6 @@ function Shell() {
       <Toasts />
       <WhatsNew />
       <Welcome />
-      <Screensaver />
       {customCursor && <Cursor />}
       {intro && <Intro />}
     </div>

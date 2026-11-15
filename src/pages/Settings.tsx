@@ -30,7 +30,6 @@ import { KineticTitle } from '../components/Kinetic'
 import { toast } from '../components/Toast'
 import { cacheSize, clearCache } from '../lib/cache'
 import { isDesktop } from '../lib/desktop'
-import { startSaver } from '../lib/saver'
 import { countingOff, setCounting } from '../lib/insights'
 import { useHistory } from '../lib/history'
 import { DISCORD_INVITE, feedbackHref, useIsAdmin } from '../lib/feedback'
@@ -61,7 +60,6 @@ const SHORTCUTS = [
   ['↑ ↓', 'Volume'],
   ['M', 'Mute'],
   ['F', 'Open or close the full player'],
-  ['Z', 'Screensaver'],
   ['/ or Ctrl K', 'Search'],
 ]
 
@@ -527,7 +525,6 @@ function AppearanceSection() {
   const customCursor = usePlayer((s) => s.customCursor)
   const intro = usePlayer((s) => s.intro)
   const liveBackground = usePlayer((s) => s.liveBackground)
-  const screensaver = usePlayer((s) => s.screensaver)
   const set = usePlayer((s) => s.set)
   return (
     <Section id="appearance" title="Appearance">
@@ -536,20 +533,6 @@ function AppearanceSection() {
       </Row>
       <Row title="Custom cursor" sub="The ring that reacts to what’s under it, and the hand on the record player.">
         <Switch on={customCursor} onChange={(v) => set({ customCursor: v })} label="Custom cursor" />
-      </Row>
-      <Row title="Screensaver" sub="A dim clock and what’s playing after you’ve been away, with almost no battery use. Press Z to start it any time.">
-        <div className="set-actions">
-          <select className="set-select" value={screensaver} onChange={(e) => set({ screensaver: Number(e.target.value) })} aria-label="Screensaver delay">
-            {[0, 2, 5, 10, 20].map((m) => (
-              <option key={m} value={m}>
-                {m ? `After ${m} min` : 'Off'}
-              </option>
-            ))}
-          </select>
-          <button className="btn btn-ghost" onClick={startSaver}>
-            Preview
-          </button>
-        </div>
       </Row>
       <Row title="Opening animation" sub="The record spin-up when you open Spindle.">
         <Switch on={intro} onChange={(v) => set({ intro: v })} label="Opening animation" />
@@ -626,7 +609,7 @@ function PrivacySection() {
       playlists: p.playlists,
       lyrics: allUserLyrics(),
       listeningHistory: h.plays.map((x) => ({ ...x, title: h.tracks[x.id]?.title, artist: h.tracks[x.id]?.artist })),
-      settings: { country: p.country, autoplay: p.autoplay, screensaver: p.screensaver, liveBackground: p.liveBackground },
+      settings: { country: p.country, autoplay: p.autoplay, liveBackground: p.liveBackground },
     }
     const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }))
     const a = document.createElement('a')

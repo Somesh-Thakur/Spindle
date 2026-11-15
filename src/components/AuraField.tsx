@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { setEnergy } from '../lib/beat'
 import { bass } from '../lib/engine'
-import { useSaver } from '../lib/saver'
 import { usePlayer } from '../store/player'
 
 // Domain-warped noise, tinted with three colours from the current cover.
@@ -72,7 +71,9 @@ export function AuraField() {
     const U = { r: u('r'), t: u('t'), e: u('e'), s: u('s'), c1: u('c1'), c2: u('c2'), c3: u('c3') }
 
     // Render at reduced resolution; the blur-like noise doesn't need more.
-    const SCALE = 0.4
+    // Phones get even fewer pixels: it's their GPU and battery.
+    const phone = matchMedia('(max-width: 860px), (pointer: coarse)').matches
+    const SCALE = phone ? 0.28 : 0.4
     const resize = () => {
       canvas.width = Math.max(1, Math.round(innerWidth * SCALE))
       canvas.height = Math.max(1, Math.round(innerHeight * SCALE))
@@ -88,12 +89,18 @@ export function AuraField() {
     const start = performance.now()
     const main = document.querySelector('main')
 
+    // The field drifts slowly, so 30 frames a second looks the same as 120 and
+    // costs a quarter as much. Paused, it only needs 15.
+    let last = 0
     const frame = (now: number) => {
+      raf = requestAnimationFrame(frame)
       const s = usePlayer.getState()
+      if (now - last < (s.isPlaying ? 32 : 64)) return
+      last = now
       const target = { c1: rgb(s.palette.base), c2: rgb(s.palette.accent), c3: rgb(s.palette.glow) }
-      for (const k of ['c1', 'c2', 'c3'] as const) for (let i = 0; i < 3; i++) cur[k][i] += (target[k][i] - cur[k][i]) * 0.03
+      for (const k of ['c1', 'c2', 'c3'] as const) for (let i = 0; i < 3; i++) cur[k][i] += (target[k][i] - cur[k][i]) * 0.06
       const raw = s.isPlaying ? bass() : 0
-      energy += (raw - energy) * 0.18
+      energy += (raw - energy) * 0.32
       setEnergy(energy)
       gl.uniform2f(U.r, canvas.width, canvas.height)
       gl.uniform1f(U.t, reduce ? 0 : (now - start) / 1000)
@@ -103,18 +110,15 @@ export function AuraField() {
       gl.uniform3fv(U.c2, cur.c2)
       gl.uniform3fv(U.c3, cur.c3)
       gl.drawArrays(gl.TRIANGLES, 0, 3)
-      raf = requestAnimationFrame(frame)
     }
     raf = requestAnimationFrame(frame)
-    // Stop drawing while the tab is hidden or the screensaver is up.
+    // Stop drawing while the tab is hidden.
     const onVis = () => {
       cancelAnimationFrame(raf)
-      if (!document.hidden && !useSaver.getState().on) raf = requestAnimationFrame(frame)
+      if (!document.hidden) raf = requestAnimationFrame(frame)
     }
     document.addEventListener('visibilitychange', onVis)
-    const unsubSaver = useSaver.subscribe(onVis)
     return () => {
-      unsubSaver()
       cancelAnimationFrame(raf)
       removeEventListener('resize', resize)
       document.removeEventListener('visibilitychange', onVis)
