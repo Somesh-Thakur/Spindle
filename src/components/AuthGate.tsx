@@ -137,6 +137,69 @@ const slide = {
  * so this screen stands in for the whole app until you're signed in.
  */
 export function AuthGate() {
+  return PRIVATE ? <PrivateGate /> : <PublicGate />
+}
+
+/**
+ * Spindle is a private player now: one owner, no sign-ups (they're also switched
+ * off in Supabase, so nobody else can get in), no public front page. Set this to
+ * false to bring back the public sign-up page and front page.
+ */
+const PRIVATE = true
+
+/** Sign-in for the owner only: GitHub, nothing else. */
+function PrivateGate() {
+  const status = useAccount((s) => s.status)
+  const liveBackground = usePlayer((s) => s.liveBackground)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState(redirectError)
+  const [note, setNote] = useState('')
+
+  const go = async () => {
+    setBusy(true)
+    setError('')
+    try {
+      await signInWith('github')
+      if (isDesktop) setNote('Finish signing in in your browser. Spindle opens again by itself.')
+    } catch (e) {
+      setError(friendly(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="gate gate-private">
+      {liveBackground && <AuraField />}
+      <div className="gate-grain" aria-hidden="true" />
+      <motion.section
+        className="gate-card gate-private-card"
+        initial={{ opacity: 0, y: 30, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.7, ease: [0.2, 0.8, 0.2, 1] }}
+      >
+        <Logo size={72} spinning />
+        <h1 className="gate-h">Spindle</h1>
+        <p className="gate-p">A private music player.</p>
+        {status === 'loading' ? (
+          <div className="gate-loading">
+            <Loader2 className="spin" size={24} />
+          </div>
+        ) : (
+          <button className="gate-provider" disabled={busy} onClick={go}>
+            {busy ? <Loader2 className="spin" size={18} /> : <GitHubMark />}
+            Continue with GitHub
+          </button>
+        )}
+        {error && <p className="import-error">{error}</p>}
+        {note && !error && <p className="gate-note">{note}</p>}
+      </motion.section>
+    </div>
+  )
+}
+
+/** The public front page and sign-up, used when PRIVATE is false. */
+function PublicGate() {
   const status = useAccount((s) => s.status)
   const liveBackground = usePlayer((s) => s.liveBackground)
   const [step, setStep] = useState<Step>('start')

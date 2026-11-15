@@ -1,8 +1,4 @@
-# Spindle: the front page and legal pages are for everyone; the rest needs an account.
+# Spindle is private. Pages are open to crawlers only so they can see the
+# "noindex" on every page and drop them from search results.
 User-agent: *
 Allow: /
-Disallow: /api/
-Disallow: /desktop-auth
-Disallow: /remote
-
-Sitemap: https://spindle-bice.vercel.app/sitemap.xml

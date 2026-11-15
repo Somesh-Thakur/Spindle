@@ -1349,3 +1349,28 @@
 .main:focus {
   outline: 0;
 }
+
+/* ---------- Private sign-in (AuthGate, PRIVATE) ---------- */
+.gate.gate-private {
+  grid-template-columns: minmax(0, 420px);
+  justify-content: center;
+}
+.gate-private-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+.gate-private-card .gate-h {
+  margin: 12px 0 0;
+}
+.gate-private-card .gate-p {
+  margin: 0 0 14px;
+}
+.gate-private-card .gate-provider {
+  width: 100%;
+}
+.gate-private-card .gate-loading {
+  min-height: 48px;
+}
