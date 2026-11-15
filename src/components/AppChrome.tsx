@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { Share, SquarePlus, WifiOff, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { at } from '../lib/site'
 
 const DISMISSED = 'spindle:install-dismissed'
 
@@ -66,7 +67,7 @@ export function InstallPrompt() {
           transition={{ type: 'spring', stiffness: 380, damping: 34 }}
           aria-label="Install Spindle"
         >
-          <img src="/brand/spindle-icon-120.png" alt="" width={52} height={52} />
+          <img src={at('brand/spindle-icon-120.png')} alt="" width={52} height={52} />
           <div className="install-text">
             <b>Get the Spindle app</b>
             {android ? (

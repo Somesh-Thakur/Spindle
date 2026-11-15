@@ -6,12 +6,12 @@
   font-display: swap;
   font-weight: 100 900;
   font-stretch: 50% 150%;
-  src: url(/fonts/anybody-latin-standard-normal.woff2) format('woff2-variations');
+  src: url(anybody-latin-standard-normal.woff2) format('woff2-variations');
 }
 @font-face {
   font-family: 'Geist';
   font-style: normal;
   font-display: swap;
   font-weight: 100 900;
-  src: url(/fonts/geist-latin-wght-normal.woff2) format('woff2-variations');
+  src: url(geist-latin-wght-normal.woff2) format('woff2-variations');
 }

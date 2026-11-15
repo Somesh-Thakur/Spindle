@@ -4,8 +4,8 @@
   "version": "1.2.0",
   "identifier": "app.spindle.desktop",
   "build": {
-    "frontendDist": "https://spindle-bice.vercel.app",
-    "devUrl": "https://spindle-bice.vercel.app"
+    "frontendDist": "https://somesh-thakur.github.io/Spindle/",
+    "devUrl": "https://somesh-thakur.github.io/Spindle/"
   },
   "app": {
     "withGlobalTauri": true,

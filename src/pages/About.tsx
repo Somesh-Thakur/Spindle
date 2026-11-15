@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { ArrowUpRight, Github, Instagram, Linkedin } from 'lucide-react'
 import { Logo } from '../components/Brand'
+import { at } from '../lib/site'
 
 const DEV = {
   name: 'Somesh Sanjay Thakur',
@@ -75,7 +76,7 @@ export function AboutPage() {
           ))}
         </div>
         <p className="about-fine">
-          Songs stream from YouTube, Apple’s iTunes previews and Audius; lyrics from LRCLIB. Spindle doesn’t host any music. <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> ·{' '}
+          Songs stream from YouTube, Apple’s iTunes previews and Audius; lyrics from LRCLIB. Spindle doesn’t host any music. <a href={at('privacy')}>Privacy</a> · <a href={at('terms')}>Terms</a> ·{' '}
           <a href="https://github.com/Somesh-Thakur/Spindle" target="_blank" rel="noreferrer">
             Source on GitHub
           </a>

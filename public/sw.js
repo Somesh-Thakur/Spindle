@@ -14,12 +14,15 @@ const ART = `spindle-art-${VERSION}`
 // Browsers pad cross-site images in storage, so keep a modest number.
 const ART_LIMIT = 250
 
-const PRECACHE = ['/', '/manifest.webmanifest', '/brand/spindle-favicon.svg', '/brand/spindle-icon-192.png', '/brand/apple-touch-icon.png']
+// The folder the app is served from: "/Spindle/" on GitHub Pages, "/" on Vercel.
+const BASE = new URL(self.registration.scope).pathname
+
+const PRECACHE = ['', 'manifest.webmanifest', 'brand/spindle-favicon.svg', 'brand/spindle-icon-192.png', 'brand/apple-touch-icon.png'].map((p) => BASE + p)
 
 /** The page's own scripts and styles, so offline start-up works after the very first visit. */
 async function precacheBuild() {
-  const html = await (await fetch('/', { cache: 'no-cache' })).text()
-  const files = [...new Set(html.match(/\/assets\/[\w.-]+\.(js|css)/g) ?? [])]
+  const html = await (await fetch(BASE, { cache: 'no-cache' })).text()
+  const files = [...new Set(html.match(/[\w./-]*\/assets\/[\w.-]+\.(js|css)/g) ?? [])].map((f) => new URL(f, self.location.origin + BASE).href)
   const assets = await caches.open(ASSETS)
   await assets.addAll(files)
 }
@@ -70,12 +73,12 @@ async function cacheFirst(request, cacheName, limit) {
 
 // Fresh from the network when it answers quickly; on a slow connection the
 // saved copy opens instead (the fresh one is still saved for next time).
-// Each page is saved under its own address: the app at "/", the mini player at
-// "/remote.html", so a slow connection never opens the wrong page.
+// Each page is saved under its own address: the app at BASE, the mini player at
+// BASE + "remote.html", so a slow connection never opens the wrong page.
 async function networkFirstPage(request) {
   const cache = await caches.open(SHELL)
   const path = new URL(request.url).pathname
-  const key = path === '/index.html' ? '/' : path
+  const key = path === BASE + 'index.html' ? BASE : path
   const fresh = fetch(request).then((res) => {
     if (res.ok && !res.redirected) cache.put(key, res.clone())
     return res
@@ -93,13 +96,16 @@ self.addEventListener('fetch', (event) => {
 
   // The app shell. Share pages (/s/…) carry their own previews, so they stay live.
   if (request.mode === 'navigate' && url.origin === location.origin) {
-    if (url.pathname.startsWith('/s/') || url.pathname.startsWith('/api/')) return
+    if (!url.pathname.startsWith(BASE)) return
+    const rel = url.pathname.slice(BASE.length)
+    if (rel.startsWith('s/') || rel.startsWith('api/')) return
     event.respondWith(networkFirstPage(request))
     return
   }
   if (url.origin === location.origin) {
-    if (url.pathname.startsWith('/assets/')) return event.respondWith(cacheFirst(request, ASSETS, 150))
-    if (url.pathname.startsWith('/brand/') || url.pathname.startsWith('/email/')) return event.respondWith(cacheFirst(request, ASSETS, 150))
+    const rel = url.pathname.startsWith(BASE) ? url.pathname.slice(BASE.length) : ''
+    if (rel.startsWith('assets/')) return event.respondWith(cacheFirst(request, ASSETS, 150))
+    if (rel.startsWith('brand/') || rel.startsWith('email/')) return event.respondWith(cacheFirst(request, ASSETS, 150))
     return
   }
   if (FONT_HOSTS.test(url.hostname)) return event.respondWith(cacheFirst(request, ASSETS, 150))

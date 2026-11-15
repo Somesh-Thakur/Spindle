@@ -36,6 +36,7 @@ import { DISCORD_INVITE, feedbackHref, useIsAdmin } from '../lib/feedback'
 import { deleteShare, myShares, shareUrl, type Share } from '../lib/share'
 import { changePassword, deleteAccount, displayName, signOut, syncAgain, updateName, useAccount } from '../lib/sync'
 import { usePlayer } from '../store/player'
+import { at } from '../lib/site'
 
 const flag = (code: string) => `https://flagcdn.com/w40/${code}.png`
 
@@ -148,10 +149,10 @@ export function SettingsPage() {
             </Row>
             <Row title="Privacy and terms" sub="What we store, and the rules for using Spindle.">
               <div className="set-actions">
-                <a className="btn btn-ghost" href="/privacy" target="_blank" rel="noreferrer">
+                <a className="btn btn-ghost" href={at('privacy')} target="_blank" rel="noreferrer">
                   Privacy
                 </a>
-                <a className="btn btn-ghost" href="/terms" target="_blank" rel="noreferrer">
+                <a className="btn btn-ghost" href={at('terms')} target="_blank" rel="noreferrer">
                   Terms
                 </a>
               </div>
@@ -645,10 +646,10 @@ function PrivacySection() {
       </Row>
       <Row title="Privacy policy and terms" sub="What Spindle stores, why, and your rights. To delete everything, use Delete account under Account.">
         <div className="set-actions">
-          <a className="btn btn-ghost" href="/privacy" target="_blank" rel="noreferrer">
+          <a className="btn btn-ghost" href={at('privacy')} target="_blank" rel="noreferrer">
             Privacy
           </a>
-          <a className="btn btn-ghost" href="/terms" target="_blank" rel="noreferrer">
+          <a className="btn btn-ghost" href={at('terms')} target="_blank" rel="noreferrer">
             Terms
           </a>
         </div>

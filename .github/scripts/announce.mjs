@@ -5,7 +5,7 @@
 import { execSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 
-const SITE = 'https://spindle-bice.vercel.app'
+const SITE = 'https://somesh-thakur.github.io/Spindle/'
 const RELEASES = 'https://github.com/Somesh-Thakur/Spindle/releases/latest'
 const hook = process.env.DISCORD_ANNOUNCE_WEBHOOK
 const kind = process.argv[2]

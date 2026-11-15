@@ -16,6 +16,7 @@ import { isDesktop, openExternal } from './desktop'
 import { usePlayer, type Playlist } from '../store/player'
 import { supabase } from './supabase'
 import type { Track } from './types'
+import { at } from './site'
 
 type Entry = { at: number; v?: unknown; del?: true }
 type Doc = Record<string, Record<string, Entry>>
@@ -409,7 +410,7 @@ export async function signInWith(provider: Provider) {
     // GitHub), which hands the code back via public/desktop-auth.html → spindle://.
     const { data, error } = await supabase!.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: `${location.origin}/desktop-auth`, skipBrowserRedirect: true },
+      options: { redirectTo: `${location.origin}${at('desktop-auth')}`, skipBrowserRedirect: true },
     })
     if (error) throw error
     await openExternal(data.url)

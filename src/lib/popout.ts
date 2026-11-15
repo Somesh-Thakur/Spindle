@@ -2,6 +2,7 @@
 // app, or a Picture-in-Picture window in Chrome and Edge.
 import { toast } from '../components/Toast'
 import { isDesktop } from './desktop'
+import { at } from './site'
 
 type Invoke = (cmd: string, args?: Record<string, unknown>) => Promise<unknown>
 const tauri = (globalThis as { __TAURI_INTERNALS__?: { invoke: Invoke } }).__TAURI_INTERNALS__
@@ -32,7 +33,7 @@ export async function popOut() {
   win.document.title = 'Spindle mini player'
   win.document.body.style.cssText = 'margin:0;background:#0b0a10;overflow:hidden'
   const frame = win.document.createElement('iframe')
-  frame.src = `${location.origin}/remote.html`
+  frame.src = `${location.origin}${at('remote.html')}`
   frame.title = 'Spindle mini player'
   frame.style.cssText = 'display:block;width:100vw;height:100vh;border:0'
   win.document.body.append(frame)

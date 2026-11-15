@@ -4,11 +4,12 @@ import { cleanYouTube, type ImportItem, type ImportResult } from '../../server/i
 import { lookupSongs } from '../api/itunes'
 import { searchYouTubeMusic } from '../api/youtube'
 import type { Track } from './types'
+import { SERVER } from './site'
 
 export type { ImportItem, ImportResult }
 
 export async function readLink(url: string): Promise<ImportResult> {
-  const res = await fetch(`/api/import?url=${encodeURIComponent(url)}`)
+  const res = await fetch(`${SERVER}/api/import?url=${encodeURIComponent(url)}`)
   const body = await res.json().catch(() => null)
   if (!res.ok || !body) throw new Error(body?.error ?? 'The import service didn’t answer. Try again in a moment.')
   return body

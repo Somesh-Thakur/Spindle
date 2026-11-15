@@ -9,6 +9,7 @@ import type { Track } from '../lib/types'
 import { Artwork } from './Artwork'
 import { Logo } from './Brand'
 import { PlaylistCover } from './PlaylistCover'
+import { at } from '../lib/site'
 
 const KIND = { track: 'Song', playlist: 'Playlist', album: 'Album' } as const
 const LIST_LIMIT = 50
@@ -83,7 +84,7 @@ export function PublicShare({ code, onSignIn }: { code: string; onSignIn: () => 
       <div className="ps-veil" aria-hidden="true" />
 
       <header className="ps-top">
-        <a href="/" className="ps-brand" aria-label="Spindle">
+        <a href={at('')} className="ps-brand" aria-label="Spindle">
           <Logo size={30} />
           <span>spindle</span>
         </a>
@@ -144,8 +145,8 @@ export function PublicShare({ code, onSignIn }: { code: string; onSignIn: () => 
       </main>
 
       <footer className="ps-foot">
-        <a href="/terms">Terms</a>
-        <a href="/privacy">Privacy</a>
+        <a href={at('terms')}>Terms</a>
+        <a href={at('privacy')}>Privacy</a>
         <span>Spindle · Every record you love, on every screen.</span>
       </footer>
     </div>

@@ -19,6 +19,7 @@ import { usePlayer } from '../store/player'
 import { loginEmail } from '../lib/family'
 import { AuraField } from './AuraField'
 import { Logo } from './Brand'
+import { at } from '../lib/site'
 
 type Step = 'start' | 'verify' | 'forgot' | 'reset'
 
@@ -526,8 +527,8 @@ function PublicGate() {
           </AnimatePresence>
         )}
         <p className="gate-legal">
-          By continuing you confirm you’re at least 13 (with a parent’s or guardian’s permission if you’re under 18) and agree to the <a href="/terms">Terms</a> and{' '}
-          <a href="/privacy">Privacy Policy</a>. Music plays through YouTube, iTunes and Audius.
+          By continuing you confirm you’re at least 13 (with a parent’s or guardian’s permission if you’re under 18) and agree to the <a href={at('terms')}>Terms</a> and{' '}
+          <a href={at('privacy')}>Privacy Policy</a>. Music plays through YouTube, iTunes and Audius.
         </p>
       </motion.section>
 

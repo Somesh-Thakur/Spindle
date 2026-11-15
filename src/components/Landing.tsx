@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { BarChart3, ChevronDown, Download, Mic2, Monitor, Music2, RefreshCw, Share2, Sparkles } from 'lucide-react'
 import { DISCORD_INVITE } from '../lib/feedback'
 import { Logo } from './Brand'
+import { at } from '../lib/site'
 
 const FEATURES = [
   { icon: Music2, title: 'Full songs, free', text: 'Almost any song, start to finish, matched to the right recording automatically. No ads and no subscription.' },
@@ -15,9 +16,9 @@ const FEATURES = [
 ]
 
 const SHOTS = [
-  { src: '/landing/player.jpg', alt: 'The Spindle player with a spinning record and the up-next queue', caption: 'A record player for every song, with what’s up next beside it.' },
-  { src: '/landing/home.jpg', alt: 'The Spindle home page with a crate of today’s top songs', caption: 'Dig through the charts like a crate of records.' },
-  { src: '/landing/playlist.jpg', alt: 'A Spindle playlist with recommended songs', caption: 'Playlists with recommendations that actually fit.' },
+  { src: at('landing/player.jpg'), alt: 'The Spindle player with a spinning record and the up-next queue', caption: 'A record player for every song, with what’s up next beside it.' },
+  { src: at('landing/home.jpg'), alt: 'The Spindle home page with a crate of today’s top songs', caption: 'Dig through the charts like a crate of records.' },
+  { src: at('landing/playlist.jpg'), alt: 'A Spindle playlist with recommended songs', caption: 'Playlists with recommendations that actually fit.' },
 ]
 
 const FAQ = [
@@ -128,8 +129,8 @@ export function Landing({ onStart }: { onStart: (mode: 'up' | 'in') => void }) {
           <Logo size={18} /> Spindle · Made by Somesh Sanjay Thakur
         </span>
         <nav>
-          <a href="/privacy">Privacy</a>
-          <a href="/terms">Terms</a>
+          <a href={at('privacy')}>Privacy</a>
+          <a href={at('terms')}>Terms</a>
           {DISCORD_INVITE && (
             <a href={DISCORD_INVITE} target="_blank" rel="noreferrer">
               Discord

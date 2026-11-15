@@ -4,6 +4,7 @@
 // in any language (Hindi, Tamil, Japanese…) render properly.
 import { nextMirror } from '../api/audius'
 import { artUrl } from './format'
+import { at } from './site'
 
 export type StoryStyle = 'cover' | 'vinyl' | 'lyrics'
 
@@ -88,7 +89,7 @@ export function loadArt(art: string | undefined): Promise<HTMLImageElement | nul
 }
 
 let brandIcon: Promise<HTMLImageElement | null> | null = null
-const loadBrand = () => (brandIcon ??= loadOne('/brand/spindle-icon-120.png').catch(() => null))
+const loadBrand = () => (brandIcon ??= loadOne(at('brand/spindle-icon-120.png')).catch(() => null))
 
 /** Make sure the page's fonts are ready before measuring text. */
 async function fontsReady() {

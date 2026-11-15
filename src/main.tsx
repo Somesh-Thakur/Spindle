@@ -35,10 +35,11 @@ import './styles/v8.css'
 import './styles/v9.css'
 import './styles/v10.css'
 import './styles/phone.css'
+import { at } from './lib/site'
 
 // Offline start-up and fast repeat visits (public/sw.js). Not in development, where it would cache stale code.
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
-  addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}))
+  addEventListener('load', () => navigator.serviceWorker.register(at('sw.js')).catch(() => {}))
 }
 
 // iPhone home-screen app: no empty strip under the bottom bars.

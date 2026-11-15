@@ -1,0 +1,51 @@
+# Publishes the app to GitHub Pages (https://somesh-thakur.github.io/Spindle/) on
+# every push to main. Vercel still deploys too: it runs the playlist-link import
+# (/api/import) and share-link previews (/s/<code>), which Pages can't.
+name: Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+        env:
+          BASE_PATH: /Spindle/
+          VITE_SERVER_ORIGIN: https://spindle-bice.vercel.app
+          # Both are public by design (they ship inside the app); the database's
+          # row-level security is what protects the data.
+          VITE_SUPABASE_URL: https://dietspufohjzyfeleqlj.supabase.co
+          VITE_SUPABASE_ANON_KEY: sb_publishable_rcjxyUNr_FOobtnHq0U3dg_ZLXnthTe
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

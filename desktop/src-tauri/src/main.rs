@@ -1,4 +1,4 @@
-// Spindle for desktop: a thin, light window around https://spindle-bice.vercel.app.
+// Spindle for desktop: a thin, light window around https://somesh-thakur.github.io/Spindle/.
 // The website does the music; this adds what a browser tab can't: Discord
 // "Listening to" status, media keys, a tray icon that keeps music going with
 // the window closed, and low memory use while hidden.
@@ -25,8 +25,8 @@ use tauri_plugin_window_state::StateFlags;
 
 /// The Discord application whose name shows as "Listening to …". Set at build time.
 const DISCORD_APP_ID: Option<&str> = option_env!("SPINDLE_DISCORD_APP_ID");
-const SITE: &str = "https://spindle-bice.vercel.app";
-const LOGO: &str = "https://spindle-bice.vercel.app/brand/spindle-icon-512.png";
+const SITE: &str = "https://somesh-thakur.github.io/Spindle/";
+const LOGO: &str = "https://somesh-thakur.github.io/Spindle/brand/spindle-icon-512.png";
 
 /// What the website reports about the current song.
 #[derive(Deserialize, Clone)]
@@ -109,7 +109,7 @@ async fn toggle_mini(app: AppHandle) -> Result<(), String> {
         return mini.close().map_err(|e| e.to_string());
     }
     let main = app.get_webview_window("main").ok_or("Spindle isn't open.")?;
-    let url = main.url().map_err(|e| e.to_string())?.join("/remote.html").map_err(|e| e.to_string())?;
+    let url = main.url().map_err(|e| e.to_string())?.join("remote.html").map_err(|e| e.to_string())?;
     let (w, h) = (360.0, 104.0);
     let mini = WebviewWindowBuilder::new(&app, "mini", WebviewUrl::External(url))
         .title("Spindle mini player")
