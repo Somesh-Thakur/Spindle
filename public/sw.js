@@ -6,7 +6,8 @@
 // - Fonts and artwork are cache-first: covers you've seen show up offline.
 // - Search, sign-in and music APIs always go to the network; downloads for
 //   offline listening are stored by the app itself (src/lib/offline.ts).
-const VERSION = 'v2'
+// v3 throws away v2's saved pages, which could hold the mini player under "/".
+const VERSION = 'v3'
 const SHELL = `spindle-shell-${VERSION}`
 const ASSETS = `spindle-assets-${VERSION}`
 const ART = `spindle-art-${VERSION}`
@@ -54,7 +55,9 @@ async function trim(cacheName, max) {
 
 async function cacheFirst(request, cacheName, limit) {
   const cache = await caches.open(cacheName)
-  const hit = await cache.match(request)
+  // ignoreVary: the saved copy was fetched by this worker, the page asks with an
+  // Origin header; for these never-changing files that difference doesn't matter.
+  const hit = await cache.match(request, { ignoreVary: true })
   if (hit) return hit
   const res = await fetch(request)
   // Opaque (no-cors) images are fine to keep; they still render.
@@ -67,13 +70,17 @@ async function cacheFirst(request, cacheName, limit) {
 
 // Fresh from the network when it answers quickly; on a slow connection the
 // saved copy opens instead (the fresh one is still saved for next time).
+// Each page is saved under its own address: the app at "/", the mini player at
+// "/remote.html", so a slow connection never opens the wrong page.
 async function networkFirstPage(request) {
   const cache = await caches.open(SHELL)
+  const path = new URL(request.url).pathname
+  const key = path === '/index.html' ? '/' : path
   const fresh = fetch(request).then((res) => {
-    if (res.ok) cache.put('/', res.clone())
+    if (res.ok && !res.redirected) cache.put(key, res.clone())
     return res
   })
-  const saved = await cache.match('/')
+  const saved = await cache.match(key)
   if (!saved) return fresh.catch(() => Response.error())
   const slow = new Promise((r) => setTimeout(() => r(saved), 1500))
   return Promise.race([fresh.catch(() => saved), slow])
