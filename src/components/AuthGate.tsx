@@ -17,6 +17,7 @@ import {
 } from '../lib/sync'
 import { usePlayer } from '../store/player'
 import { loginEmail } from '../lib/family'
+import { openInstallGuide, platform } from '../lib/install'
 import { AuraField } from './AuraField'
 import { Logo } from './Brand'
 import { at } from '../lib/site'
@@ -237,6 +238,11 @@ function PrivateGate() {
         )}
         {error && <p className="import-error">{error}</p>}
         {note && !error && <p className="gate-note">{note}</p>}
+        {platform !== 'other' && (
+          <button type="button" className="gate-link gate-install" onClick={openInstallGuide}>
+            📲 Get Spindle on your home screen
+          </button>
+        )}
       </motion.section>
     </div>
   )

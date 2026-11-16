@@ -5,6 +5,7 @@ import { HashRouter } from 'react-router-dom'
 import App from './App'
 import { TitleBar, UpdateBanner } from './components/DesktopChrome'
 import { ErrorBoundary } from './components/ErrorBoundary'
+import { InstallGuide } from './components/InstallGuide'
 import { startAutoplay } from './lib/autoplay'
 import { startDesktop } from './lib/desktop'
 import { startRemoteHost } from './lib/remote'
@@ -91,6 +92,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       {/* Desktop app only: the window's title bar and update notice, outside the app so they survive a crash. */}
       <TitleBar />
       <UpdateBanner />
+      {/* "Use Spindle like an app": opened from Home, the sign-in page and Settings. */}
+      <InstallGuide />
       <HashRouter>
         <ErrorBoundary>
           <App />

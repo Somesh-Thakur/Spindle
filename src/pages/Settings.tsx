@@ -1,25 +1,5 @@
 import { motion } from 'framer-motion'
-import {
-  Check,
-  CloudOff,
-  Gauge,
-  Info,
-  Keyboard,
-  KeyRound,
-  Link2,
-  MessageSquareHeart,
-  Languages,
-  Loader2,
-  LogOut,
-  MonitorPlay,
-  Palette,
-  RefreshCw,
-  Search,
-  ShieldCheck,
-  Trash2,
-  UserRound,
-  Volume2,
-} from 'lucide-react'
+import { Check, CloudOff, Gauge, Info, KeyRound, Keyboard, Languages, Link2, Loader2, LogOut, MessageSquareHeart, MonitorPlay, Palette, RefreshCw, Search, ShieldCheck, Smartphone, Trash2, UserRound, Volume2 } from 'lucide-react'
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { COUNTRIES } from '../api/itunes'
@@ -37,11 +17,13 @@ import { deleteShare, myShares, shareUrl, type Share } from '../lib/share'
 import { changePassword, deleteAccount, displayName, signOut, syncAgain, updateName, useAccount } from '../lib/sync'
 import { usePlayer } from '../store/player'
 import { at } from '../lib/site'
+import { openInstallGuide, useInstall } from '../lib/install'
 
 const flag = (code: string) => `https://flagcdn.com/w40/${code}.png`
 
 const SECTIONS = [
   { id: 'account', label: 'Account', icon: UserRound },
+  { id: 'app', label: 'Get the app', icon: Smartphone },
   { id: 'sharing', label: 'Shared links', icon: Link2 },
   { id: 'region', label: 'Region', icon: Languages },
   { id: 'playback', label: 'Playback', icon: Volume2 },
@@ -111,6 +93,7 @@ export function SettingsPage() {
         </nav>
         <div className="set-body">
           <AccountSection />
+          <AppSection />
           <SharingSection />
           <RegionSection />
           <PlaybackSection />
@@ -338,6 +321,27 @@ function AccountSection() {
 // ---------- Shared links ----------
 
 const SHARE_KIND = { track: 'Song', playlist: 'Playlist', album: 'Album' } as const
+
+function AppSection() {
+  const installed = useInstall((s) => s.installed)
+  return (
+    <Section id="app" title="Get the app">
+      <Row
+        title="On your phone"
+        sub={installed ? 'You’re using Spindle from your home screen.' : 'Add Spindle to your home screen on iPhone or Android: its own icon, full screen, no browser bars.'}
+      >
+        <button className="btn btn-ghost" onClick={openInstallGuide}>
+          <Smartphone size={15} /> How to install
+        </button>
+      </Row>
+      <Row title="On your computer" sub="In Chrome or Edge, click the install icon at the right of the address bar, or get the Windows app with Discord status, media keys and a mini player.">
+        <a className="btn btn-ghost" href="https://github.com/Somesh-Thakur/Spindle/releases/latest" target="_blank" rel="noreferrer">
+          Windows app
+        </a>
+      </Row>
+    </Section>
+  )
+}
 
 function SharingSection() {
   const status = useAccount((s) => s.status)

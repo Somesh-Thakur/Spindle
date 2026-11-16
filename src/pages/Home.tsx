@@ -13,6 +13,7 @@ import { ERAS } from '../lib/catalog'
 import { greeting } from '../lib/format'
 import { useAsync } from '../lib/useAsync'
 import { useIsPhone } from '../lib/useIsPhone'
+import { InstallBanner } from '../components/InstallBanner'
 import { usePlayer } from '../store/player'
 
 export function Home() {
@@ -41,6 +42,8 @@ export function Home() {
             <Search size={18} /> Songs, artists, albums
           </Link>
         </header>
+
+        <InstallBanner />
 
         {recent.length > 0 && (
           <PhoneSection title="Jump back in" to="/recent">

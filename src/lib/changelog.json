@@ -1,5 +1,24 @@
 [
   {
+    "version": "1.7",
+    "date": "2026-11-16",
+    "title": "Spindle on your home screen",
+    "items": [
+      {
+        "emoji": "📲",
+        "text": "A step-by-step guide to add Spindle to your home screen on iPhone and Android, with one-tap install where Android offers it. Find it on Home or in Settings → Get the app."
+      },
+      {
+        "emoji": "👨‍👩‍👧",
+        "text": "Family accounts: sign in with an ID and password."
+      },
+      {
+        "emoji": "🌐",
+        "text": "Spindle has a new home: somesh-thakur.github.io/Spindle."
+      }
+    ]
+  },
+  {
     "version": "1.6",
     "date": "2026-11-15",
     "title": "Karaoke that just works",
