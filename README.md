@@ -4,21 +4,22 @@
 
 # Spindle
 
-**A free music player with full songs, live lyrics, karaoke, story cards and your library on every device.**
+**A private music player with full songs, live lyrics, karaoke and your library synced across phone, web and desktop.**
 
-[**Open Spindle →**](https://spindle-bice.vercel.app)
+[**Open Spindle →**](https://somesh-thakur.github.io/Spindle/) · invite-only, DM for an account
 
 ![React](https://img.shields.io/badge/React_18-20232A?logo=react&logoColor=61DAFB)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?logo=supabase&logoColor=white)
-![Vercel](https://img.shields.io/badge/Vercel-000000?logo=vercel&logoColor=white)
+![GitHub Pages](https://img.shields.io/badge/GitHub_Pages-222222?logo=githubpages&logoColor=white)
+![Tauri](https://img.shields.io/badge/Tauri_2-24C8DB?logo=tauri&logoColor=white)
 
 </div>
 
 ---
 
-Spindle is built like an after-hours record store: a living colour field behind everything, a crate of records to dig through, album sleeves you can turn over, and a turntable you can scratch. Every song plays in full, it's free, and there are no ads.
+Spindle is built like an after-hours record store: a living colour field behind everything, a crate of records to dig through, album sleeves you can turn over, and a turntable you can scratch. Every song plays in full.
 
 The name is the pin at the centre of a turntable that every record spins on. In the wordmark, the dot of the **i** is a tiny record that spins while music plays.
 
@@ -26,8 +27,8 @@ The name is the pin at the centre of a turntable that every record spins on. In 
 
 **Listening**
 - Full songs for almost anything, through YouTube's official player, matched to the right upload automatically
-- Live lyrics, synced line by line, with a Hinglish / हिन्दी switch for Hindi songs
-- Karaoke: lyrics fill in word by word, and vocals can be swapped for an instrumental version or removed live
+- Live lyrics, synced line by line, with a Hinglish switch that romanises Hindi, Punjabi, Bengali, Gujarati, Odia, Tamil, Telugu, Kannada and Malayalam
+- Karaoke: lyrics fill in word by word, and vocals start off. Spindle finds a karaoke or instrumental version by itself (and readies the next songs' ahead of time), or removes vocals live for audio files
 - A turntable player: drag the record to scrub, tap the deck to lift the needle
 - **Autoplay** keeps the music going with similar songs when your queue runs out
 - **Smart Shuffle** mixes recommended songs into a playlist, marked with ✦ so you can keep the ones you like
@@ -45,8 +46,8 @@ The name is the pin at the centre of a turntable that every record spins on. In 
 - **Story cards**: 1080×1920 images for Instagram, WhatsApp and Snapchat stories (cover, vinyl or lyrics looks)
 
 **Everywhere**
-- Accounts with GitHub or email (6-digit code), and a library that syncs live between devices
-- Installable as an app from Safari or Chrome, opens offline, lock-screen controls
+- Invite-only accounts: GitHub for the owner, an ID and password for family and friends (added from `#/admin` → Family), and a library that syncs live between devices
+- Installable on iPhone and Android with a built-in step-by-step guide (it even spots Instagram's in-app browser), opens offline, lock-screen and CarPlay Now Playing controls
 - **Desktop app** for Windows and Mac: Discord “Listening to” status, media keys, and music that keeps playing from the tray ([download](https://github.com/Somesh-Thakur/Spindle/releases/latest))
 - **Feedback** page for bug reports and ideas, with replies from the developer
 - Search across iTunes and YouTube Music at once (press **/** or **Ctrl+K**)
@@ -58,7 +59,8 @@ The name is the pin at the centre of a turntable that every record spins on. In 
 | App | React 18, TypeScript, Vite, Framer Motion, Zustand |
 | Graphics | WebGL colour field, Canvas story cards, Web Audio visuals and vocal remover |
 | Accounts & sync | Supabase (Postgres, Auth, Realtime) with row-level security |
-| Server | Vercel functions: importer, share pages, link-preview images |
+| Hosting | GitHub Pages for the app; Vercel functions for the importer, share pages and link-preview images |
+| Desktop | Tauri 2 (Rust) around the live site, using WebView2 on Windows |
 | Music | YouTube IFrame API, iTunes Search, Audius, LRCLIB lyrics |
 
 ### How it fits together
@@ -72,12 +74,14 @@ src/
   store/        the player and library state (persisted, synced)
 server/         importer and share-page logic, shared by dev and Vercel
 api/            Vercel functions: /api/import, /api/share (/s/:code), /api/og
+desktop/        the Tauri desktop app
+.github/        CI, GitHub Pages publishing and desktop releases
 supabase/       database schema and branded email templates
 public/         brand assets, service worker, privacy and terms pages
 ```
 
 - **Sync** (`src/lib/sync.ts`): each library is one JSON document of keyed entries. Devices send only what changed; the database merges entry by entry (newest wins, deletions carry over), and Realtime tells the other devices to pull.
-- **Playback** (`src/components/AudioEngine.tsx`): finds the YouTube upload for each song, scoring title, artist and length, and falls back to the iTunes preview. Audius tracks play as audio files.
+- **Playback** (`src/components/AudioEngine.tsx`): finds the YouTube upload for each song by asking several search mirrors at once and scoring title, artist and length, remembers the match (synced across devices) so replays start instantly, and preloads the next songs. Falls back to the iTunes preview; Audius tracks play as audio files.
 - **Recommendations** (`src/lib/recommend.ts`): the popular songs of the artists a playlist leans on, with name lookups for songs from YouTube or Audius.
 
 ## Run it locally
@@ -114,7 +118,7 @@ The Supabase URL and publishable key are public by design; row-level security ke
 ### Supabase setup
 
 1. Create a project, then run [`supabase/schema.sql`](supabase/schema.sql) in the SQL Editor.
-2. **Authentication → URL Configuration:** Site URL `https://spindle-bice.vercel.app`, redirect URLs for production and `http://localhost:5173`.
+2. **Authentication → URL Configuration:** Site URL `https://somesh-thakur.github.io/Spindle/`, redirect URLs `https://somesh-thakur.github.io/Spindle/**`, `https://spindle-bice.vercel.app/**` and `http://localhost:5173/**`.
 3. **Email:** keep *Confirm email* on, minimum password 8, 6-digit codes.
 4. **Templates:** *Confirm signup* uses [`confirm-signup.html`](supabase/emails/confirm-signup.html) (subject `{{ .Token }} is your Spindle code`); *Reset password* uses [`reset-password.html`](supabase/emails/reset-password.html).
 5. **SMTP:** connect a sender (Gmail with an app password, or Resend with your own domain). Supabase's built-in mailer only reaches your own team.
@@ -131,15 +135,20 @@ The Supabase URL and publishable key are public by design; row-level security ke
 
 ### Deploy
 
-The project is deployed on Vercel and every push to `main` goes live. To deploy your own copy, import the repo into Vercel (free Hobby plan) and add the environment variables above.
+Every push to `main` goes live in two places:
+
+- **GitHub Pages** (https://somesh-thakur.github.io/Spindle/): the app itself, built by [`.github/workflows/pages.yml`](.github/workflows/pages.yml) with the `/Spindle/` base path. In the repo's *Settings → Pages*, the source is *GitHub Actions*.
+- **Vercel**: the server jobs Pages can't run: reading playlist links (`/api/import`) and share links with rich previews (`/s/:code`). The app on Pages calls them through `VITE_SERVER_ORIGIN`. Vercel also still serves a full copy of the app at its own address.
+
+Paths to files in `public/` go through `src/lib/site.ts`, so the same code works from a folder (Pages) or the domain root (Vercel).
 
 ## Desktop app
 
-`desktop/` is a [Tauri](https://tauri.app) app: a small native window around the live site, using the browser engine already on the computer (WebView2 on Windows), so the installer is a few MB and it updates whenever the site does. It adds:
+`desktop/` is a [Tauri](https://tauri.app) app: a small native window (about 10 MB of its own memory) around the live site, using the browser engine already on the computer (WebView2 on Windows), so the installer is a few MB and it updates whenever the site does. It adds:
 
 - Discord Rich Presence (“Listening to *song*” with cover art and a progress bar)
 - Media keys, a tray icon, and closing to the tray while music plays
-- Lower memory while hidden or minimised; outside links open in your browser
+- An always-on-top mini player, lower memory while hidden or minimised, and outside links open in your browser
 - Its own title bar, GitHub sign-in through your browser (via a `spindle://` link), and updates that install from inside the app
 
 ```bash
@@ -157,11 +166,12 @@ It needs [Rust](https://rustup.rs). To show Discord status, create an applicatio
 
 - Row-level security on every table: libraries are readable and writable only by their owner; shared links are readable by anyone with the code, without exposing who owns them.
 - Database functions run with a fixed search path, and write functions are callable only when signed in.
-- Security headers on every page (no framing, no MIME sniffing, strict referrer, locked-down permissions).
-- No secrets in the repository: keys live in `.env.local` and Vercel's environment settings.
+- Signups are switched off: only accounts the owner adds can sign in, and family accounts can't see anyone else's library or the admin page.
+- Every page asks search engines not to index it.
+- No secrets in the repository: only the public Supabase URL and publishable key (they ship inside the app anyway); everything else lives in `.env.local`, Vercel and GitHub Actions secrets.
 - Crashes are recorded to a write-only table (no one can read it from the site), capped in size and to 50 a day per person.
 
-Found something? Please email the address on the [privacy page](https://spindle-bice.vercel.app/privacy) instead of opening a public issue.
+Found something? Please email the address on the [privacy page](https://somesh-thakur.github.io/Spindle/privacy) instead of opening a public issue.
 
 ## Keyboard
 
