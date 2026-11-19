@@ -446,6 +446,14 @@ function PlaybackSection() {
   const set = usePlayer((s) => s.set)
   return (
     <Section id="playback" title="Playback">
+      <Row
+        title="No ads with YouTube Premium"
+        sub="Sign in to YouTube in this browser with your Premium account, then reload Spindle: songs play without ads. Works in Chrome and Edge on PC and Android; iPhone blocks it."
+      >
+        <a className="btn btn-ghost" href="https://accounts.google.com/ServiceLogin?service=youtube&continue=https%3A%2F%2Fwww.youtube.com%2F" target="_blank" rel="noreferrer">
+          Sign in to YouTube
+        </a>
+      </Row>
       <Row title="Volume" sub="Saved on this device only.">
         <input
           type="range"
