@@ -242,7 +242,7 @@ function Results({ q }: { q: string }) {
             ) : (
               songs.slice(0, 4).map((t, i) => (
                 <div key={t.id} className="rise" style={rise(i + 1)}>
-                  <TrackRow track={t} onPlay={() => play(songs, i)} showAlbum={false} />
+                  <TrackRow track={t} onPlay={() => play(songs, i)} showAlbum={false} quickAdd />
                 </div>
               ))
             )}
@@ -254,7 +254,7 @@ function Results({ q }: { q: string }) {
         <div className="rise" style={rise(5)}>
           <Shelf title="More songs" itemWidth="min(360px, 84vw)" rows={3}>
             {songs.slice(4).map((t, i) => (
-              <TrackRow key={t.id} track={t} onPlay={() => play(songs, i + 4)} showAlbum={false} />
+              <TrackRow key={t.id} track={t} onPlay={() => play(songs, i + 4)} showAlbum={false} quickAdd />
             ))}
           </Shelf>
         </div>

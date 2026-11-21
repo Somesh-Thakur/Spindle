@@ -113,6 +113,8 @@ interface PlayerState {
   deletePlaylist: (id: string) => void
   /** Returns false when the song was already in the playlist. */
   addToPlaylist: (id: string, t: Track) => boolean
+  /** The playlist being filled right now, for the quick + on search results (lib/quickAdd.ts). */
+  quickAdd: { id: string; at: number; count: number } | null
   removeFromPlaylist: (id: string, trackId: string) => void
   setPlaylistTracks: (id: string, tracks: Track[]) => void
   setPlaylistCover: (id: string, cover?: string) => void
@@ -168,6 +170,7 @@ export const usePlayer = create<PlayerState>()(
       intro: true,
       liveBackground: true,
       playlistView: 'list',
+      quickAdd: null,
       autoplay: true,
       queueSource: '',
       queueSession: 0,
@@ -279,7 +282,10 @@ export const usePlayer = create<PlayerState>()(
       addToPlaylist: (id, t) => {
         const p = get().playlists.find((x) => x.id === id)
         if (!p || p.tracks.some((x) => x.id === t.id)) return false
-        set({ playlists: get().playlists.map((x) => (x.id === id ? { ...x, tracks: [...x.tracks, t] } : x)) })
+        // Count adds to the same playlist in a row; a different playlist starts over.
+        const q = get().quickAdd
+        const count = q && q.id === id ? q.count + 1 : 1
+        set({ playlists: get().playlists.map((x) => (x.id === id ? { ...x, tracks: [...x.tracks, t] } : x)), quickAdd: { id, at: Date.now(), count } })
         return true
       },
       removeFromPlaylist: (id, trackId) =>
@@ -304,6 +310,7 @@ export const usePlayer = create<PlayerState>()(
         intro: s.intro,
         liveBackground: s.liveBackground,
         playlistView: s.playlistView,
+        quickAdd: s.quickAdd,
         autoplay: s.autoplay,
         addedIds: s.addedIds,
         ytMatches: s.ytMatches,

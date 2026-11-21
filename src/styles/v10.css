@@ -1700,3 +1700,43 @@
     grid-template-columns: minmax(0, 1fr) auto auto minmax(260px, 1.4fr) auto;
   }
 }
+
+/* ---------- Quick add to the playlist being filled (search results) ---------- */
+.row-quick {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: var(--text-2);
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.28);
+  transition:
+    color 0.15s,
+    background 0.15s,
+    box-shadow 0.15s,
+    transform 0.15s;
+}
+.row-quick:hover:not(:disabled) {
+  background: transparent;
+  color: #fff;
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.6);
+}
+.row-quick:active {
+  transform: scale(0.88);
+}
+.row-quick.is-on,
+.row-quick.is-on:hover:not(:disabled) {
+  color: #fff;
+  background: var(--accent);
+  box-shadow: none;
+  animation: quick-pop 0.28s cubic-bezier(0.2, 0.8, 0.2, 1.4);
+}
+@keyframes quick-pop {
+  from {
+    transform: scale(0.6);
+  }
+}
+@media (max-width: 860px) {
+  .row-quick {
+    width: 40px;
+    height: 40px;
+  }
+}

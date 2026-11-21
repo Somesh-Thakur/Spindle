@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { ChevronLeft, ChevronRight, Disc3, Heart, ListEnd, ListMusic, ListStart, MoreHorizontal, Play, Plus, User, Share, ArrowDownToLine, CircleCheck } from 'lucide-react'
+import { Check, ChevronLeft, ChevronRight, Disc3, Heart, ListEnd, ListMusic, ListStart, MoreHorizontal, Play, Plus, User, Share, ArrowDownToLine, CircleCheck } from 'lucide-react'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
@@ -8,6 +8,7 @@ import type { Track } from '../lib/types'
 import { canDownload, download, removeDownload, useDownloads } from '../lib/offline'
 import { openShare, trackShare } from '../lib/share'
 import { useIsPhone } from '../lib/useIsPhone'
+import { useQuickAddPlaylist } from '../lib/quickAdd'
 import { useCurrent, usePlayer } from '../store/player'
 import { Artwork } from './Artwork'
 import { Equalizer } from './Equalizer'
@@ -22,9 +23,11 @@ interface Props {
   onPlay: () => void
   showAlbum?: boolean
   showArt?: boolean
+  /** Show the + for the playlist you're filling (search results). */
+  quickAdd?: boolean
 }
 
-export function TrackRow({ track, rank, label, onPlay, showAlbum = true, showArt = true }: Props) {
+export function TrackRow({ track, rank, label, onPlay, showAlbum = true, showArt = true, quickAdd = false }: Props) {
   const current = useCurrent()
   const isPlaying = usePlayer((s) => s.isPlaying)
   const liked = usePlayer((s) => !!s.liked[track.id])
@@ -63,6 +66,7 @@ export function TrackRow({ track, rank, label, onPlay, showAlbum = true, showArt
         <div className="row-sub">{track.artist}</div>
       </div>
       {showAlbum && <div className="row-album">{track.album}</div>}
+      {quickAdd && <QuickAddButton track={track} />}
       <button
         className={`icon-btn row-like ${liked ? 'is-on' : ''}`}
         onClick={(e) => {
@@ -77,6 +81,30 @@ export function TrackRow({ track, rank, label, onPlay, showAlbum = true, showArt
       <span className="row-time">{fmtTime(track.duration)}</span>
       <TrackMenu track={track} />
     </div>
+  )
+}
+
+/** + adds this song to the playlist you've been filling; ✓ means it's in (tap to take it out). */
+function QuickAddButton({ track }: { track: Track }) {
+  const playlist = useQuickAddPlaylist()
+  if (!playlist) return null
+  const added = playlist.tracks.some((t) => t.id === track.id)
+  return (
+    <button
+      className={`icon-btn row-quick ${added ? 'is-on' : ''}`}
+      onClick={(e) => {
+        e.stopPropagation()
+        const { addToPlaylist, removeFromPlaylist } = usePlayer.getState()
+        if (added) {
+          removeFromPlaylist(playlist.id, track.id)
+          toast(`Removed from ${playlist.name}`)
+        } else if (addToPlaylist(playlist.id, track)) toast(`Added to ${playlist.name}`)
+      }}
+      aria-label={added ? `Remove from ${playlist.name}` : `Add to ${playlist.name}`}
+      aria-pressed={added}
+    >
+      {added ? <Check size={16} strokeWidth={2.6} /> : <Plus size={17} />}
+    </button>
   )
 }
 
@@ -300,6 +328,8 @@ function PlaylistChooser({
           // The menu lingers while it fades out; drop focus so Enter can't press this twice.
           e.currentTarget.blur()
           const id = createPlaylist(undefined, [track])
+          // Its first song counts towards the quick + on search results.
+          usePlayer.setState({ quickAdd: { id, at: Date.now(), count: 1 } })
           onDone()
           toast('Playlist created')
           usePlayer.getState().setFull(false)
