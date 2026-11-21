@@ -5,6 +5,7 @@ import { useIsPhone } from '../lib/useIsPhone'
 import { useCurrent, usePlayer } from '../store/player'
 import { Artwork } from './Artwork'
 import { PlayButton, Scrubber, TransportControls, VolumeControl } from './Controls'
+import { TrackMenu } from './TrackRow'
 
 export function MiniPlayer() {
   const track = useCurrent()
@@ -64,6 +65,8 @@ export function MiniPlayer() {
           >
             <Heart size={16} fill={liked ? 'currentColor' : 'none'} />
           </button>
+          {/* Play next, add to queue or a playlist, share: the same menu as song rows. */}
+          <TrackMenu track={track} className="menu-up bar-more" />
 
           <div className="bar-center">
             <TransportControls />

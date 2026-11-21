@@ -11,6 +11,7 @@ import { startDesktop } from './lib/desktop'
 import { startRemoteHost } from './lib/remote'
 import { startErrorReporting } from './lib/errors'
 import { startIosGapFix } from './lib/iosGap'
+import { startTooltips } from './lib/tooltip'
 import { startPrefetch } from './lib/prefetch'
 import { startInsights } from './lib/insights'
 import { startHistory } from './lib/history'
@@ -45,6 +46,9 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
 
 // iPhone home-screen app: no empty strip under the bottom bars.
 startIosGapFix()
+
+// Hover labels for icon buttons (with a mouse).
+startTooltips()
 
 // While you're in another window, decorative animations rest (v5.css .is-away).
 // Checked a moment later: clicking into the YouTube player also blurs the page.

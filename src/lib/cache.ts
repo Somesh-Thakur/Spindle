@@ -25,7 +25,10 @@ export async function cached<T>(key: string, ttlMs: number, load: () => Promise<
     return v
   })
   pending.set(k, p)
-  p.finally(() => pending.delete(k))
+  // Cleanup on success or failure; the caller handles the failure itself, so this
+  // copy of it must not surface as an unhandled rejection.
+  const done = () => void pending.delete(k)
+  p.then(done, done)
   return p
 }
 
