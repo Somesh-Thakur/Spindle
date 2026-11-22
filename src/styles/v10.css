@@ -1742,6 +1742,17 @@
 }
 
 /* ---------- Made for you, follows, new releases ---------- */
+.wrapped-art {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  color: #fff;
+  background: radial-gradient(circle at 20% 15%, #ff3b5c, transparent 60%), radial-gradient(circle at 85% 90%, #ffb020, transparent 55%), linear-gradient(135deg, #ff3b5c, #5b3cff);
+}
+.wrapped-art svg {
+  margin-bottom: 30px;
+  filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.35));
+}
 .mix-art {
   position: relative;
   overflow: hidden;

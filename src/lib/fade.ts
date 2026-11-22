@@ -8,6 +8,10 @@ import { yt } from './yt'
 import { usePlayer } from '../store/player'
 
 let gain = 1
+/** Seconds before the reported end that the fade reaches silence and the next song starts. */
+const END_EARLY = 0.6
+/** The song already moved on early, so it isn't done twice. */
+let advancedFrom = ''
 /** Right after a song change, until the new song is actually playing from its start. */
 let startingUntil = 0
 
@@ -37,8 +41,11 @@ function target(): number {
   // In: a little quicker than out, so the song starts promptly.
   const fadeIn = Math.max(0.6, secs * 0.6)
   const inGain = Math.min(1, Math.max(0.05, t / fadeIn))
-  // Out: only when the next song follows on its own (not on repeat-one).
-  const outGain = s.repeat === 'one' ? 1 : Math.min(1, Math.max(0, (d - t) / secs))
+  // Out: only when the next song follows on its own (not on repeat-one). It finishes a
+  // little before the reported end (YouTube's length runs slightly long), and drops
+  // along a curve, which the ear hears as an even fade rather than a late cut.
+  const left = Math.min(1, Math.max(0, (d - END_EARLY - t) / secs))
+  const outGain = s.repeat === 'one' ? 1 : left * left
   return Math.min(inGain, outGain)
 }
 
@@ -49,6 +56,7 @@ export function startFading() {
     const id = s.current()?.id ?? ''
     if (id === last) return
     last = id
+    advancedFrom = ''
     if (s.fade && id) {
       gain = 0.05
       startingUntil = performance.now() + 3000
@@ -57,6 +65,17 @@ export function startFading() {
   })
   setInterval(() => {
     const next = target()
+    // Faded all the way out: go straight to the next song instead of waiting out the tail.
+    const s = usePlayer.getState()
+    const id = s.current()?.id ?? ''
+    if (s.fade && s.isPlaying && s.repeat !== 'one' && next === 0 && id && advancedFrom !== id && getMode() !== 'none') {
+      const d = totalTime(s.duration)
+      if (d > 10 && currentTime() >= d - END_EARLY - 0.05) {
+        advancedFrom = id
+        s.next(true)
+        return
+      }
+    }
     if (Math.abs(next - gain) < 0.015 && next !== 1) return
     if (next === gain) return
     gain = next

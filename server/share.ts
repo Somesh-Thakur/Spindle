@@ -48,6 +48,9 @@ export async function fetchShare(code: string, env: Env): Promise<Share | null> 
 /** Artwork at a given pixel size, matching src/lib/format.ts. */
 export function artAt(art: string | undefined | null, size: number) {
   if (!art) return ''
+  // YouTube artwork: ask for JPEG at this size (the card maker can't read WebP).
+  if (/googleusercontent\.com\//.test(art)) return art.split('#')[0].replace(/=[^/=]*$/, '') + `=w${size}-h${size}-l90`
+  if (/ytimg\.com\//.test(art)) return art.split('#')[0].replace('/vi_webp/', '/vi/').replace(/\.webp(\?.*)?$/, '.jpg')
   if (art.includes('{s}')) return art.replaceAll('{s}', String(size))
   const [base] = art.split('#')
   if (base.endsWith('/480x480.jpg')) return base.replace('/480x480.jpg', size <= 480 ? '/480x480.jpg' : '/1000x1000.jpg')
@@ -189,10 +192,8 @@ export async function shareImage(s: Share, origin: string) {
       ),
     ),
   )
-  return new ImageResponse(root as never, {
-    width: 1200,
-    height: 630,
-    fonts: await loadFonts(),
-    headers: { 'cache-control': 'public, max-age=86400, s-maxage=604800, immutable' },
-  })
+  // Rendered in full before replying: a picture that fails halfway would otherwise go out empty.
+  const png = await new ImageResponse(root as never, { width: 1200, height: 630, fonts: await loadFonts() }).arrayBuffer()
+  if (!png.byteLength) throw new Error('empty preview')
+  return new Response(png, { headers: { 'content-type': 'image/png', 'cache-control': 'public, max-age=86400, s-maxage=604800, immutable' } })
 }

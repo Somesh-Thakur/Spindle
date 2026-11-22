@@ -1,6 +1,7 @@
+import { useHistory } from '../lib/history'
 import { Play, Search } from 'lucide-react'
 import { useEffect } from 'react'
-import { MixTile } from '../components/MixTile'
+import { MixTile, WrappedTile } from '../components/MixTile'
 import { ensureMixes, useMixes } from '../lib/mixes'
 import { useNewReleases } from '../lib/newReleases'
 import { Link } from 'react-router-dom'
@@ -30,6 +31,7 @@ export function Home() {
   const albums = useAsync(() => topAlbums(country, 24), [country])
   const radio = useAsync(() => trending(undefined, 20), [])
   const mixes = useMixes((s) => s.mixes) ?? []
+  const hasPlays = useHistory((s) => s.plays.length > 0)
   const { releases } = useNewReleases()
   useEffect(() => ensureMixes(), [])
 
@@ -52,9 +54,10 @@ export function Home() {
 
         <InstallBanner />
 
-        {mixes.length > 0 && (
+        {(mixes.length > 0 || hasPlays) && (
           <PhoneSection title="Made for you">
             <Shelf title="">
+              {hasPlays && <WrappedTile />}
               {mixes.map((m) => (
                 <MixTile key={m.id} mix={m} />
               ))}
@@ -125,13 +128,14 @@ export function Home() {
 
       <Marquee items={artists} />
 
-      {mixes.length > 0 && (
+      {(mixes.length > 0 || hasPlays) && (
         <section className="home-sec">
           <div className="sec-head">
             <KineticTitle>Made for you</KineticTitle>
-            <p className="sec-lede">Mixes from what you play and like, fresh every day.</p>
+            <p className="sec-lede">Mixes from what you play and like, fresh every day, and your Wrapped.</p>
           </div>
           <Shelf title="">
+            {hasPlays && <WrappedTile />}
             {mixes.map((m) => (
               <MixTile key={m.id} mix={m} />
             ))}

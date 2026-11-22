@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { Clock3, Compass, Download, Heart, Home, Library, Plus, Radio, Search, Settings, UserRound } from 'lucide-react'
+import { Clock3, Compass, Download, Heart, Home, Library, Plus, Radio, Search, Settings, Sparkles, UserRound } from 'lucide-react'
 import { useEffect } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { displayName, useAccount } from '../lib/sync'
@@ -17,6 +17,7 @@ const LIBRARY = [
   { to: '/library', label: 'Your Library', icon: Library },
   { to: '/liked', label: 'Liked Songs', icon: Heart },
   { to: '/recent', label: 'Recently Played', icon: Clock3 },
+  { to: '/wrapped', label: 'Spindle Wrapped', icon: Sparkles },
   { to: '/import', label: 'Import Music', icon: Download },
 ]
 
