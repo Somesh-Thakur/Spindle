@@ -1,9 +1,9 @@
-// Where Spindle lives. The app is on GitHub Pages at somesh-thakur.github.io/Spindle/
+// Where Spindle lives. The app is on GitHub Pages at someshthakur.tech/spindle/
 // (a folder, not the domain root), and Vercel still runs the two server jobs Pages
 // can't: reading playlist links (/api/import) and share-link previews (/s/<code>).
 // The Vercel copy is built with BASE "/" and no server origin, so it uses itself.
 
-/** The folder the app is served from: "/Spindle/" on GitHub Pages, "/" elsewhere. */
+/** The folder the app is served from: "/spindle/" on GitHub Pages, "/" elsewhere. */
 export const BASE = import.meta.env.BASE_URL
 
 /** A file shipped with the app (public/), at the right folder on any host. */

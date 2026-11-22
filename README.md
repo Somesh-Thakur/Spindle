@@ -6,7 +6,7 @@
 
 **A private music player with full songs, live lyrics, karaoke and your library synced across phone, web and desktop.**
 
-[**Open Spindle →**](https://somesh-thakur.github.io/Spindle/) · invite-only, DM for an account
+[**Open Spindle →**](https://someshthakur.tech/spindle/) · invite-only, DM for an account
 
 ![React](https://img.shields.io/badge/React_18-20232A?logo=react&logoColor=61DAFB)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
@@ -118,7 +118,7 @@ The Supabase URL and publishable key are public by design; row-level security ke
 ### Supabase setup
 
 1. Create a project, then run [`supabase/schema.sql`](supabase/schema.sql) in the SQL Editor.
-2. **Authentication → URL Configuration:** Site URL `https://somesh-thakur.github.io/Spindle/`, redirect URLs `https://somesh-thakur.github.io/Spindle/**`, `https://spindle-bice.vercel.app/**` and `http://localhost:5173/**`.
+2. **Authentication → URL Configuration:** Site URL `https://someshthakur.tech/spindle/`, redirect URLs `https://someshthakur.tech/spindle/**`, `https://spindle-bice.vercel.app/**` and `http://localhost:5173/**`.
 3. **Email:** keep *Confirm email* on, minimum password 8, 6-digit codes.
 4. **Templates:** *Confirm signup* uses [`confirm-signup.html`](supabase/emails/confirm-signup.html) (subject `{{ .Token }} is your Spindle code`); *Reset password* uses [`reset-password.html`](supabase/emails/reset-password.html).
 5. **SMTP:** connect a sender (Gmail with an app password, or Resend with your own domain). Supabase's built-in mailer only reaches your own team.
@@ -137,7 +137,7 @@ The Supabase URL and publishable key are public by design; row-level security ke
 
 Every push to `main` goes live in two places:
 
-- **GitHub Pages** (https://somesh-thakur.github.io/Spindle/): the app itself, built by [`.github/workflows/pages.yml`](.github/workflows/pages.yml) with the `/Spindle/` base path. In the repo's *Settings → Pages*, the source is *GitHub Actions*.
+- **GitHub Pages** (https://someshthakur.tech/spindle/): the app itself, built by [`.github/workflows/pages.yml`](.github/workflows/pages.yml) with the repo's name as the base path (`/spindle/`). The custom domain `someshthakur.tech` is set on the `Somesh-Thakur.github.io` repo, and project sites like this one appear under it. In this repo's *Settings → Pages*, the source is *GitHub Actions*.
 - **Vercel**: the server jobs Pages can't run: reading playlist links (`/api/import`) and share links with rich previews (`/s/:code`). The app on Pages calls them through `VITE_SERVER_ORIGIN`. Vercel also still serves a full copy of the app at its own address.
 
 Paths to files in `public/` go through `src/lib/site.ts`, so the same code works from a folder (Pages) or the domain root (Vercel).
@@ -171,7 +171,7 @@ It needs [Rust](https://rustup.rs). To show Discord status, create an applicatio
 - No secrets in the repository: only the public Supabase URL and publishable key (they ship inside the app anyway); everything else lives in `.env.local`, Vercel and GitHub Actions secrets.
 - Crashes are recorded to a write-only table (no one can read it from the site), capped in size and to 50 a day per person.
 
-Found something? Please email the address on the [privacy page](https://somesh-thakur.github.io/Spindle/privacy) instead of opening a public issue.
+Found something? Please email the address on the [privacy page](https://someshthakur.tech/spindle/privacy) instead of opening a public issue.
 
 ## Keyboard
 

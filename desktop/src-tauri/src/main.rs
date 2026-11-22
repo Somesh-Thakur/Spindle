@@ -1,4 +1,4 @@
-// Spindle for desktop: a thin, light window around https://somesh-thakur.github.io/Spindle/.
+// Spindle for desktop: a thin, light window around https://someshthakur.tech/spindle/.
 // The website does the music; this adds what a browser tab can't: Discord
 // "Listening to" status, media keys, a tray icon that keeps music going with
 // the window closed, and low memory use while hidden.
@@ -25,8 +25,8 @@ use tauri_plugin_window_state::StateFlags;
 
 /// The Discord application whose name shows as "Listening to …". Set at build time.
 const DISCORD_APP_ID: Option<&str> = option_env!("SPINDLE_DISCORD_APP_ID");
-const SITE: &str = "https://somesh-thakur.github.io/Spindle/";
-const LOGO: &str = "https://somesh-thakur.github.io/Spindle/brand/spindle-icon-512.png";
+const SITE: &str = "https://someshthakur.tech/spindle/";
+const LOGO: &str = "https://someshthakur.tech/spindle/brand/spindle-icon-512.png";
 
 /// What the website reports about the current song.
 #[derive(Deserialize, Clone)]

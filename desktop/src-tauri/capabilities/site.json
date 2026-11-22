@@ -8,6 +8,8 @@
   ],
   "remote": {
     "urls": [
+      "https://someshthakur.tech/spindle/*",
+      "https://somesh-thakur.github.io/spindle/*",
       "https://somesh-thakur.github.io/Spindle/*",
       "https://spindle-bice.vercel.app",
       "https://spindle-bice.vercel.app/*"

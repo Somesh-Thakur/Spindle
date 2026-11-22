@@ -14,7 +14,7 @@ const ART = `spindle-art-${VERSION}`
 // Browsers pad cross-site images in storage, so keep a modest number.
 const ART_LIMIT = 250
 
-// The folder the app is served from: "/Spindle/" on GitHub Pages, "/" on Vercel.
+// The folder the app is served from: "/spindle/" on GitHub Pages, "/" on Vercel.
 const BASE = new URL(self.registration.scope).pathname
 
 const PRECACHE = ['', 'manifest.webmanifest', 'brand/spindle-favicon.svg', 'brand/spindle-icon-192.png', 'brand/apple-touch-icon.png'].map((p) => BASE + p)

@@ -65,7 +65,7 @@ function shareApi(env: Env): Plugin {
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), 'VITE_')
   return {
-    // GitHub Pages serves the app from /Spindle/ (set in .github/workflows/pages.yml); Vercel from /.
+    // GitHub Pages serves the app from /spindle/ (the repo's name, set in .github/workflows/pages.yml); Vercel from /.
     base: process.env.BASE_PATH || '/',
     // Which deploy an error report came from (Vercel sets the commit during builds).
     define: { __RELEASE__: JSON.stringify((process.env.VERCEL_GIT_COMMIT_SHA ?? 'local').slice(0, 7)) },

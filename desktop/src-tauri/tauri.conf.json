@@ -4,8 +4,8 @@
   "version": "1.2.0",
   "identifier": "app.spindle.desktop",
   "build": {
-    "frontendDist": "https://somesh-thakur.github.io/Spindle/",
-    "devUrl": "https://somesh-thakur.github.io/Spindle/"
+    "frontendDist": "https://someshthakur.tech/spindle/",
+    "devUrl": "https://someshthakur.tech/spindle/"
   },
   "app": {
     "withGlobalTauri": true,
