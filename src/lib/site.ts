@@ -11,3 +11,6 @@ export const at = (path: string) => BASE + path.replace(/^\//, '')
 
 /** Where /api/import and /s/<code> live. */
 export const SERVER = (import.meta.env.VITE_SERVER_ORIGIN as string | undefined) || location.origin
+
+/** Where share links point: Spindle's own address on Vercel, which can draw link previews. */
+export const SHARE_ORIGIN = import.meta.env.DEV ? SERVER : 'https://spindle.someshthakur.tech'

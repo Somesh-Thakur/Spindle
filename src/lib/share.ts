@@ -7,7 +7,7 @@ import { artUrl } from './format'
 import { displayName, useAccount } from './sync'
 import { supabase } from './supabase'
 import type { Track } from './types'
-import { SERVER } from './site'
+import { SHARE_ORIGIN } from './site'
 
 export type ShareKind = 'track' | 'playlist' | 'album'
 
@@ -38,7 +38,7 @@ export interface Share {
 /** Playlists can be long; the link carries the first 500 songs. */
 const MAX_TRACKS = 3000
 
-export const shareUrl = (code: string) => `${SERVER}/s/${code}`
+export const shareUrl = (code: string) => `${SHARE_ORIGIN}/s/${code}`
 
 export const trackShare = (t: Track): ShareItem => ({ kind: 'track', key: t.id, title: t.title, subtitle: t.artist, art: t.art, tracks: [t] })
 
