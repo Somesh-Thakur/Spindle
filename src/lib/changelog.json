@@ -1,5 +1,32 @@
 [
   {
+    "version": "1.8",
+    "date": "2026-11-22",
+    "title": "Made for you",
+    "items": [
+      {
+        "emoji": "🎧",
+        "text": "Made for you: Your Repeat, mixes of your top artists, Discover and Throwback, built from what you play and fresh every day."
+      },
+      {
+        "emoji": "➕",
+        "text": "Follow artists (on their page or from any song’s ⋯ menu) and their new releases show up on Home, marked NEW."
+      },
+      {
+        "emoji": "🎁",
+        "text": "Spindle Wrapped, any time: your minutes, top songs and artists and your listening personality as a story. Library → Spindle Wrapped."
+      },
+      {
+        "emoji": "🔀",
+        "text": "Drag songs in Up next to reorder them, or take them out with ✕."
+      },
+      {
+        "emoji": "🌊",
+        "text": "Songs fade into each other. Change the length or turn it off in Settings → Playback."
+      }
+    ]
+  },
+  {
     "version": "1.7",
     "date": "2026-11-16",
     "title": "Spindle on your home screen",

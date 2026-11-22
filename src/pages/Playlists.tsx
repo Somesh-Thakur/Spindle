@@ -10,7 +10,7 @@ import { PlaylistCover } from '../components/PlaylistCover'
 import { PlaylistRecs } from '../components/PlaylistRecs'
 import { Reveal } from '../components/Reveal'
 import { Shelf } from '../components/Shelf'
-import { SongTile } from '../components/Tiles'
+import { ArtistTile, SongTile } from '../components/Tiles'
 import { toast } from '../components/Toast'
 import { TrackMenu } from '../components/TrackRow'
 import { fmtTime } from '../lib/format'
@@ -268,6 +268,8 @@ export function LibraryPage() {
   const liked = usePlayer((s) => s.liked)
   const playlists = usePlayer((s) => s.playlists)
   const recent = usePlayer((s) => s.recent)
+  const followingMap = usePlayer((s) => s.following)
+  const following = Object.values(followingMap).sort((a, b) => b.at - a.at)
   const likedList = Object.values(liked).reverse()
   const downloads = useDownloads((s) => Object.keys(s.saved).length)
   const nav = useNavigate()
@@ -317,6 +319,15 @@ export function LibraryPage() {
             <span className="lib-sub">Top songs, artists and minutes</span>
           </Link>
         </Reveal>
+        <Reveal i={3}>
+          <Link to="/wrapped" className="lib-card lib-liked lib-wrapped" data-cursor="open">
+            <span className="lib-liked-art">
+              <Sparkles size={44} />
+            </span>
+            <span className="lib-name">Spindle Wrapped</span>
+            <span className="lib-sub">Your listening as a story, any time</span>
+          </Link>
+        </Reveal>
         {playlists.map((p, i) => (
           <Reveal key={p.id} i={i + 1}>
             <Link to={`/playlist/${p.id}`} className="lib-card" data-cursor="open">
@@ -336,6 +347,14 @@ export function LibraryPage() {
           </button>
         </Reveal>
       </div>
+
+      {following.length > 0 && (
+        <Shelf title="Artists you follow">
+          {following.map((a) => (
+            <ArtistTile key={a.id} artist={a} />
+          ))}
+        </Shelf>
+      )}
 
       {recent.length > 0 && (
         <Shelf title="Recently played" to="/recent">

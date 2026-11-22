@@ -8,6 +8,7 @@ import { useCurrent, usePlayer } from '../store/player'
 import { Artwork } from './Artwork'
 import { Marquee } from './Kinetic'
 import { TrackRow } from './TrackRow'
+import { FollowButton } from './Follow'
 
 /** Long titles get a condensed width so they still read as one confident line. */
 function widthFor(title: string) {
@@ -149,7 +150,7 @@ export function SleeveBack({ tracks }: { tracks: Track[] }) {
 }
 
 /** Artist hero: their name runs past in huge type behind a spinning portrait. */
-export function ArtistHero({ name, genre, art, tracks }: { name: string; genre?: string; art?: string; tracks: Track[] }) {
+export function ArtistHero({ id, name, genre, art, tracks }: { id: string; name: string; genre?: string; art?: string; tracks: Track[] }) {
   const pal = usePalette(art)
   return (
     <header className="artist-stage" style={{ ['--wash' as string]: pal?.accent ?? '#444' }}>
@@ -164,6 +165,7 @@ export function ArtistHero({ name, genre, art, tracks }: { name: string; genre?:
         <button className="btn btn-primary" onClick={() => play(tracks, false)} disabled={!tracks.length}>
           <Play size={15} fill="currentColor" strokeWidth={0} /> Play top songs
         </button>
+        <FollowButton artist={{ id, name, genre, art }} />
       </div>
     </header>
   )

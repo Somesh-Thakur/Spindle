@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { defaultCountry } from '../api/itunes'
 import type { Mode } from '../lib/engine'
-import type { Track } from '../lib/types'
+import type { Artist, Followed, Track } from '../lib/types'
 
 export type Repeat = 'off' | 'all' | 'one'
 
@@ -68,6 +68,8 @@ interface PlayerState {
   replayNonce: number
   palette: Palette
   liked: Record<string, Track>
+  /** Artists you follow, by Apple Music id (synced). */
+  following: Record<string, Followed>
   playlists: Playlist[]
   recent: Track[]
   country: string
@@ -77,6 +79,8 @@ interface PlayerState {
   liveBackground: boolean
   /** How playlist songs are laid out. */
   playlistView: 'list' | 'grid' | 'compact'
+  /** Seconds songs fade out and in between each other; 0 is off (lib/fade.ts). */
+  fade: number
   /** Keep playing similar songs when the queue runs out. */
   autoplay: boolean
   /** Where the current queue came from, e.g. "playlist:abc123", and a number for each new start. */
@@ -96,6 +100,10 @@ interface PlayerState {
   playNext: (t: Track) => void
   addToQueue: (t: Track) => void
   jumpTo: (orderPos: number) => void
+  /** New order for the songs after the current one (queue indices, as in `order`). */
+  setUpNext: (upcoming: number[]) => void
+  /** Take one song out of Up next, by its place in `order`. */
+  removeUpNext: (orderPos: number) => void
   setPlaying: (p: boolean) => void
   toggle: () => void
   next: (auto?: boolean) => void
@@ -103,6 +111,7 @@ interface PlayerState {
   toggleShuffle: () => void
   cycleRepeat: () => void
   toggleLike: (t: Track) => void
+  toggleFollow: (a: Artist) => void
   setVolume: (v: number) => void
   toggleMute: () => void
   setFull: (open: boolean) => void
@@ -163,6 +172,7 @@ export const usePlayer = create<PlayerState>()(
       replayNonce: 0,
       palette: DEFAULT_PALETTE,
       liked: {},
+      following: {},
       playlists: [],
       recent: [],
       country: defaultCountry(),
@@ -170,6 +180,7 @@ export const usePlayer = create<PlayerState>()(
       intro: true,
       liveBackground: true,
       playlistView: 'list',
+      fade: 3,
       quickAdd: null,
       autoplay: true,
       queueSource: '',
@@ -213,6 +224,15 @@ export const usePlayer = create<PlayerState>()(
         })
       },
       playTrack: (t) => get().playList([t], 0),
+      setUpNext: (upcoming) => {
+        const { order, pos } = get()
+        set({ order: [...order.slice(0, pos + 1), ...upcoming] })
+      },
+      removeUpNext: (orderPos) => {
+        const { order, pos } = get()
+        if (orderPos <= pos) return
+        set({ order: order.filter((_, i) => i !== orderPos) })
+      },
       playNext: (t) => {
         const { queue, order, pos } = get()
         if (!queue.length) return get().playTrack(t)
@@ -265,6 +285,12 @@ export const usePlayer = create<PlayerState>()(
         else liked[t.id] = t
         set({ liked })
       },
+      toggleFollow: (a) => {
+        const following = { ...get().following }
+        if (following[a.id]) delete following[a.id]
+        else following[a.id] = { id: a.id, name: a.name, art: a.art, genre: a.genre, at: Date.now() }
+        set({ following })
+      },
       setVolume: (v) => set({ volume: Math.min(1, Math.max(0, v)), muted: false }),
       toggleMute: () => set({ muted: !get().muted }),
       setFull: (open) => set({ fullOpen: open }),
@@ -300,6 +326,7 @@ export const usePlayer = create<PlayerState>()(
         shuffle: s.shuffle,
         repeat: s.repeat,
         liked: s.liked,
+        following: s.following,
         recent: s.recent,
         country: s.country,
         playlists: s.playlists,
@@ -310,6 +337,7 @@ export const usePlayer = create<PlayerState>()(
         intro: s.intro,
         liveBackground: s.liveBackground,
         playlistView: s.playlistView,
+        fade: s.fade,
         quickAdd: s.quickAdd,
         autoplay: s.autoplay,
         addedIds: s.addedIds,

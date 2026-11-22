@@ -15,7 +15,7 @@ import { toast } from '../components/Toast'
 import { isDesktop, openExternal } from './desktop'
 import { usePlayer, type Playlist } from '../store/player'
 import { supabase } from './supabase'
-import type { Track } from './types'
+import type { Followed, Track } from './types'
 import { at } from './site'
 
 type Entry = { at: number; v?: unknown; del?: true }
@@ -58,7 +58,7 @@ const DEVICE = (() => {
 const QUEUE_LIMIT = 200
 
 /** Settings that follow the account. Volume stays per device: speakers differ. */
-const PREFS = ['country', 'hinglish', 'recent', 'videoHidden', 'videoView', 'customCursor', 'intro', 'liveBackground', 'playlistView', 'autoplay'] as const
+const PREFS = ['country', 'hinglish', 'recent', 'videoHidden', 'videoView', 'customCursor', 'intro', 'liveBackground', 'playlistView', 'autoplay', 'fade'] as const
 
 // ---------- projection: store → sections ----------
 
@@ -80,6 +80,8 @@ function project(): Projection {
     session: session ? { now: session } : {},
     // Which YouTube video each song plays from, so other devices skip the search.
     matches: s.ytMatches,
+    // Artists you follow.
+    follows: s.following,
     // Listening history syncs separately (playSync.ts).
   }
 }
@@ -195,6 +197,8 @@ function apply(doc: Doc) {
   let lyricsChanged = false
   const matches = { ...s.ytMatches }
   let matchesChanged = false
+  const following = { ...s.following }
+  let followingChanged = false
   let session: Session | null = null
   const newPlays: Play[] = []
   const newTracks: Record<string, Track> = {}
@@ -228,6 +232,10 @@ function apply(doc: Doc) {
         if (e.del) delete matches[k]
         else if (typeof e.v === 'string') matches[k] = e.v
         matchesChanged = true
+      } else if (sec === 'follows') {
+        if (e.del) delete following[k]
+        else following[k] = e.v as Followed
+        followingChanged = true
       } else if (sec === 'prefs' && !e.del && (PREFS as readonly string[]).includes(k)) {
         ;(prefs as Record<string, unknown>)[k] = e.v
       } else continue
@@ -244,6 +252,7 @@ function apply(doc: Doc) {
   if (playlistsChanged) patch.playlists = [...playlists.values()].sort((a, b) => a.createdAt - b.createdAt)
   if (lyricsChanged) patch.lyricsNonce = s.lyricsNonce + 1
   if (matchesChanged) patch.ytMatches = matches
+  if (followingChanged) patch.following = following
   if (session) {
     Object.assign(patch, { queue: session.queue, order: session.order, pos: session.pos, isPlaying: false, currentTime: 0 })
     // Hash it the way this device will project it, so adopting it isn't seen as a new change.
@@ -339,7 +348,7 @@ function start(user: User) {
   let last = ''
 
   unsubStore = usePlayer.subscribe((s) => {
-    const sig = [s.liked, s.playlists, s.lyricsNonce, s.queue, s.order, s.pos, s.ytMatches, ...PREFS.map((k) => s[k])]
+    const sig = [s.liked, s.playlists, s.lyricsNonce, s.queue, s.order, s.pos, s.ytMatches, s.following, ...PREFS.map((k) => s[k])]
     const ref = sig.map((x) => (typeof x === 'object' ? identity(x) : String(x))).join('|')
     if (ref === last) return
     last = ref
@@ -497,7 +506,7 @@ export async function signOut(forget = false, flush = true) {
   }
   if (forget) {
     for (const id of Object.keys(allUserLyrics())) applyUserLyrics(id, null)
-    usePlayer.setState({ liked: {}, playlists: [], recent: [], queue: [], order: [], pos: 0, isPlaying: false })
+    usePlayer.setState({ liked: {}, following: {}, playlists: [], recent: [], queue: [], order: [], pos: 0, isPlaying: false })
   }
 }
 

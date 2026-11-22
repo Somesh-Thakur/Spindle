@@ -9,6 +9,7 @@ import type { Track } from '../lib/types'
 import { YT_STATE, yt, ytPlayer } from '../lib/yt'
 import { DEFAULT_PALETTE, useCurrent, usePlayer } from '../store/player'
 import { toast } from './Toast'
+import { applyVolume } from '../lib/fade'
 
 const st = usePlayer.setState
 const get = usePlayer.getState
@@ -107,7 +108,7 @@ function fallBack(t: Track) {
 const ytListener = {
   onReady: () => {
     const s = get()
-    yt.get()?.setVolume(Math.round(s.volume * s.volume * 100))
+    applyVolume()
     if (s.muted) yt.get()?.mute()
   },
   onState: (state: number) => {
@@ -252,13 +253,11 @@ export function AudioEngine() {
   }, [replayNonce])
 
   useEffect(() => {
-    audio.volume = volume * volume // perceptual curve
+    // Volume times the fade between songs (lib/fade.ts).
+    applyVolume()
     audio.muted = muted
     const p = yt.get()
-    if (p?.setVolume) {
-      p.setVolume(Math.round(volume * volume * 100))
-      muted ? p.mute() : p.unMute()
-    }
+    if (p?.setVolume) muted ? p.mute() : p.unMute()
   }, [volume, muted])
 
   // Ambient palette from artwork.

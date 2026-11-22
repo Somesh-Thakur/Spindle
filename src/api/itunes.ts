@@ -100,6 +100,7 @@ function toAlbum(r: any): Album | null {
     genre: r.primaryGenreName,
     trackCount: r.trackCount,
     copyright: r.copyright,
+    released: r.releaseDate,
   }
 }
 
@@ -190,6 +191,23 @@ export function artist(id: string, country: string) {
       tracks,
       albums: albumList,
     }
+  })
+}
+
+/**
+ * The latest albums and singles from several artists, newest first. Asked in
+ * batches (Apple's lookup takes many ids at once) and cached for a few hours.
+ */
+export function latestReleases(ids: string[], country: string, perArtist = 3): Promise<Album[]> {
+  const sorted = [...new Set(ids)].sort()
+  return cached(`new:${country}:${perArtist}:${sorted.join(',')}`, 6 * HOUR, async () => {
+    const batches: string[][] = []
+    for (let i = 0; i < sorted.length; i += 40) batches.push(sorted.slice(i, i + 40))
+    const pages = await Promise.all(batches.map((b) => get(`/lookup?id=${b.join(',')}&entity=album&sort=recent&limit=${perArtist}&country=${country}`)))
+    const seen = new Set<string>()
+    return compact<Album>(pages.flatMap((p) => p.results.map(toAlbum)))
+      .filter((a) => !seen.has(a.id) && seen.add(a.id))
+      .sort((a, b) => (b.released ?? '').localeCompare(a.released ?? ''))
   })
 }
 

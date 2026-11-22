@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Share } from 'lucide-react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { trending } from '../api/audius'
@@ -14,6 +14,7 @@ import type { Track } from '../lib/types'
 import { albumShare, openShare } from '../lib/share'
 import { useAsync } from '../lib/useAsync'
 import { usePlayer } from '../store/player'
+import { ensureMixes, useMixes } from '../lib/mixes'
 
 export function TrackList({
   tracks,
@@ -79,6 +80,27 @@ export function AlbumPage() {
   )
 }
 
+/** One "Made for you" mix. */
+export function MixPage() {
+  const { id = '' } = useParams()
+  const mixes = useMixes((s) => s.mixes)
+  useEffect(() => ensureMixes(), [])
+  const mix = mixes?.find((m) => m.id === decodeURIComponent(id))
+  if (mixes && !mix)
+    return (
+      <div className="page">
+        <div className="note">This mix isn’t around today. Mixes change daily with what you play; find today’s on Home.</div>
+      </div>
+    )
+  const tracks = mix?.tracks ?? []
+  return (
+    <div className="page">
+      <CollectionHeader kind="Made for you" title={mix?.title ?? ' '} byline={mix?.subtitle} tint={mix?.tint ?? '#333'} tracks={tracks} meta={tracks.length ? `${tracks.length} songs, ${minutes(tracks)} min · updated daily` : undefined} />
+      <TrackList tracks={tracks} loading={!mix} />
+    </div>
+  )
+}
+
 export function ArtistPage() {
   const { id = '' } = useParams()
   const country = usePlayer((s) => s.country)
@@ -88,7 +110,7 @@ export function ArtistPage() {
   if (error) return <div className="page"><ErrorNote /></div>
   return (
     <div className="page">
-      <ArtistHero name={data?.artist.name ?? ''} genre={data?.artist.genre} art={data?.artist.art} tracks={tracks} />
+      <ArtistHero id={id} name={data?.artist.name ?? ''} genre={data?.artist.genre} art={data?.artist.art} tracks={tracks} />
       <h2 className="section-title">Top songs</h2>
       <TrackList tracks={tracks.slice(0, 10)} loading={loading} />
       <h2 className="section-title">Discography</h2>

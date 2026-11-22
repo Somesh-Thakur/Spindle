@@ -12,6 +12,7 @@ import { startRemoteHost } from './lib/remote'
 import { startErrorReporting } from './lib/errors'
 import { startIosGapFix } from './lib/iosGap'
 import { startTooltips } from './lib/tooltip'
+import { startFading } from './lib/fade'
 import { startPrefetch } from './lib/prefetch'
 import { startInsights } from './lib/insights'
 import { startHistory } from './lib/history'
@@ -49,6 +50,9 @@ startIosGapFix()
 
 // Hover labels for icon buttons (with a mouse).
 startTooltips()
+
+// Songs fade out and in between each other (Settings → Playback).
+startFading()
 
 // While you're in another window, decorative animations rest (v5.css .is-away).
 // Checked a moment later: clicking into the YouTube player also blurs the page.

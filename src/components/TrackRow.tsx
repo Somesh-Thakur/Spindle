@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { Check, ChevronLeft, ChevronRight, Disc3, Heart, ListEnd, ListMusic, ListStart, MoreHorizontal, Play, Plus, User, Share, ArrowDownToLine, CircleCheck } from 'lucide-react'
+import { Check, ChevronLeft, ChevronRight, Disc3, Heart, ListEnd, ListMusic, ListStart, MoreHorizontal, Play, Plus, User, UserPlus, Share, ArrowDownToLine, CircleCheck } from 'lucide-react'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
@@ -137,6 +137,7 @@ export function TrackMenu({ track, className = '' }: { track: Track; className?:
   const menu = useRef<HTMLDivElement>(null)
   const nav = useNavigate()
   const { playNext, addToQueue, setFull } = usePlayer.getState()
+  const following = usePlayer((s) => !!(track.artistId && s.following[track.artistId]))
 
   const place = useCallback(() => {
     if (!button.current || !menu.current) return
@@ -225,6 +226,20 @@ export function TrackMenu({ track, className = '' }: { track: Track; className?:
         {track.source === 'itunes' && track.artistId && (
           <button role="menuitem" onClick={() => go(`/artist/${track.artistId}`)}>
             <User size={16} /> Go to artist
+          </button>
+        )}
+        {track.source === 'itunes' && track.artistId && (
+          <button
+            role="menuitem"
+            onClick={() => {
+              const name = track.artist.split(/,|&| x | feat\.? /i)[0].trim()
+              const was = !!usePlayer.getState().following[track.artistId!]
+              usePlayer.getState().toggleFollow({ id: track.artistId!, name, art: track.art, genre: track.genre })
+              setOpen(false)
+              toast(was ? `Unfollowed ${name}` : `Following ${name}. New releases show on Home.`)
+            }}
+          >
+            <UserPlus size={16} /> {following ? 'Unfollow artist' : 'Follow artist'}
           </button>
         )}
       </>

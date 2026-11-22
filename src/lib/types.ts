@@ -32,6 +32,8 @@ export interface Album {
   genre?: string
   trackCount?: number
   copyright?: string
+  /** Full release date (ISO), when known. */
+  released?: string
 }
 
 export interface Artist {
@@ -39,4 +41,9 @@ export interface Artist {
   name: string
   genre?: string
   art?: string
+}
+
+/** An artist you follow (Apple Music id), and when you started. */
+export interface Followed extends Artist {
+  at: number
 }

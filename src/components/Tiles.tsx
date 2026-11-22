@@ -3,12 +3,14 @@ import { Link } from 'react-router-dom'
 import type { Album, Artist, Track } from '../lib/types'
 import { useCurrent, usePlayer } from '../store/player'
 import { Artwork } from './Artwork'
+import { isFresh } from '../lib/newReleases'
 
 export function AlbumTile({ album }: { album: Album }) {
   return (
     <Link to={`/album/${album.id}`} className="tile" data-cursor="open">
       <div className="tile-art">
         <Artwork src={album.art} size={220} />
+        {isFresh(album) && <span className="tile-new">New</span>}
       </div>
       <div className="tile-title">{album.title}</div>
       <div className="tile-sub">{album.artist}</div>

@@ -443,6 +443,7 @@ function PlaybackSection() {
   const shuffle = usePlayer((s) => s.shuffle)
   const repeat = usePlayer((s) => s.repeat)
   const autoplay = usePlayer((s) => s.autoplay)
+  const fade = usePlayer((s) => s.fade)
   const set = usePlayer((s) => s.set)
   return (
     <Section id="playback" title="Playback">
@@ -453,6 +454,15 @@ function PlaybackSection() {
         <a className="btn btn-ghost" href="https://accounts.google.com/ServiceLogin?service=youtube&continue=https%3A%2F%2Fwww.youtube.com%2F" target="_blank" rel="noreferrer">
           Sign in to YouTube
         </a>
+      </Row>
+      <Row title="Fade between songs" sub="Each song fades out over its last seconds and the next one fades in, so changes are smooth.">
+        <select className="set-select" value={fade} onChange={(e) => set({ fade: Number(e.target.value) })} aria-label="Fade length">
+          {[0, 2, 3, 5, 8].map((n) => (
+            <option key={n} value={n}>
+              {n ? `${n} seconds` : 'Off'}
+            </option>
+          ))}
+        </select>
       </Row>
       <Row title="Volume" sub="Saved on this device only.">
         <input

@@ -1,5 +1,5 @@
-import { Sparkles } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { GripVertical, Sparkles, X } from 'lucide-react'
+import { Reorder, useDragControls } from 'framer-motion'
 import { useEffect, useRef } from 'react'
 import { useSongLyrics } from '../lib/useSongLyrics'
 import type { Track } from '../lib/types'
@@ -58,6 +58,30 @@ export function LyricsPanel({ track }: { track: Track }) {
   )
 }
 
+const SHOWN = 100
+
+function QueueItem({ qi, track, added, onPlay, onRemove }: { qi: number; track: Track; added: boolean; onPlay: () => void; onRemove: () => void }) {
+  const controls = useDragControls()
+  return (
+    <Reorder.Item as="div" value={qi} dragListener={false} dragControls={controls} className="q-item q-drag" whileDrag={{ scale: 1.02, boxShadow: '0 18px 40px rgba(0,0,0,.55)', zIndex: 2 }}>
+      <span className="q-grip" onPointerDown={(e) => controls.start(e)} aria-label="Drag to reorder" role="button" tabIndex={-1}>
+        <GripVertical size={16} />
+      </span>
+      <button className="q-play" onClick={onPlay} aria-label={`Play ${track.title}`}>
+        <Artwork src={track.art} size={44} />
+        <span className="q-text">
+          <b>{track.title}</b>
+          <small>{track.artist}</small>
+        </span>
+      </button>
+      {added && <Sparkles size={14} className="q-added" aria-label="Added for you" />}
+      <button className="icon-btn q-remove" onClick={onRemove} aria-label="Remove from queue">
+        <X size={15} />
+      </button>
+    </Reorder.Item>
+  )
+}
+
 export function QueuePanel() {
   const queue = usePlayer((s) => s.queue)
   const order = usePlayer((s) => s.order)
@@ -65,8 +89,11 @@ export function QueuePanel() {
   const isPlaying = usePlayer((s) => s.isPlaying)
   const jumpTo = usePlayer((s) => s.jumpTo)
   const added = usePlayer((s) => s.addedIds)
+  const setUpNext = usePlayer((s) => s.setUpNext)
+  const removeUpNext = usePlayer((s) => s.removeUpNext)
   const current = queue[order[pos]]
   const upcoming = order.slice(pos + 1)
+  const shown = upcoming.slice(0, SHOWN)
 
   return (
     <div className="queue">
@@ -85,27 +112,13 @@ export function QueuePanel() {
       )}
       <h3 className="queue-head">Up next</h3>
       {upcoming.length === 0 && <div className="panel-empty small">Nothing queued. Use “Play next” on any song to add one.</div>}
-      {upcoming.map((qi, i) => {
-        const t = queue[qi]
-        return (
-          <motion.button
-            layout
-            key={`${t.id}-${qi}`}
-            className="q-item"
-            onClick={() => jumpTo(pos + 1 + i)}
-            initial={{ opacity: 0, x: 12 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: Math.min(i, 12) * 0.02 }}
-          >
-            <Artwork src={t.art} size={44} />
-            <div className="q-text">
-              <b>{t.title}</b>
-              <small>{t.artist}</small>
-            </div>
-            {added.includes(t.id) && <Sparkles size={14} className="q-added" aria-label="Added for you" />}
-          </motion.button>
-        )
-      })}
+      {/* Drag the handle to reorder; the first 100 are draggable, which covers any real queue. */}
+      <Reorder.Group as="div" axis="y" values={shown} onReorder={(next) => setUpNext([...next, ...upcoming.slice(SHOWN)])} className="q-list">
+        {shown.map((qi, i) => (
+          <QueueItem key={qi} qi={qi} track={queue[qi]} added={added.includes(queue[qi].id)} onPlay={() => jumpTo(pos + 1 + i)} onRemove={() => removeUpNext(pos + 1 + i)} />
+        ))}
+      </Reorder.Group>
+      {upcoming.length > SHOWN && <div className="panel-empty small">and {upcoming.length - SHOWN} more</div>}
     </div>
   )
 }

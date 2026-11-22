@@ -21,7 +21,7 @@ const COLORS: [string, string][] = [
 
 const hourLabel = (h: number) => new Date(2000, 0, 1, h).toLocaleTimeString([], { hour: 'numeric' })
 
-function StatsShare({ stats, period, onClose }: { stats: Stats; period: string; onClose: () => void }) {
+export function StatsShare({ stats, period, onClose }: { stats: Stats; period: string; onClose: () => void }) {
   const [colors, setColors] = useState(COLORS[0])
   const [drawn, setDrawn] = useState<HTMLCanvasElement | null>(null)
   const view = useRef<HTMLCanvasElement>(null)
@@ -134,6 +134,9 @@ export function StatsPage() {
           <button className="btn btn-primary" onClick={() => setSharing(true)} disabled={!stats.plays}>
             <Share2 size={15} /> Share my stats
           </button>
+          <Link to="/wrapped" className="btn">
+            <Sparkles size={15} /> Wrapped
+          </Link>
         </div>
       </div>
 

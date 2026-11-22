@@ -1,4 +1,8 @@
 import { Play, Search } from 'lucide-react'
+import { useEffect } from 'react'
+import { MixTile } from '../components/MixTile'
+import { ensureMixes, useMixes } from '../lib/mixes'
+import { useNewReleases } from '../lib/newReleases'
 import { Link } from 'react-router-dom'
 import { trending } from '../api/audius'
 import { COUNTRIES, topAlbums, topSongs } from '../api/itunes'
@@ -25,6 +29,9 @@ export function Home() {
   const songs = useAsync(() => topSongs(country, undefined, 50), [country])
   const albums = useAsync(() => topAlbums(country, 24), [country])
   const radio = useAsync(() => trending(undefined, 20), [])
+  const mixes = useMixes((s) => s.mixes) ?? []
+  const { releases } = useNewReleases()
+  useEffect(() => ensureMixes(), [])
 
   const top = songs.data ?? []
   const crate = top.slice(0, 20)
@@ -44,6 +51,26 @@ export function Home() {
         </header>
 
         <InstallBanner />
+
+        {mixes.length > 0 && (
+          <PhoneSection title="Made for you">
+            <Shelf title="">
+              {mixes.map((m) => (
+                <MixTile key={m.id} mix={m} />
+              ))}
+            </Shelf>
+          </PhoneSection>
+        )}
+
+        {releases.length > 0 && (
+          <PhoneSection title="New from artists you follow">
+            <Shelf title="">
+              {releases.map((a) => (
+                <AlbumTile key={a.id} album={a} />
+              ))}
+            </Shelf>
+          </PhoneSection>
+        )}
 
         {recent.length > 0 && (
           <PhoneSection title="Jump back in" to="/recent">
@@ -97,6 +124,34 @@ export function Home() {
       )}
 
       <Marquee items={artists} />
+
+      {mixes.length > 0 && (
+        <section className="home-sec">
+          <div className="sec-head">
+            <KineticTitle>Made for you</KineticTitle>
+            <p className="sec-lede">Mixes from what you play and like, fresh every day.</p>
+          </div>
+          <Shelf title="">
+            {mixes.map((m) => (
+              <MixTile key={m.id} mix={m} />
+            ))}
+          </Shelf>
+        </section>
+      )}
+
+      {releases.length > 0 && (
+        <section className="home-sec">
+          <div className="sec-head">
+            <KineticTitle>New from artists you follow</KineticTitle>
+            <p className="sec-lede">Albums and singles from the last few months.</p>
+          </div>
+          <Shelf title="">
+            {releases.map((a) => (
+              <AlbumTile key={a.id} album={a} />
+            ))}
+          </Shelf>
+        </section>
+      )}
 
       <section className="home-sec">
         <div className="sec-head">

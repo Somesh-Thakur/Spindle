@@ -98,11 +98,12 @@ export function startHistory() {
 
 // ---------- Stats ----------
 
-export type Period = '4w' | '6m' | 'all'
+export type Period = '4w' | '6m' | 'year' | 'all'
 
 export const PERIODS: { id: Period; label: string; days: number }[] = [
   { id: '4w', label: 'Last 4 weeks', days: 28 },
   { id: '6m', label: 'Last 6 months', days: 182 },
+  { id: 'year', label: 'This year', days: NaN },
   { id: 'all', label: 'All time', days: Infinity },
 ]
 
@@ -125,7 +126,8 @@ export interface Stats {
 
 export function computeStats(all: Play[], tracks: Record<string, Track>, period: Period): Stats {
   const days = PERIODS.find((p) => p.id === period)!.days
-  const since = days === Infinity ? 0 : Date.now() - days * 86400000
+  // 'This year' starts on 1 January.
+  const since = period === 'year' ? new Date(new Date().getFullYear(), 0, 1).getTime() : days === Infinity ? 0 : Date.now() - days * 86400000
   const plays = all.filter((p) => p.at >= since)
 
   const songs = new Map<string, { track: Track; count: number }>()

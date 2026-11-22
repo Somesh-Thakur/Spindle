@@ -22,6 +22,7 @@ import {
   AdminPage,
   AlbumPage,
   ArtistPage,
+  MixPage,
   AuthGate,
   BrowsePage,
   ChartsPage,
@@ -44,6 +45,7 @@ import {
   SharedPage,
   ShareSheet,
   StatsPage,
+  WrappedPage,
 } from './lazy'
 import { ScrollRoot } from './lib/scroll'
 import { codeFromPath, rememberShare, takeRememberedShare } from './lib/share'
@@ -150,6 +152,7 @@ function Shell() {
               <Route path="/liked" element={<LikedPage />} />
               <Route path="/downloads" element={<DownloadsPage />} />
               <Route path="/stats" element={<StatsPage />} />
+              <Route path="/wrapped" element={<WrappedPage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/feedback" element={<FeedbackPage />} />
               <Route path="/admin" element={<AdminPage />} />
@@ -157,6 +160,7 @@ function Shell() {
               <Route path="/recent" element={<RecentPage />} />
               <Route path="/album/:id" element={<AlbumPage />} />
               <Route path="/artist/:id" element={<ArtistPage />} />
+              <Route path="/mix/:id" element={<MixPage />} />
               <Route path="/genre/:id" element={<GenrePage />} />
               <Route path="/era/:key" element={<EraPage />} />
               <Route path="*" element={<NotFound />} />
